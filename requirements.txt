@@ -1,0 +1,7 @@
+colorama >= 0.4
+pyyaml
+requests ~= 2.25.1
+EdgeDeviceProvisioning/tools/botocore-1.29.32-py3-none-any.whl
+EdgeDeviceProvisioning/tools/boto3-1.26.32-py3-none-any.whl
+EdgeDeviceProvisioning/tools/awscli-1.27.32-py3-none-any.whl
+-r EdgeDeviceProvisioning/tools/provision/requirements.txt

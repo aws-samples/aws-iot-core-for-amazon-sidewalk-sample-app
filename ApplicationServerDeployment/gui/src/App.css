@@ -1,0 +1,20 @@
+/* Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.*/
+/* SPDX-License-Identifier: MIT-0*/
+
+.device-wrapper {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 25px;
+  padding: 1rem;
+}
+
+.abs-center {
+  height: calc(100vh + var(--header));
+}
+
+@media screen and (min-width: 1681px) {
+  .device-wrapper {
+    gap: 50px;
+  }
+}

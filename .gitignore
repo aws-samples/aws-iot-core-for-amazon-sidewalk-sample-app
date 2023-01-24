@@ -1,0 +1,8 @@
+.DS_Store
+.idea
+.flake8
+**.env
+*env/
+**/__pycache__
+**/public
+**/node_modules

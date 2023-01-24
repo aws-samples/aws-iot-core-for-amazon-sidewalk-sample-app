@@ -1,0 +1,12 @@
+/* Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.*/
+/* SPDX-License-Identifier: MIT-0*/
+
+.chart-section {
+  height: 100%;
+  padding: 2rem 1rem;
+}
+
+.chart-wrapper-link {
+  cursor: pointer;
+  color: blue;
+}

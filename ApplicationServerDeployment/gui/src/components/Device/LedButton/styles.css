@@ -1,0 +1,30 @@
+/* Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.*/
+/* SPDX-License-Identifier: MIT-0*/
+
+.led-section {
+  flex-direction: column;
+  padding: 0.5rem 1rem;
+}
+
+.led-section-toggle-button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.led-section-indicator-on,
+.led-section-indicator-off {
+  font-size: 0.8rem;
+}
+
+.led-section-indicator-on {
+  color: green;
+}
+
+.led-section-indicator-off {
+  color: black;
+}
+
+.led-section-toggle-button:disabled {
+  opacity: 0.3;
+}

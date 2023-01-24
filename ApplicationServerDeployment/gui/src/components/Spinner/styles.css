@@ -1,0 +1,57 @@
+/* Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.*/
+/* SPDX-License-Identifier: MIT-0*/
+
+@keyframes ldio-3ubwwbm9rn2 {
+  0% {
+    transform: scale(1.1500000000000001);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.ldio-3ubwwbm9rn2 div {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  top: 8px;
+  left: 8px;
+  background: #dae4e5;
+  animation: ldio-3ubwwbm9rn2 1s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+  animation-delay: -0.3s;
+}
+.ldio-3ubwwbm9rn2 div:nth-child(2) {
+  top: 8px;
+  left: 54px;
+  background: #adbcbf;
+  animation-delay: -0.2s;
+}
+.ldio-3ubwwbm9rn2 div:nth-child(3) {
+  top: 54px;
+  left: 8px;
+  background: #53585a;
+  animation-delay: 0s;
+}
+.ldio-3ubwwbm9rn2 div:nth-child(4) {
+  top: 54px;
+  left: 54px;
+  background: #77868b;
+  animation-delay: -0.1s;
+}
+.loadingio-spinner-cube-43if4zhoecl {
+  width: 35px;
+  height: 35px;
+  display: inline-block;
+  overflow: hidden;
+  background: none;
+}
+.ldio-3ubwwbm9rn2 {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform: translateZ(0) scale(0.35);
+  backface-visibility: hidden;
+  transform-origin: 0 0; /* see note above */
+}
+.ldio-3ubwwbm9rn2 div {
+  box-sizing: content-box;
+}
