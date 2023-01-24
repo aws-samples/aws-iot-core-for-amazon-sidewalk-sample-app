@@ -12,7 +12,6 @@
     "add": "^2.0.6",
     "chart.js": "^4.1.1",
     "classnames": "^2.3.2",
-    "faker": "^6.6.6",
     "javascript-time-ago": "^2.5.9",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
@@ -24,7 +23,6 @@
     "vite-plugin-svgr": "^2.4.0"
   },
   "devDependencies": {
-    "@types/faker": "^6.6.9",
     "@types/lodash": "^4.14.191",
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.9",
