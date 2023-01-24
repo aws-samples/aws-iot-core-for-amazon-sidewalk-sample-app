@@ -1,0 +1,252 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:AttachRolePolicy",
+                "iam:CreatePolicy",
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:DeleteRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:GetRole",
+                "iam:GetRolePolicy",
+                "iam:PassRole",
+                "iam:PutRolePolicy",
+                "iam:TagPolicy",
+                "iam:TagRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::<account_ID>:role/SidewalkDestinationRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkRuleRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkSampleApplicationGrafanaWorkspaceRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkUplinkLambdaExecutionRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkDownlinkLambdaExecutionRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkDbHandlerLambdaExecutionRole"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DeleteStack",
+                "cloudformation:TagResource"
+            ],
+            "Resource": "arn:aws:cloudformation:*:<account_ID>:stack/SidewalkSampleApplicationStack/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iot:CreatePolicy",
+                "iot:CreateTopicRule",
+                "iot:DeletePolicy",
+                "iot:DeleteTopicRule",
+                "iot:GetPolicy",
+                "iot:GetTopicRule",
+                "iot:ListPolicyVersions",
+                "iot:TagResource"
+            ],
+            "Resource": [
+                "arn:aws:iot:*:<account_ID>:policy/SidewalkReceiveWirelessEventNotificationsPolicy",
+                "arn:aws:iot:*:<account_ID>:rule/SidewalkNotificationRule",
+                "arn:aws:iot:*:<account_ID>:rule/SidewalkUplinkRule"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iotwireless:GetDestination",
+                "iotwireless:DeleteDestination",
+                "iotwireless:CreateDestination",
+                "iotwireless:UpdateDestination"
+            ],
+            "Resource": "arn:aws:iotwireless:*:<account_ID>:Destination/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "iotwireless:UpdateEventConfigurationByResourceTypes",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "lambda:AddPermission",
+                "lambda:CreateFunction",
+                "lambda:DeleteFunction",
+                "lambda:GetFunction",
+                "lambda:RemovePermission",
+                "lambda:TagResource",
+                "lambda:UpdateFunctionCode"
+            ],
+            "Resource": [
+                "arn:aws:lambda:*:<account_ID>:function:SidewalkUplinkLambda",
+                "arn:aws:lambda:*:<account_ID>:function:SidewalkDownlinkLambda",
+                "arn:aws:lambda:*:<account_ID>:function:SidewalkDbHandlerLambda"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:DeleteLogGroup",
+                "logs:TagLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": "arn:aws:logs:us-east-1:<account_ID>:log-group:SidewalkRuleErrors:*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:DescribeTable",
+                "dynamodb:CreateTable",
+                "dynamodb:DeleteTable",
+                "dynamodb:Scan",
+                "dynamodb:DeleteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:GetItem",
+                "dynamodb:Query",
+                "dynamodb:UpdateTimeToLive",
+                "dynamodb:DescribeTimeToLive"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:*:<account_ID>:table/SidewalkDevices"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:CreateCloudFrontOriginAccessIdentity",
+                "cloudfront:DeleteCloudFrontOriginAccessIdentity",
+                "cloudfront:GetCloudFrontOriginAccessIdentity",
+                "cloudfront:UpdateCloudFrontOriginAccessIdentity",
+                "cloudfront:ListCloudFrontOriginAccessIdentities"
+
+            ],
+            "Resource": [
+                "arn:aws:cloudfront::<account_ID>:origin-access-identity/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:CreateDistribution",
+                "cloudfront:GetDistribution",
+                "cloudfront:GetOriginAccessControl",
+                "cloudfront:GetOriginRequestPolicy",
+                "cloudfront:ListDistributions",
+                "cloudfront:DeleteDistribution",
+                "cloudfront:UpdateDistribution",
+                "cloudfront:TagResource"
+            ],
+            "Resource": [
+                "arn:aws:cloudfront::<account_ID>:distribution/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:CreateOriginAccessControl",
+                "cloudfront:DeleteOriginAccessControl",
+                "cloudfront:UpdateOriginAccessControl"
+            ],
+            "Resource": [
+                "arn:aws:cloudfront::<account_ID>:distribution/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:CreateOriginRequestPolicy",
+                "cloudfront:DeleteOriginRequestPolicy",
+                "cloudfront:UpdateOriginRequestPolicy"
+            ],
+            "Resource": [
+                "arn:aws:cloudfront::<account_ID>:distribution/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "timestream:CreateDatabase",
+                "timestream:CreateTable",
+                "timestream:DeleteDatabase",
+                "timestream:DeleteTable",
+                "timestream:DescribeEndpoints",
+                "timestream:DescribeTable",
+                "timestream:ListDatabases",
+                "timestream:ListTables",
+                "timestream:ListTagsForResource",
+                "timestream:UpdateDatabase",
+                "timestream:UpdateTable",
+                "timestream:DescribeDatabase",
+                "timestream:DescribeScheduledQuery",
+                "timestream:PrepareQuery",
+                "timestream:Select",
+                "timestream:DeleteScheduledQuery",
+                "timestream:ExecuteScheduledQuery",
+                "timestream:SelectValues",
+                "timestream:CancelQuery",
+                "timestream:ListScheduledQueries",
+                "timestream:CreateScheduledQuery",
+                "timestream:TagResource"
+            ],
+            "Resource": [
+                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream",
+                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/*",
+                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/table/Notifications",
+                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/table/Measurements",
+                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/table/UplinkMessages"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "timestream:DescribeEndpoints",
+                "cloudformation:*",
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:DeleteBucketPolicy",
+                "s3:PutBucketPolicy",
+                "s3:GetBucketPolicy",
+                "s3:ListBucket"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:CreateLogGroup",
+                "logs:DeleteLogGroup",
+                "logs:DeleteLogStream",
+                "logs:DescribeLogStreams",
+                "logs:DescribeLogGroups",
+                "logs:PutRetentionPolicy",
+                "logs:PutLogEvents",
+                "logs:TagResource"
+            ],
+            "Resource":[
+                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkUplinkLambda*",
+                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkDbHandlerLambda*",
+                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkDownlinkLambda*",
+                "arn:aws:logs:*:<account_ID>:log-group:SidewalkRuleErrors*"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,110 @@
+/* Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.*/
+/* SPDX-License-Identifier: MIT-0*/
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 0.75fr 0.5fr 1.5fr 0.5fr;
+  grid-auto-flow: row;
+  grid-template-areas:
+    "title"
+    "led"
+    "chart"
+    "ebuttons";
+  border-top: 4px solid var(--main-gray);
+  border-left: 4px solid var(--main-gray);
+  width: 460px;
+}
+
+.container-offline {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 0.75fr 2.5fr;
+  grid-auto-flow: row;
+  grid-template-areas:
+    "title"
+    "offline";
+  width: 460px;
+  border-top: 4px solid var(--main-gray);
+  border-left: 4px solid var(--main-gray);
+}
+
+.container > section,
+.container-offline > section {
+  border-bottom: 4px solid var(--main-gray);
+  border-right: 4px solid var(--main-gray);
+}
+
+.title,
+.led,
+.chart,
+.ebuttons,
+.offline {
+  display: grid;
+}
+
+.title {
+  grid-area: title;
+}
+
+.led {
+  grid-area: led;
+}
+
+.led-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.ebuttons {
+  grid-area: ebuttons;
+}
+
+.ebuttons-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 1rem 1rem 1rem;
+}
+
+.ebuttons-section-title {
+  font-weight: 800;
+  margin: 1rem 0
+}
+
+.chart {
+  grid-area: chart;
+}
+
+.offline {
+  grid-area: offline;
+}
+
+.offline-text {
+  height: 100%;
+  text-align: center;
+}
+
+@media screen and (min-width: 320px) and (max-width: 900px) {
+  .container-offline {
+    width: 100%;
+  }
+
+  .container {
+    grid-template-rows: 0.9fr auto 1fr 1fr;
+    width: 100%;
+  }
+
+  .ebuttons-wrapper {
+    margin: 0 0.5rem 0.5rem 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .ebuttons-section-title {
+    margin: 0.5rem 0;
+  }
+}

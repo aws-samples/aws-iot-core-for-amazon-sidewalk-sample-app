@@ -1,0 +1,23 @@
+/* Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.*/
+/* SPDX-License-Identifier: MIT-0*/
+
+header {
+  background-color: #eaebee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--main-gray);
+  height: var(--header);
+}
+
+.header-img {
+  width: 185px;
+}
+
+@media screen and (min-width: 320px) and (max-width: 900px) {
+  .header-img {
+    width: 160px;
+  } 
+}

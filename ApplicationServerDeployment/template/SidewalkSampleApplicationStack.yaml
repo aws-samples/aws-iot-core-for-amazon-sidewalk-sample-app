@@ -1,0 +1,894 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description:
+  'This template creates SidewalkSampleApplication stack.
+  **WARNING** You will be billed for the AWS resources used if you create a stack from this template'
+
+Parameters:
+
+  SidewalkDestinationName:
+    Type: String
+    Default: SidewalkDestination
+
+  SidewalkDestinationAlreadyExists:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
+
+  DeployGrafana:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
+
+Conditions:
+
+  ShouldCreateDestination: !Equals
+    - !Ref SidewalkDestinationAlreadyExists
+    - false
+
+  ShouldDeployGrafana: !Equals
+    - !Ref DeployGrafana
+    - true
+
+Resources:
+
+  # --------------------------------------
+  # Timestream database related resources
+  # --------------------------------------
+
+  # SidewalkTimestream database
+  SidewalkTimestream:
+    Type: AWS::Timestream::Database
+    Properties:
+      DatabaseName: SidewalkTimestream
+
+  # Table for storing uplink data
+  UplinkMessages:
+    Condition: ShouldDeployGrafana
+    Type: AWS::Timestream::Table
+    DependsOn: SidewalkTimestream
+    Properties:
+      TableName: UplinkMessages
+      DatabaseName: SidewalkTimestream
+      MagneticStoreWriteProperties:
+        EnableMagneticStoreWrites: false
+      RetentionProperties:
+        MemoryStoreRetentionPeriodInHours: 12
+        MagneticStoreRetentionPeriodInDays: 7
+
+  # Table for storing notification data
+  Notifications:
+    Condition: ShouldDeployGrafana
+    Type: AWS::Timestream::Table
+    DependsOn: SidewalkTimestream
+    Properties:
+      TableName: Notifications
+      DatabaseName: SidewalkTimestream
+      MagneticStoreWriteProperties:
+        EnableMagneticStoreWrites: false
+      RetentionProperties:
+        MemoryStoreRetentionPeriodInHours: 12
+        MagneticStoreRetentionPeriodInDays: 7
+
+  # Table for storing sensor measurements
+  Measurements:
+    Type: AWS::Timestream::Table
+    DependsOn: SidewalkTimestream
+    Properties:
+      TableName: Measurements
+      DatabaseName: SidewalkTimestream
+      MagneticStoreWriteProperties:
+        EnableMagneticStoreWrites: false
+      RetentionProperties:
+        MemoryStoreRetentionPeriodInHours: 12
+        MagneticStoreRetentionPeriodInDays: 7
+
+  # ---------------------------
+  # DynamoDb related resources
+  # ---------------------------
+
+  # Table for storing Sidewalk devices
+  SidewalkDevices:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: wireless_device_id
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: wireless_device_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: true
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+      TableName: SidewalkDevices
+
+
+  # -------------------------
+  # Lambda related resources
+  # -------------------------
+
+  # Uplink Lambda's execution role with CloudWatch write access
+  SidewalkUplinkLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkDownlinkLambda
+      - SidewalkDevices
+      - Measurements
+    Properties:
+      RoleName: SidewalkUplinkLambdaExecutionRole
+      Description: Allows SidewalkUplinkLambda to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkUplinkLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkUplinkLambda:*
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt SidewalkDownlinkLambda.Arn
+              - Effect: Allow
+                Action:
+                    - dynamodb:BatchGetItem
+                    - dynamodb:UpdateTimeToLive
+                    - dynamodb:PutItem
+                    - dynamodb:DescribeTable
+                    - dynamodb:DeleteItem
+                    - dynamodb:GetItem
+                    - dynamodb:Scan
+                    - dynamodb:Query
+                    - dynamodb:UpdateItem
+                    - dynamodb:DescribeTimeToLive
+                Resource:
+                    - !GetAtt SidewalkDevices.Arn
+              - Effect: Allow
+                Action:
+                    - timestream:ListTables
+                    - timestream:DescribeDatabase
+                    - timestream:DescribeTable
+                    - timestream:DescribeScheduledQuery
+                    - timestream:PrepareQuery
+                    - timestream:Select
+                    - timestream:DeleteScheduledQuery
+                    - timestream:ExecuteScheduledQuery
+                    - timestream:WriteRecords
+                    - timestream:UpdateTable
+                    - timestream:UpdateScheduledQuery
+                Resource:
+                    - !GetAtt Measurements.Arn
+              - Effect: Allow
+                Action:
+                    - timestream:DescribeEndpoints
+                    - timestream:SelectValues
+                    - timestream:CancelQuery
+                    - timestream:ListScheduledQueries
+                    - timestream:CreateScheduledQuery
+                Resource:
+                    - '*'
+
+  # Downlink Lambda's execution role with CloudWatch write access and iot device access
+  SidewalkDownlinkLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkDownlinkLambdaExecutionRole
+      Description: Allows SidewalkDownlinkLambda to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkDownlinkLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkDownlinkLambda:*
+              - Effect: Allow
+                Action:
+                  - iotwireless:SendDataToWirelessDevice
+                Resource:
+                  - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:WirelessDevice/*
+
+  # Db handler Lambda's execution role with CloudWatch write access and iot device access
+  SidewalkDbHandlerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkDevices
+      - Measurements
+    Properties:
+      RoleName: SidewalkDbHandlerLambdaExecutionRole
+      Description: Allows SidewalkDbHandlerLambda to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkDbHandlerLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkDbHandlerLambda:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
+                Resource:
+                  - !GetAtt SidewalkDevices.Arn
+              - Effect: Allow
+                Action:
+                  - timestream:ListTables
+                  - timestream:DescribeDatabase
+                  - timestream:DescribeTable
+                  - timestream:DescribeScheduledQuery
+                  - timestream:PrepareQuery
+                  - timestream:Select
+                  - timestream:DeleteScheduledQuery
+                  - timestream:ExecuteScheduledQuery
+                Resource:
+                  - !GetAtt Measurements.Arn
+              - Effect: Allow
+                Action:
+                  - timestream:DescribeEndpoints
+                  - timestream:SelectValues
+                  - timestream:CancelQuery
+                  - timestream:ListScheduledQueries
+                  - timestream:CreateScheduledQuery
+                Resource:
+                  - '*'
+
+  # SidewalkUplinkLambda function. Handles uplink messages
+  SidewalkUplinkLambda:
+    Type: AWS::Lambda::Function
+    DependsOn: SidewalkUplinkLambdaExecutionRole
+    Properties:
+      FunctionName: SidewalkUplinkLambda
+      Description: Receives uplink messages and logs them in the CloudWatch log group.
+      Handler: uplink_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkUplinkLambdaExecutionRole.Arn
+      Runtime: python3.8
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile: "Please run deploy_stack.py script to upload the code."
+
+  # SidewalkDownlinkLambda function. Handles downlink messages
+  SidewalkDownlinkLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkDownlinkLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkDownlinkLambda
+      Description: Sends downlink messages and logs them in the CloudWatch log group.
+      Handler: downlink_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkDownlinkLambdaExecutionRole.Arn
+      Runtime: python3.8
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile:  "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
+  # SidewalkDbHandlerLambda function. Handles read requests to databases
+  SidewalkDbHandlerLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkDbHandlerLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkDbHandlerLambda
+      Description: Handles communication with db.
+      Handler: db_handler_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkDbHandlerLambdaExecutionRole.Arn
+      Runtime: python3.8
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile: "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
+  # -----------------------------
+  # CloudWatch related resources
+  # -----------------------------
+
+  # Log group for storing IoT rule errors
+  SidewalkRuleErrorsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: SidewalkRuleErrors
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkUplinkLambda logs
+  SidewalkUplinkLambdaLogGroup:
+    DependsOn: SidewalkUplinkLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkUplinkLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkDownlinkLambda logs
+  SidewalkDownlinkLambdaLogGroup:
+    DependsOn: SidewalkDownlinkLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkDownlinkLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkDbHandlerLambda logs
+  SidewalkDbHandlerLambdaLogGroup:
+    DependsOn: SidewalkDbHandlerLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkDbHandlerLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # ------------------------------
+  # API Gateway related resources
+  # ------------------------------
+
+  # API Gateway methods
+  SidewalkApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: sensor-monitoring-app
+      Description: Sensor Monitoring App API
+
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt SidewalkApiGateway.RootResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: api
+
+  ApiPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkDownlinkLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref ApiResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  ApiOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref ApiResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  ProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: '{proxy+}'
+
+  ProxyGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkDbHandlerLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref ProxyResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  ProxyOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref ProxyResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  # API Gateway deployment
+  SidewalkApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ApiPostMethod
+      - ApiOptionsMethod
+      - ProxyGetMethod
+      - ProxyOptionsMethod
+    Properties:
+      RestApiId: !Ref SidewalkApiGateway
+      StageName: dev
+
+  # Set SidewalkDownlinkLambda permissions regarding API Gateway
+  SidewalkDownlinkLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkDownlinkLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkDownlinkLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api
+
+  # Set SidewalkDbHandlerLambda permissions regarding API Gateway
+  SidewalkDbHandlerLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkDbHandlerLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkDbHandlerLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/*
+
+  # -------------------------------------------
+  # IoT related resources for uplink reception
+  # -------------------------------------------
+
+  # AWS IoT wireless destination role with access to the SidewalkUplinkRule
+  SidewalkDestinationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkDestinationRole
+      Description: Allows SidewalkDestination to call SidewalkUplinkRule on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - iotwireless.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkDestinationRoleInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iot:Publish
+                Resource:
+                  - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/rules/SidewalkUplinkRule
+              - Effect: Allow
+                Action:
+                  - iot:DescribeEndpoint
+                Resource:
+                  - '*'
+
+  # AWS IoT wireless destination
+  SidewalkDestination:
+    Type: AWS::IoTWireless::Destination
+    DependsOn: SidewalkDestinationRole
+    Condition: ShouldCreateDestination
+    Properties:
+      Name:
+        Ref: SidewalkDestinationName
+      Description: Destination for uplink messages from Sidewalk devices.
+      ExpressionType: RuleName
+      Expression: SidewalkUplinkRule
+      RoleArn: !GetAtt SidewalkDestinationRole.Arn
+
+  # AWS IoT wireless rule role with write access to the SidewalkRuleErrors and SidewalkTimestream tables
+  SidewalkRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkRuleRole
+      Description: Role assumed by the sidewalk rules, which preprocess and dispatch messages.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - iot.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkRuleInlinePolicy-SidewalkRuleErrorsWriteAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:SidewalkRuleErrors:*
+        - PolicyName: SidewalkRuleInlinePolicy-SidewalkTimestreamWriteAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - timestream:WriteRecords
+                Resource:
+                  - !Sub arn:aws:timestream:${AWS::Region}:${AWS::AccountId}:database/SidewalkTimestream/table/UplinkMessages
+                  - !Sub arn:aws:timestream:${AWS::Region}:${AWS::AccountId}:database/SidewalkTimestream/table/Notifications
+              - Effect: Allow
+                Action:
+                  - timestream:DescribeEndpoints
+                Resource:
+                  - '*'
+
+  # AWS IoT wireless rule for uplink messages
+  # Passes incoming uplink messages to the SidewalkUplinkLambda and UplinkMessages table
+  SidewalkUplinkRule:
+    Type: AWS::IoT::TopicRule
+    DependsOn:
+      - SidewalkUplinkLambda
+      - SidewalkRuleRole
+    Properties:
+      RuleName: SidewalkUplinkRule
+      TopicRulePayload:
+        AwsIotSqlVersion: 2016-03-23
+        Description: Rule for processing Sidewalk uplink messages.
+        Sql: SELECT * as uplink FROM '$aws/rules/SidewalkUplinkRule'
+        Actions:
+          - Lambda:
+              FunctionArn: !GetAtt SidewalkUplinkLambda.Arn
+          - !If
+            - ShouldDeployGrafana
+            - Timestream:
+                DatabaseName: SidewalkTimestream
+                RoleArn: !GetAtt SidewalkRuleRole.Arn
+                TableName: UplinkMessages
+                Dimensions:
+                  - Name: wireless_device_id
+                    Value: ${WirelessDeviceId}
+                  - Name: payload_base64
+                    Value: ${PayloadData}
+                  - Name: payload
+                    Value: ${decode(PayloadData, 'base64')}
+            - !Ref 'AWS::NoValue'
+        ErrorAction:
+          CloudwatchLogs:
+            LogGroupName: SidewalkRuleErrors
+            RoleArn: !GetAtt SidewalkRuleRole.Arn
+        RuleDisabled: False
+
+  # Set SidewalkUplinkLambda permissions regarding SidewalkUplinkRule
+  SidewalkUplinkLambdaPermissionsForUplinks:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkUplinkLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkUplinkLambda
+      Principal: iot.amazonaws.com
+      SourceArn: !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:rule/SidewalkUplinkRule
+
+  # -------------------------------------------------
+  # IoT related resources for notification reception
+  # -------------------------------------------------
+
+  # Policy for receiving wireless event notifications
+  SidewalkReceiveWirelessEventNotificationsPolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyName: SidewalkReceiveWirelessEventNotificationsPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - iot:Subscribe
+              - iot:Receive
+            Resource:
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/device_registration_state/*
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/proximity/*
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/message_delivery_status/*
+
+  # AWS IoT wireless rule for notification
+  # Passes incoming notifications to the SidewalkUplinkLambda and Notifications table
+  SidewalkNotificationRule:
+    Type: AWS::IoT::TopicRule
+    DependsOn:
+      - SidewalkUplinkLambda
+      - SidewalkRuleRole
+    Properties:
+      RuleName: SidewalkNotificationRule
+      TopicRulePayload:
+        AwsIotSqlVersion: 2016-03-23
+        Description: Rule for processing Sidewalk notifications.
+        Sql: SELECT * as notification FROM '$aws/iotwireless/events/+/+/sidewalk/wireless_devices'
+        Actions:
+          - Lambda:
+              FunctionArn: !GetAtt SidewalkUplinkLambda.Arn
+          - !If
+            - ShouldDeployGrafana
+            - Timestream:
+                DatabaseName: SidewalkTimestream
+                RoleArn: !GetAtt SidewalkRuleRole.Arn
+                TableName: Notifications
+                Dimensions:
+                  - Name: wireless_device_id
+                    Value: ${ WirelessDeviceId }
+                  - Name: notification
+                    Value: ${ topic(4) }
+                  - Name: event_type
+                    Value: ${ eventType }
+                  - Name: event_id
+                    Value: ${ eventId }
+            - !Ref 'AWS::NoValue'
+        ErrorAction:
+          CloudwatchLogs:
+            LogGroupName: SidewalkRuleErrors
+            RoleArn: !GetAtt SidewalkRuleRole.Arn
+        RuleDisabled: False
+
+  # Set permissions for SidewalkUplinkLambda
+  SidewalkUplinkLambdaPermissionsForNotifications:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkUplinkLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkUplinkLambda
+      Principal: iot.amazonaws.com
+      SourceArn: !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:rule/SidewalkNotificationRule
+
+  # -------------------------------------------
+  # Grafana related resources
+  # -------------------------------------------
+
+  # Workspace role ARN
+  SidewalkSampleApplicationGrafanaWorkspaceRole:
+    Condition: ShouldDeployGrafana
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkSampleApplicationGrafanaWorkspaceRole
+      Description: Allows SidewalkSampleApplicationWorkspace to access your AWS services.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - grafana.amazonaws.com
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Sub ${AWS::AccountId}
+              StringLike:
+                aws:SourceArn: !Sub arn:aws:grafana:${AWS::Region}:${AWS::AccountId}:/workspaces/*
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonTimestreamReadOnlyAccess
+
+  # ---------------------
+  # S3 related resources
+  # ---------------------
+
+  # S3 bucket for hosting Web Application
+  SidewalkWebAppBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      # BucketName consists of 'sensor-monitoring-app-' prefix and 32 chars-long GUID taken from the StackId
+      BucketName: !Join
+        - '-'
+        - - sensor-monitoring-app
+          - !Select [2, !Split [/, !Ref AWS::StackId ]]
+      AccessControl: Private
+    DeletionPolicy: Delete
+
+  # Bucket policy to allow communication with cloudFront
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: SidewalkWebAppBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ''
+                - - !GetAtt SidewalkWebAppBucket.Arn
+                  - /*
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - CloudFrontOriginAccessIdentity
+                  - S3CanonicalUserId
+
+  # ------------------------------
+  # Cloud Front related resources
+  # ------------------------------
+
+  # Cloud Front distribution. Hosts S3 bucket
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn:
+      - SidewalkWebAppBucket
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          Compress: true
+          DefaultTTL: 100
+          ForwardedValues:
+            QueryString: true
+          MaxTTL: 500
+          TargetOriginId:
+            Fn::Sub: ${AWS::StackName}-root
+          ViewerProtocolPolicy: redirect-to-https
+        Enabled: true
+        DefaultRootObject: index.html
+        IPV6Enabled: true
+        Origins:
+          - DomainName: !GetAtt SidewalkWebAppBucket.DomainName
+            Id:
+              Fn::Sub: ${AWS::StackName}-root
+            S3OriginConfig:
+              OriginAccessIdentity:
+                Fn::Join:
+                  - ''
+                  - - origin-access-identity/cloudfront/
+                    - Ref: CloudFrontOriginAccessIdentity
+        PriceClass: PriceClass_All
+
+  # OriginAccessIdentity to allow communication with 3
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment:
+          Fn::Sub: CloudFront OAI for SidewalkSampleApp
+
+
+Outputs:
+
+  SensorMonitoringAppUrl:
+    Value: !GetAtt
+      - SidewalkWebAppBucket
+      - WebsiteURL
+    Description: Sensor Monitoring App URL
+
+  SidewalkWebAppBucketName:
+    Value: !Ref SidewalkWebAppBucket
+    Description: SidewalkWebAppBucketName
+
+  SidewalkApiGwId:
+    Value: !Ref SidewalkApiGateway
+    Description: Sidewalk API Gateway identifier
+
+  CloudFrontDistribution:
+    Description: CloudFront distribution
+    Value:
+      Fn::GetAtt:
+        - CloudFrontDistribution
+        - DomainName

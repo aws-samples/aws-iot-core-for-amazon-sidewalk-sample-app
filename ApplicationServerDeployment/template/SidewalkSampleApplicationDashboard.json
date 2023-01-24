@@ -1,0 +1,849 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 15,
+      "panels": [],
+      "title": "Sidewalk messages",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/.*/",
+          "values": true
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 17,
+          "refId": "A"
+        }
+      ],
+      "title": "# uplink",
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 1
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/.*/",
+          "values": true
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 17,
+          "refId": "A"
+        }
+      ],
+      "title": "# device_registration_state",
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "D"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-timestream-datasource",
+        "uid": "<datasource_uid>"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 17,
+      "options": {
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "percent"
+          ],
+          "width": 0
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "measure": "uplink",
+          "rawQuery": "SELECT count(*) as ${uplink} FROM $__database.$__table\r\nWHERE $__timeFilter \r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "A",
+          "table": "\"UplinkMessages\""
+        },
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "hide": false,
+          "measure": "notification",
+          "rawQuery": "SELECT count(*) as ${message_delivery_status} FROM $__database.$__table\r\nWHERE notification='${message_delivery_status}' and $__timeFilter\r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "B",
+          "table": "\"Notifications\""
+        },
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "hide": false,
+          "measure": "notification",
+          "rawQuery": "SELECT count(*) as ${proximity} FROM $__database.$__table\r\nWHERE notification='${proximity}' and $__timeFilter \r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "C",
+          "table": "\"Notifications\""
+        },
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "hide": false,
+          "measure": "notification",
+          "rawQuery": "SELECT count(*) as ${device_registration_state} FROM $__database.$__table\r\nWHERE notification='${device_registration_state}' and $__timeFilter\r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='') ",
+          "refId": "D",
+          "table": "\"Notifications\""
+        }
+      ],
+      "title": "Events distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-timestream-datasource",
+        "uid": "<datasource_uid>"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "wireless_device_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 290
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 19,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "measure": "uplink",
+          "rawQuery": "SELECT time, wireless_device_id, payload_base64, payload \r\nFROM $__database.$__table\r\nWHERE $__timeFilter\r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "A",
+          "table": "\"UplinkMessages\""
+        }
+      ],
+      "title": "Uplink messages",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "time"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 4
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/.*/",
+          "values": true
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 17,
+          "refId": "A"
+        }
+      ],
+      "title": "# proximity",
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "C"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 4
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/.*/",
+          "values": true
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 17,
+          "refId": "A"
+        }
+      ],
+      "title": "# message_delivery_status",
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "B"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-timestream-datasource",
+        "uid": "<datasource_uid>"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisGridShow": true,
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "points",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [
+            {
+              "options": {
+                "1": {
+                  "index": 0,
+                  "text": "Device registration state event"
+                },
+                "2": {
+                  "index": 1,
+                  "text": "Proximity event"
+                },
+                "3": {
+                  "index": 2,
+                  "text": "Uplink message reception"
+                },
+                "4": {
+                  "index": 3,
+                  "text": "Message delivery status event"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byType",
+              "options": "number"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "measure": "uplink",
+          "rawQuery": "SELECT time, 3 as ${uplink} FROM $__database.$__table\r\nWHERE $__timeFilter \r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "A",
+          "table": "\"UplinkMessages\""
+        },
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "hide": false,
+          "measure": "notification",
+          "rawQuery": "SELECT time, 1 as ${device_registration_state} FROM $__database.$__table\r\nWHERE notification='${device_registration_state}' AND $__timeFilter\r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "B",
+          "table": "\"Notifications\""
+        },
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "hide": false,
+          "measure": "notification",
+          "rawQuery": "SELECT time, 2 as ${proximity} FROM $__database.$__table\r\nWHERE notification='${proximity}' AND $__timeFilter \r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "C",
+          "table": "\"Notifications\""
+        },
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "hide": false,
+          "measure": "notification",
+          "rawQuery": "SELECT time, 4 as ${message_delivery_status} FROM $__database.$__table\r\nWHERE notification='${message_delivery_status}' AND $__timeFilter \r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "D",
+          "table": "\"Notifications\""
+        }
+      ],
+      "title": "Messages",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-timestream-datasource",
+        "uid": "<datasource_uid>"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "wireless_device_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 290
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "id": 20,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "database": "\"SidewalkTimestream\"",
+          "datasource": {
+            "type": "grafana-timestream-datasource",
+            "uid": "<datasource_uid>"
+          },
+          "measure": "notification",
+          "rawQuery": "SELECT time, wireless_device_id, notification, event_type\r\nFROM $__database.$__table\r\nWHERE $__timeFilter \r\nAND (wireless_device_id = '${wireless_device_id}' OR '${wireless_device_id}'='')",
+          "refId": "A",
+          "table": "\"Notifications\""
+        }
+      ],
+      "title": "Notifications",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "time"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "description": "Name of the device registration state notification.",
+        "hide": 2,
+        "name": "device_registration_state",
+        "query": "device_registration_state",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "description": "Name of the message delivery status notification.",
+        "hide": 2,
+        "name": "message_delivery_status",
+        "query": "message_delivery_status",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "description": "Name of the proximity notification.",
+        "hide": 2,
+        "name": "proximity",
+        "query": "proximity",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "description": "Name of the uplink message event.",
+        "hide": 2,
+        "name": "uplink",
+        "query": "uplink",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Id of the wireless device",
+        "hide": 0,
+        "name": "wireless_device_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "SidewalkSampleApplication",
+  "uid": null,
+  "version": 0,
+  "weekStart": ""
+}

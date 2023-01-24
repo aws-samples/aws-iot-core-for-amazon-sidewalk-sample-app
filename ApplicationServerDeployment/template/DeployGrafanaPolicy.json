@@ -1,0 +1,56 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "grafana:CreateWorkspaceApiKey",
+                "grafana:DeleteWorkspace",
+                "grafana:DeleteWorkspaceApiKey",
+                "grafana:DescribeWorkspace",
+                "grafana:DescribeWorkspaceAuthentication",
+                "grafana:TagResource"
+            ],
+            "Resource": "arn:aws:grafana:*:<account_ID>:/workspaces*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "grafana:CreateWorkspace",
+                "grafana:ListWorkspaces"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "identitystore:CreateGroup",
+                "identitystore:CreateGroupMembership",
+                "identitystore:CreateUser",
+                "identitystore:DeleteGroup",
+                "identitystore:DeleteGroupMembership",
+                "identitystore:DeleteUser",
+                "identitystore:GetGroupId",
+                "identitystore:GetUserId",
+                "identitystore:ListGroups"
+            ],
+            "Resource": [
+                "arn:aws:identitystore::<account_ID>:identitystore/*",
+                "arn:aws:identitystore:::group/*",
+                "arn:aws:identitystore:::membership/*",
+                "arn:aws:identitystore:::user/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sso:CreateManagedApplicationInstance",
+                "sso:DescribeRegisteredRegions",
+                "sso:GetManagedApplicationInstance",
+                "sso:DeleteManagedApplicationInstance",
+                "sso:GetSharedSsoConfiguration"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

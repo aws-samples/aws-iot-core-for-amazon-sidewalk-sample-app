@@ -1,0 +1,35 @@
+/* Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.*/
+/* SPDX-License-Identifier: MIT-0*/
+
+.stats-power-button {
+  border-radius: 25px;
+  min-width: 140px;
+  border: 2px solid black;
+  cursor: default;
+  padding: 0.3rem 0.8rem;
+  background: transparent;
+}
+
+.on {
+  border: 2px solid green;
+}
+
+.engaged-text {
+  width: 100px;
+  font-weight: 600;
+}
+
+.green {
+  color: green;
+}
+
+.black {
+  color: black;
+}
+
+.engage-button-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}

@@ -1,0 +1,8 @@
+Config:
+    IDENTITY_STORE_ID: null
+    IDENTITY_CENTER_USERS:
+      - USER_NAME: GrafanaUser
+        FIRST_NAME: Grafana
+        LAST_NAME: User
+Outputs:
+    WORKSPACE_URL: null
