@@ -60,7 +60,7 @@ pip install -r requirements.txt
 python3 -m pip install --user virtualenv
 python3 -m venv sample-app-env
 sample-app-env\Scripts\activate.bat
-python -m pip install --upgrade pip
+python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -75,9 +75,15 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 ### 3. Deploy cloud infrastructure
 
 For the sample application to work, you need to deploy necessary resources to your AWS account.  
-**Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)**  
-**You can reuse following policy document (replace *<account_ID>* with your AWS Account ID): [DeployStackPolicy.json](./ApplicationServerDeployment/template/DeployStackPolicy.json)**
 
+**Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)**  
+You can reuse [DeployStackPolicy.json](./ApplicationServerDeployment/template/DeployStackPolicy.json) template to create a policy document, which then can be assigned to the user associated with the *AWS_PROFILE*. It provides all the permissions needed to create the *SidewalkSampleApplicationStack*.  
+In order to do so:
+- open *DeployStackPolicy.json*, replace all the occurrences of *<account_ID>* with your AWS Account ID
+- go to the IAM console, create the policy using *DeployStackPolicy.json* content
+- assign created policy to the user associated with your *AWS_PROFILE*
+
+Refer to the [IAM tutorial: Create and attach your first customer managed policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_managed-policies.html) for further guidance.
 
 |WARNING: You will be billed for the usage of AWS resources created by this application. |
 |---|
