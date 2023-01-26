@@ -79,13 +79,15 @@ class CloudFormationClient:
                 response = self._client.describe_stack_events(StackName=stack_name)
                 stack_events_idx = len(stack_events)
                 stack_events = list(reversed(response['StackEvents']))
+                # log new events
                 for event in stack_events[stack_events_idx:]:
                     timestamp = str(event.get('Timestamp')).split('.')[0].split('+')[0]
                     logical_id = event.get('LogicalResourceId', None)
                     status = event.get('ResourceStatus', None)
                     log_progress(f'[{timestamp}] \t{status}: {logical_id}')
-                if in_progress:
-                    sleep(1)
+                # no new events
+                if stack_events_idx == len(stack_events): log_wait()
+                if in_progress: sleep(1)
             if stack_status == 'CREATE_COMPLETE':
                 log_success(f'{sidewalk_stack_name} created successfully.')
             else:
@@ -262,6 +264,7 @@ class CloudFormationClient:
             response = self._client.describe_stack_events(StackName=stack_id)
             stack_events_idx = len(stack_events)
             stack_events = list(reversed(response['StackEvents']))
+            # log new events
             for event in stack_events[stack_events_idx:]:
                 timestamp = str(event.get('Timestamp')).split('.')[0].split('+')[0]
                 # skip events from before deletion
@@ -271,5 +274,7 @@ class CloudFormationClient:
                 log_progress(f'[{timestamp}] \t{status}: {logical_id}')
                 if status == 'DELETE_FAILED':
                     failures.append(logical_id)
+            # no new events
+            if stack_events_idx == len(stack_events): log_wait()
             if in_progress: sleep(1)
         return stack_status, failures
