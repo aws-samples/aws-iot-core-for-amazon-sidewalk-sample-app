@@ -117,6 +117,21 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 2. In *EdgeDeviceProvisioning* directory, you should now see a *DeviceProfile* catalog with *WirelessDevice* subcatalog(s).  
    Each _WirelessDevice_ subcatalog represents a singe edge device.
    Personalisation data, in a form of a programmable binary, is available inside.  
+    ```
+   EdgeDeviceProvisioning \
+    - DeviceProfile_102d750c-e4d0-4e10-8742-ea3698429ca9 \
+       - DeviceProfile.json
+       - WirelessDevice_5153dd3a-c78f-4e9e-9d8c-3d84fabb8911\
+           --  Nordic_MFG.bin
+           --  Nordic_MFG.hex
+           --  SiLabs_MFG.nvm3
+           --  Silabs_xG21.s37
+           --  Silabs_xG24.s37
+           --  TI.bin
+           --  TI_P1_MFG.hex
+           --  TI_P7_MFG.hex
+           --  WirelessDevice.json
+    ```
    You should be able to flash it onto development kit using the flashing tools specific for your selected platform.
 
 
@@ -132,11 +147,11 @@ Make sure to program:
 - personalisation data from previous step (this loads serial number and authorization keys)
 - application binary from *EdgeDeviceBinaries*
 
-Programming devices depends on selected hardware platform. Please refer to platform vendor tools & documentation for details.
+Programming devices depends on selected hardware platform. Please refer to platform vendor tools & their documentation for details.
 
 ### 6. Enjoy the application
 
-The edge device will transmit a welcome message to application server, thus information the application server of its presence.
+The edge device will transmit a welcome message to application server, thus informing the application server of its presence.
 After the edge device receives an acknowledgement from the application server, it will start sending periodical temperature measurement to the backend. Received data will be represented on the frontend UI.
 
 You can open the terminal to the edge device to see the log flow (eg. data transfer happening periodically).   
