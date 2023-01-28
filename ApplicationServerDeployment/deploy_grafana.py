@@ -29,6 +29,7 @@ config = Config()
 # --------------------
 log_info('Arguments to be used during the SidewalkSampleApplication deployment:')
 log_info(f'\tCONFIG_PROFILE: {config.aws_profile}')
+log_info(f'\tREGION: {config.region_name}')
 msg = f"{config.identity_store_id}" if config.identity_store_id else "<empty> - no users will be created"
 log_info(f'\tIDENTITY_STORE_ID: {msg}')
 if config.identity_store_id and config.identity_center_users:
@@ -50,7 +51,7 @@ confirm()
 # -------------------------------------------------------------
 # Create boto3 session using given profile and service clients
 # -------------------------------------------------------------
-session = boto3.Session(profile_name=config.aws_profile)
+session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 grafana_client = GrafanaClient(session)
 idstore_client = IdentityStoreClient(session, config.identity_store_id)

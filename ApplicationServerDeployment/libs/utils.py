@@ -34,7 +34,8 @@ def log_clear():
     """Clears the contents of the current line"""
     global _log_wait_count
     _log_wait_count = 0
-    print(end='\x1b[2K')
+    LINE_CLEAR = '\x1b[2K'
+    print(end=LINE_CLEAR)
 
 def log_error(message):
     """Formats and prints error message."""
