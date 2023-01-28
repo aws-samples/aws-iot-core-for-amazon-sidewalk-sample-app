@@ -25,6 +25,7 @@ config = Config()
 # --------------------
 log_info('Arguments to be used during the Grafana-related resources deletion:')
 log_info(f'\tCONFIG_PROFILE: {config.aws_profile}')
+log_info(f'\tREGION: {config.region_name}')
 log_warn('This is a destructive action and can not be undone!')
 confirm()
 
@@ -32,7 +33,7 @@ confirm()
 # -------------------------------------------------------------
 # Create boto3 session using given profile and service clients
 # -------------------------------------------------------------
-session = boto3.Session(profile_name=config.aws_profile)
+session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 grafana_client = GrafanaClient(session)
 idstore_client = IdentityStoreClient(session, config.identity_store_id)
