@@ -20,8 +20,11 @@ Installation and configuration of the gateway is not covered in this readme.
 
 ## Prerequisites
 - Python 3.6 or above (https://www.python.org/)
-- AWS account; permissions to create resources (https://aws.amazon.com/)
-- *config* and *credentials* files configured (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+- AWS account (https://aws.amazon.com/)
+- IAM user ([Creating IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console)) with:
+  - authentication credentials configured ([Managing access keys -> To create an access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey))
+  - permissions to create resources (details are provided in [Deploy cloud infrastructure](#3.-Deploy-cloud-infrastructure) section)
+- *credentials* file configured ([Boto3 -> QuickStart -> Configuration](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration))
 - MCU-specific toolchains:
     - Nordic
         - GNU Arm Embedded Toolchain (https://developer.arm.com/downloads/-/gnu-rm)
@@ -76,6 +79,9 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 
 For the sample application to work, you need to deploy necessary resources to your AWS account.  
 
+|All the resources need to be created in *us-east-1* region. If *config* file specifies another region, it will be ignored.
+|---|
+
 **Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)**  
 You can reuse [DeployStackPolicy.json](./ApplicationServerDeployment/template/DeployStackPolicy.json) template to create a policy document, which then can be assigned to the user associated with the *AWS_PROFILE*. It provides all the permissions needed to create the *SidewalkSampleApplicationStack*.  
 In order to do so:
@@ -102,7 +108,7 @@ Refer to the [IAM tutorial: Create and attach your first customer managed policy
    Your device will appear in the web app, once embedded app sends a first uplink message.
 
    |WARNING: The web app is publicly available. Anyone who has the right URL can interact with your device. |
-       |---|
+   |---|
 
 ### 4. Provision edge device
 
