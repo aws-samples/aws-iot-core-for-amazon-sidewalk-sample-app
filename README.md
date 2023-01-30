@@ -153,7 +153,7 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 In this step you will program binaries onto your development kit.  
 There are two main files to flash: personalisation data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
 
-Programming devices depends on used hardware platform. Find dedicated how-tos nder the following paths:  
+Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:  
  --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
  --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)  
  --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)  
@@ -176,7 +176,7 @@ You can open the window in your room (or turn on the heating, upon preference) a
 This is what you should see in the Web app after both Server and EdgeDevice start communicating:  
 ![Alt text](./ApplicationServerDeployment/doc/web_app_device.png "Web App - device status")
 
-## Sensor Monitoring App
+## Sensor Monitoring App - implementation details
 
 Sensor Monitoring Application consists of an AWS infrastructure, which is able to receive, process and store messages coming from a Sidewalk-enabled devices.  
 It also provides a Web App, which allows user to interact with his development board.
