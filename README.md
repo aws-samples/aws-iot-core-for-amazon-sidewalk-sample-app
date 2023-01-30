@@ -20,17 +20,22 @@ Installation and configuration of the gateway is not covered in this readme.
 
 ## Prerequisites
 - Python 3.6 or above (https://www.python.org/)
-- AWS account; permissions to create resources (https://aws.amazon.com/)
-- *config* and *credentials* files configured (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+- AWS account (https://aws.amazon.com/)
+- IAM user ([Creating IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console)) with:
+  - authentication credentials configured ([Managing access keys -> To create an access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey))
+  - permissions to create resources (details are provided in [Deploy cloud infrastructure](#3.-Deploy-cloud-infrastructure) section)
+- *credentials* file configured ([Boto3 -> QuickStart -> Configuration](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration))
 - MCU-specific toolchains:
-    - Nordic
-        - GNU Arm Embedded Toolchain (https://developer.arm.com/downloads/-/gnu-rm)
-        - nRF Command Line Tools (https://www.nordicsemi.com/Products/Development-tools/nrf-command-line-tools)
-    - TI:
-        - GNU Arm Embedded Toolchain (https://developer.arm.com/downloads/-/gnu-rm)
-        - UniFlash (https://www.ti.com/tool/UNIFLASH)
-    - SiLabs:
-        - Simplicity Commander (https://community.silabs.com/s/article/simplicity-commander)
+  - Nordic
+    - Compiler: *GNU Arm Embedded Toolchain* (https://developer.arm.com/downloads/-/gnu-rm)
+    - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
+    - Flashing Tool: *Nordic nRF Connect* (https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-Desktop/Download)
+  - TI:
+    - Compiler: *GNU Arm Embedded Toolchain* (https://developer.arm.com/downloads/-/gnu-rm)
+    - Flashing Tool: *UniFlash* (https://www.ti.com/tool/UNIFLASH)
+  - SiLabs:
+    - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
+    - Flashing Tool: *Simplicity Commander* (https://community.silabs.com/s/article/simplicity-commander)    
 
 
 Make sure that *GNU ARM Toolchain* (for Nordic/TI) and/or *Simplicity Commander* (for SiLabs) are present in your system PATH.  
@@ -57,10 +62,10 @@ pip install -r requirements.txt
 
 - Windows:
 ```
-python3 -m pip install --user virtualenv
-python3 -m venv sample-app-env
+python -m pip install --user virtualenv
+python -m venv sample-app-env
 sample-app-env\Scripts\activate.bat
-python3 -m pip install --upgrade pip
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -75,6 +80,9 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 ### 3. Deploy cloud infrastructure
 
 For the sample application to work, you need to deploy necessary resources to your AWS account.  
+
+|All the resources need to be created in *us-east-1* region. If *config* file specifies another region, it will be ignored.
+|---|
 
 **Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)**  
 You can reuse [DeployStackPolicy.json](./ApplicationServerDeployment/template/DeployStackPolicy.json) template to create a policy document, which then can be assigned to the user associated with the *AWS_PROFILE*. It provides all the permissions needed to create the *SidewalkSampleApplicationStack*.  
@@ -102,7 +110,7 @@ Refer to the [IAM tutorial: Create and attach your first customer managed policy
    Your device will appear in the web app, once embedded app sends a first uplink message.
 
    |WARNING: The web app is publicly available. Anyone who has the right URL can interact with your device. |
-       |---|
+   |---|
 
 ### 4. Provision edge device
 
@@ -117,6 +125,21 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 2. In *EdgeDeviceProvisioning* directory, you should now see a *DeviceProfile* catalog with *WirelessDevice* subcatalog(s).  
    Each _WirelessDevice_ subcatalog represents a singe edge device.
    Personalisation data, in a form of a programmable binary, is available inside.  
+    ```
+   EdgeDeviceProvisioning \
+    - DeviceProfile_102d750c-e4d0-4e10-8742-ea3698429ca9 \
+       - DeviceProfile.json
+       - WirelessDevice_5153dd3a-c78f-4e9e-9d8c-3d84fabb8911\
+           --  Nordic_MFG.bin
+           --  Nordic_MFG.hex
+           --  SiLabs_MFG.nvm3
+           --  Silabs_xG21.s37
+           --  Silabs_xG24.s37
+           --  TI.bin
+           --  TI_P1_MFG.hex
+           --  TI_P7_MFG.hex
+           --  WirelessDevice.json
+    ```
    You should be able to flash it onto development kit using the flashing tools specific for your selected platform.
 
 
@@ -127,16 +150,21 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 
 ### 5. Flash edge device
 
-In this step you should program all the binaries onto your development kit.
-Make sure to program:
-- personalisation data from previous step (this loads serial number and authorization keys)
-- application binary from *EdgeDeviceBinaries*
+In this step you will program binaries onto your development kit.  
+There are two main files to flash: personalisation data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
 
-Programming devices depends on selected hardware platform. Please refer to platform vendor tools & documentation for details.
+Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:  
+ --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
+ --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)  
+ --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)  
+ 
+
+For detailed instructions on programming the boards, refer to official documentation of given hardware platform.
+
 
 ### 6. Enjoy the application
 
-The edge device will transmit a welcome message to application server, thus information the application server of its presence.
+The edge device will transmit a welcome message to application server, thus informing the application server of its presence.
 After the edge device receives an acknowledgement from the application server, it will start sending periodical temperature measurement to the backend. Received data will be represented on the frontend UI.
 
 You can open the terminal to the edge device to see the log flow (eg. data transfer happening periodically).   
@@ -145,7 +173,10 @@ You can press buttons on the edge device and see the button state changes in the
 You can press LED button in the web UI and see that the LED on your edge device toggles.  
 You can open the window in your room (or turn on the heating, upon preference) and observe how temperature readouts change in the web UI.
 
-## Sensor Monitoring App
+This is what you should see in the Web app after both Server and EdgeDevice start communicating:  
+![Alt text](./ApplicationServerDeployment/doc/web_app_device.png "Web App - device status")
+
+## Sensor Monitoring App - implementation details
 
 Sensor Monitoring Application consists of an AWS infrastructure, which is able to receive, process and store messages coming from a Sidewalk-enabled devices.  
 It also provides a Web App, which allows user to interact with his development board.
@@ -281,10 +312,6 @@ Device will appear in the web app, once embedded app sends a first uplink messag
 Web app displays device state as well as sensor data, collected in the previous hour.  
 User can engage buttons on the edge device, which is also reflected in the web UI (uplink communication).  
 User can also toggle LED buttons in the UI view, which triggers toggle LED request sent to the edge device (downlink communication).
-
-| ![Alt text](./ApplicationServerDeployment/doc/web_app_device.png "Web App - device status") |
-| --- |
-| *Web App - device tile* |
 
 ## Security
 
