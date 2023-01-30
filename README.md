@@ -12,7 +12,7 @@ Each sensor must be flashed with an application binary common to all devices, an
 The cloud backend identifies/authorizes each edge device based on the data present in device-specific binary, which ensures end-to-end encryption and a highly secure communication channel.
 
 ## Coverage
-Sidewalk network is operational in the United States. Check if you have coverage by filling your address in https://coverage.sidewalk.amazon/ 
+Sidewalk network is operational in the United States. Check if you have coverage by filling your address in https://coverage.sidewalk.amazon/ (for Amazon only employees, please see process in https://permissions.amazon.com/a/team/sidewalk-obfuscated-maps to request access).
 If you are not sure whether you have coverage, we recommend you turn on an operational Sidewalk-enabled gateway available (eg. Amazon Echo 4th Gen). A Sidewalk-enabled gateway is a device that has a primary function (e.g. a smart speaker, or a doorbell) and also acts as bridge between edge devices (sensors) and the cloud backend. To turn on Sidewalk on your Amazon Echo 4th Gen device, please check this: https://www.amazon.com/gp/help/customer/display.html?nodeId=GZ4VSNFMBDHLRJUK
 
 |WARNING: Sidewalk is activated only for gateways located in the USA |
