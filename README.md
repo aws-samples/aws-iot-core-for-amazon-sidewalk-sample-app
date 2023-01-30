@@ -26,14 +26,16 @@ Installation and configuration of the gateway is not covered in this readme.
   - permissions to create resources (details are provided in [Deploy cloud infrastructure](#3.-Deploy-cloud-infrastructure) section)
 - *credentials* file configured ([Boto3 -> QuickStart -> Configuration](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration))
 - MCU-specific toolchains:
-    - Nordic
-        - GNU Arm Embedded Toolchain (https://developer.arm.com/downloads/-/gnu-rm)
-        - nRF Command Line Tools (https://www.nordicsemi.com/Products/Development-tools/nrf-command-line-tools)
-    - TI:
-        - GNU Arm Embedded Toolchain (https://developer.arm.com/downloads/-/gnu-rm)
-        - UniFlash (https://www.ti.com/tool/UNIFLASH)
-    - SiLabs:
-        - Simplicity Commander (https://community.silabs.com/s/article/simplicity-commander)
+  - Nordic
+    - Compiler: *GNU Arm Embedded Toolchain* (https://developer.arm.com/downloads/-/gnu-rm)
+    - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
+    - Flashing Tool: *Nordic nRF Connect* (https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-Desktop/Download)
+  - TI:
+    - Compiler: *GNU Arm Embedded Toolchain* (https://developer.arm.com/downloads/-/gnu-rm)
+    - Flashing Tool: *UniFlash* (https://www.ti.com/tool/UNIFLASH)
+  - SiLabs:
+    - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
+    - Flashing Tool: *Simplicity Commander* (https://community.silabs.com/s/article/simplicity-commander)    
 
 
 Make sure that *GNU ARM Toolchain* (for Nordic/TI) and/or *Simplicity Commander* (for SiLabs) are present in your system PATH.  
@@ -60,10 +62,10 @@ pip install -r requirements.txt
 
 - Windows:
 ```
-python3 -m pip install --user virtualenv
-python3 -m venv sample-app-env
+python -m pip install --user virtualenv
+python -m venv sample-app-env
 sample-app-env\Scripts\activate.bat
-python3 -m pip install --upgrade pip
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -148,12 +150,17 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 
 ### 5. Flash edge device
 
-In this step you should program all the binaries onto your development kit.
-Make sure to program:
-- personalisation data from previous step (this loads serial number and authorization keys)
-- application binary from *EdgeDeviceBinaries*
+In this step you will program binaries onto your development kit.  
+There are two main files to flash: personalisation data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
 
-Programming devices depends on selected hardware platform. Please refer to platform vendor tools & their documentation for details.
+Programming devices depends on used hardware platform. Find dedicated how-tos nder the following paths:  
+ --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
+ --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)  
+ --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)  
+ 
+
+For detailed instructions on programming the boards, refer to official documentation of given hardware platform.
+
 
 ### 6. Enjoy the application
 
@@ -165,6 +172,9 @@ You can open the URL to web application to see the graphical representation of y
 You can press buttons on the edge device and see the button state changes in the web UI.  
 You can press LED button in the web UI and see that the LED on your edge device toggles.  
 You can open the window in your room (or turn on the heating, upon preference) and observe how temperature readouts change in the web UI.
+
+This is what you should see in the Web app after both Server and EdgeDevice start communicating:  
+![Alt text](./ApplicationServerDeployment/doc/web_app_device.png "Web App - device status")
 
 ## Sensor Monitoring App
 
@@ -302,10 +312,6 @@ Device will appear in the web app, once embedded app sends a first uplink messag
 Web app displays device state as well as sensor data, collected in the previous hour.  
 User can engage buttons on the edge device, which is also reflected in the web UI (uplink communication).  
 User can also toggle LED buttons in the UI view, which triggers toggle LED request sent to the edge device (downlink communication).
-
-| ![Alt text](./ApplicationServerDeployment/doc/web_app_device.png "Web App - device status") |
-| --- |
-| *Web App - device tile* |
 
 ## Security
 
