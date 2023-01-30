@@ -1,18 +1,18 @@
 # Amazon Sidewalk Sample IoT App
 
 This is an application that demonstrates a set of simple Sidewalk-based IoT use-cases: sensor monitoring, command-control and alarms/alerts. The sample application communicates with the cloud backend over the secure Sidewalk network.
-The Amazon Sidewalk Sample IoT app consists of an edge device (the Hardware Development Kit running the embedded application) and application server (cloud backend with web UI). 
+The Amazon Sidewalk Sample IoT app consists of an edge device (the Hardware Development Kit running the embedded application) and application server (cloud backend with web UI).
 The Edge device, after initial setup and registration in Sidewalk network, sends the temperature measurement periodically to the backend. The backend visualizes the data on graphical UI in a form of chart.
 
-A user can engage buttons on the edge device, which is reflected corresponding button icon in the web UI (uplink communication).  
-A user can toggle LED buttons in the UI view, which is then propagated to corresponding LEDs in the edge device (downlink communication).  
+A user can engage buttons on the edge device, which is reflected corresponding button icon in the web UI (uplink communication).
+A user can toggle LED buttons in the UI view, which is then propagated to corresponding LEDs in the edge device (downlink communication).
 It is possible to add multiple edge devices (sensors) to work with a single application server. In such a case, the UI will represent each edge device as a separate tile in the view.
 
 Each sensor must be flashed with an application binary common to all devices, and a device-specific image (a binary that contains serial number, ciphering keys and authorization data individual for each device).
 The cloud backend identifies/authorizes each edge device based on the data present in device-specific binary, which ensures end-to-end encryption and a highly secure communication channel.
 
 ## Coverage
-Sidewalk network is operational in the United States. Check if you have coverage by filling your address in https://coverage.sidewalk.amazon/ 
+Sidewalk network is operational in the United States. Check if you have coverage by filling your address in https://coverage.sidewalk.amazon/
 If you are not sure whether you have coverage, we recommend you turn on an operational Sidewalk-enabled gateway available (eg. Amazon Echo 4th Gen). A Sidewalk-enabled gateway is a device that has a primary function (e.g. a smart speaker, or a doorbell) and also acts as bridge between edge devices (sensors) and the cloud backend. To turn on Sidewalk on your Amazon Echo 4th Gen device, please check this: https://www.amazon.com/gp/help/customer/display.html?nodeId=GZ4VSNFMBDHLRJUK
 
 |WARNING: Sidewalk is activated only for gateways located in the USA |
@@ -27,19 +27,16 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
 - *credentials* file configured on your local machine ([Boto3 -> QuickStart -> Configuration](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration))
 - Install MCU-specific tools for building and flashing:
   - Nordic
-    - Compiler: *GNU Arm Embedded Toolchain* (https://developer.arm.com/downloads/-/gnu-rm)
     - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
     - Flashing Tool: *Nordic nRF Connect* (https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-Desktop/Download)
   - TI:
-    - Compiler: *GNU Arm Embedded Toolchain* (https://developer.arm.com/downloads/-/gnu-rm)
     - Flashing Tool: *UniFlash* (https://www.ti.com/tool/UNIFLASH)
   - SiLabs:
     - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
-    - Flashing Tool: *Simplicity Commander* (https://community.silabs.com/s/article/simplicity-commander)    
+    - Flashing Tool: *Simplicity Commander* (https://community.silabs.com/s/article/simplicity-commander)
 
 
-Make sure that *GNU ARM Toolchain* (for Nordic/TI) and/or *Simplicity Commander* (for SiLabs) are present in your system PATH enviromental variable.  
---> Try calling *arm-none-eabi-objcopy --version* in the terminal to make sure the GNU ARM Toolchain is available  
+Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.
 --> Try calling *commander --version* in the terminal to make sure the Simplicity Commander is available
 
 ## Getting Started
@@ -48,7 +45,7 @@ Make sure that *GNU ARM Toolchain* (for Nordic/TI) and/or *Simplicity Commander*
 
 1. Open command line terminal and navigate to project's top level directory.
 
-2. Install virtualenv and required packages. Just copy/paste commands to the terminal.  
+2. Install virtualenv and required packages. Just copy/paste commands to the terminal.
    You may need to use *python* instead of *python3* alias, depending on your configuration.
 
 - Linux / MacOS:
@@ -79,13 +76,13 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 
 ### 3. Deploy cloud infrastructure
 
-For the sample application to work, you need to deploy necessary resources to your AWS account.  
+For the sample application to work, you need to deploy necessary resources to your AWS account.
 
 |All the resources need to be created in *us-east-1* region. If *config* file specifies another region, it will be ignored.
 |---|
 
-**Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)**  
-You can reuse [DeployStackPolicy.json](./ApplicationServerDeployment/template/DeployStackPolicy.json) template to create a policy document, which then can be assigned to the user associated with the *AWS_PROFILE*. It provides all the permissions needed to create the *SidewalkSampleApplicationStack*.  
+**Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)**
+You can reuse [DeployStackPolicy.json](./ApplicationServerDeployment/template/DeployStackPolicy.json) template to create a policy document, which then can be assigned to the user associated with the *AWS_PROFILE*. It provides all the permissions needed to create the *SidewalkSampleApplicationStack*.
 In order to do so:
 - open *DeployStackPolicy.json*, replace all the occurrences of *<account_ID>* with your AWS Account ID
 - go to the IAM console, create the policy using *DeployStackPolicy.json* content
@@ -103,10 +100,10 @@ Refer to the [IAM tutorial: Create and attach your first customer managed policy
     ```
     python3 ApplicationServerDeployment/deploy_stack.py
     ```
-    Type `y` when asked to proceed.  
+    Type `y` when asked to proceed.
     Wait for the deployment to complete (it usually takes ~5 minutes).
 
-3. Go to the URL printed in the console. It is also stored in the [config](./config.yaml) under *WEB_APP_URL*.  
+3. Go to the URL printed in the console. It is also stored in the [config](./config.yaml) under *WEB_APP_URL*.
    Your device will appear in the web app, once embedded app sends a first uplink message.
 
    |WARNING: The web app is publicly available. Anyone who has the right URL can interact with your device. |
@@ -122,9 +119,9 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
     python3 EdgeDeviceProvisioning/generate_prototype.py
     ```
 
-2. In *EdgeDeviceProvisioning* directory, you should now see a *DeviceProfile* catalog with *WirelessDevice* subcatalog(s).  
+2. In *EdgeDeviceProvisioning* directory, you should now see a *DeviceProfile* catalog with *WirelessDevice* subcatalog(s).
    Each _WirelessDevice_ subcatalog represents a singe edge device.
-   Personalisation data, in a form of a programmable binary, is available inside.  
+   Personalisation data, in a form of a programmable binary, is available inside.
     ```
    EdgeDeviceProvisioning \
     - DeviceProfile_102d750c-e4d0-4e10-8742-ea3698429ca9 \
@@ -150,14 +147,14 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 
 ### 5. Flash edge device
 
-In this step you will program binaries onto your development kit.  
+In this step you will program binaries onto your development kit.
 There are two main files to flash: device-specific data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
 
-Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:  
- --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
- --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)  
- --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)  
- 
+Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:
+ --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)
+ --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)
+ --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)
+
 
 For detailed instructions on programming the boards, refer to official documentation of given hardware platform.
 
@@ -167,18 +164,18 @@ For detailed instructions on programming the boards, refer to official documenta
 The edge device will transmit a welcome message to application server, thus informing the application server of its presence.
 After the edge device receives an acknowledgement from the application server, it will start sending periodical temperature measurement to the backend. Received data will be represented on the frontend UI.
 
-You can open the terminal to the edge device to see the log flow (eg. data transfer happening periodically).   
-You can open the URL to web application to see the graphical representation of your edge device in the UI.  
-You can press buttons on the edge device and see the button state changes in the web UI.  
-You can press LED button in the web UI and see that the LED on your edge device toggles.  
+You can open the terminal to the edge device to see the log flow (eg. data transfer happening periodically).
+You can open the URL to web application to see the graphical representation of your edge device in the UI.
+You can press buttons on the edge device and see the button state changes in the web UI.
+You can press LED button in the web UI and see that the LED on your edge device toggles.
 You can open the window in your room (or turn on the heating, upon preference) and observe how temperature readouts change in the web UI.
 
-This is what you should see in the Web app after both Server and EdgeDevice start communicating:  
+This is what you should see in the Web app after both Server and EdgeDevice start communicating:
 ![Alt text](./ApplicationServerDeployment/doc/web_app_device.png "Web App - device status")
 
 ## Sensor Monitoring App - implementation details
 
-Sensor Monitoring Application consists of an AWS infrastructure, which is able to receive, process and store messages coming from a Sidewalk-enabled devices.  
+Sensor Monitoring Application consists of an AWS infrastructure, which is able to receive, process and store messages coming from a Sidewalk-enabled devices.
 It also provides a Web App, which allows user to interact with his development board.
 
 ### Cloud infrastructure
@@ -195,13 +192,13 @@ Color denotes message type:
 | --- |
 | *Sample application - resources and dataflow* |
 
-*SidewalkSampleApplicationStack* CloudFormation stack provides resources that handle messages coming from Sidewalk-enabled devices.  
+*SidewalkSampleApplicationStack* CloudFormation stack provides resources that handle messages coming from Sidewalk-enabled devices.
 It also creates necessary roles and permissions, not included on the diagram.
 Its main components are:
 
 - *SIDEWALK_DESTINATION* - maps a device message to an AWS IoT rule.
   Each Sidewalk device need to have its destination defined, so that AWS IoT knows where to redirect the message.
-  You can change destination of your device using *UpdateDestination* method from the AWS IoT Wireless API.   
+  You can change destination of your device using *UpdateDestination* method from the AWS IoT Wireless API.
   All the uplink messages from the *SIDEWALK_DESTINATION* are redirected to the *SidewalkUplinkRule*.
 
 
@@ -244,7 +241,7 @@ In order to deploy the application, run the *ApplicationServerDeployment/deploy_
 - creates CloudFormation stack
 - configures settings, which cannot be set via CloudFormation
 
-Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)   
+Before running the script, ensure that you have sufficient permissions to create resources listed in [SidewalkSampleApplicationStack.yaml](./ApplicationServerDeployment/template/SidewalkSampleApplicationStack.yaml)
 You can reuse following policy document (replace *<account_ID>* with your AWS Account ID): [DeployStackPolicy.json](./ApplicationServerDeployment/template/DeployStackPolicy.json)
 
 ```
@@ -308,9 +305,9 @@ After the deployment, web application is available under the link stored in [con
 |WARNING: The web app is publicly available. Anyone who has the right URL can interact with your device. |
 |---|
 
-Device will appear in the web app, once embedded app sends a first uplink message.  
-Web app displays device state as well as sensor data, collected in the previous hour.  
-User can engage buttons on the edge device, which is also reflected in the web UI (uplink communication).  
+Device will appear in the web app, once embedded app sends a first uplink message.
+Web app displays device state as well as sensor data, collected in the previous hour.
+User can engage buttons on the edge device, which is also reflected in the web UI (uplink communication).
 User can also toggle LED buttons in the UI view, which triggers toggle LED request sent to the edge device (downlink communication).
 
 ## Security
