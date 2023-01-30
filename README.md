@@ -1,31 +1,31 @@
 # Amazon Sidewalk Sample IoT App
 
-This is an application that demonstrates a simple Sidewalk-based IOT use-case: a temperature sensor that communicates with Cloud backend over the secure Sidewalk network.
-It consists of an edge device (a sensor) and application server (cloud backend with web UI). Edge device, after initial setup and registration in Sidewalk network, periodically sends the temperature measurement to the backend. The backend visualizes the data on graphical UI in a form of chart.
+This is an application that demonstrates a set of simple Sidewalk-based IoT use-cases: sensor monitoring, command-control and alarms/alerts. The sample application communicates with the cloud backend over the secure Sidewalk network.
+The Amazon Sidewalk Sample IoT app consists of an edge device (the Hardware Development Kit running the embedded application) and application server (cloud backend with web UI). 
+The Edge device, after initial setup and registration in Sidewalk network, sends the temperature measurement periodically to the backend. The backend visualizes the data on graphical UI in a form of chart.
 
 A user can engage buttons on the edge device, which is reflected corresponding button icon in the web UI (uplink communication).  
 A user can toggle LED buttons in the UI view, which is then propagated to corresponding LEDs in the edge device (downlink communication).  
 It is possible to add multiple edge devices (sensors) to work with a single application server. In such a case, the UI will represent each edge device as a separate tile in the view.
 
-Each sensor must be flashed with an application binary (a program that reads temperature and sends it over Sidewalk protocol - it's the same binary for all edge devices)
-and a personalization binary (a binary blob that contains serial number, ciphering keys and authorization data individual for each device).
-Cloud backend identifies/authorizes each edge device based on the data present in personalization binary, which ensures E2E encryption and highly secure communication channel.
+Each sensor must be flashed with an application binary common to all devices, and a device-specific image (a binary that contains serial number, ciphering keys and authorization data individual for each device).
+The cloud backend identifies/authorizes each edge device based on the data present in device-specific binary, which ensures end-to-end encryption and a highly secure communication channel.
 
-## Assumptions
-It is assumed that you have an operational Sidewalk-enabled gateway available (eg. Amazon Echo 4th Gen). The gateway is a bridge between edge devices (sensors) and the cloud backend.
-Installation and configuration of the gateway is not covered in this readme.
+## Coverage
+Sidewalk network is operational in the United States. Check if you have coverage by filling your address in https://coverage.sidewalk.amazon/ 
+If you are not sure whether you have coverage, we recommend you turn on an operational Sidewalk-enabled gateway available (eg. Amazon Echo 4th Gen). A Sidewalk-enabled gateway is a device that has a primary function (e.g. a smart speaker, or a doorbell) and also acts as bridge between edge devices (sensors) and the cloud backend. To turn on Sidewalk on your Amazon Echo 4th Gen device, please check this: https://www.amazon.com/gp/help/customer/display.html?nodeId=GZ4VSNFMBDHLRJUK
 
 |WARNING: Sidewalk is activated only for gateways located in the USA |
 |---|
 
 ## Prerequisites
-- Python 3.6 or above (https://www.python.org/)
-- AWS account (https://aws.amazon.com/)
-- IAM user ([Creating IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console)) with:
+- Downloand and install Python 3.6 or above (https://www.python.org/)
+- Create an AWS account (https://aws.amazon.com/)
+- Set up an AWS user using the AWS IAM service ([Creating IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console)) with:
   - authentication credentials configured ([Managing access keys -> To create an access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey))
   - permissions to create resources (details are provided in [Deploy cloud infrastructure](#3.-Deploy-cloud-infrastructure) section)
-- *credentials* file configured ([Boto3 -> QuickStart -> Configuration](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration))
-- MCU-specific toolchains:
+- *credentials* file configured on your local machine ([Boto3 -> QuickStart -> Configuration](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration))
+- Install MCU-specific tools for building and flashing:
   - Nordic
     - Compiler: *GNU Arm Embedded Toolchain* (https://developer.arm.com/downloads/-/gnu-rm)
     - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
@@ -38,7 +38,7 @@ Installation and configuration of the gateway is not covered in this readme.
     - Flashing Tool: *Simplicity Commander* (https://community.silabs.com/s/article/simplicity-commander)    
 
 
-Make sure that *GNU ARM Toolchain* (for Nordic/TI) and/or *Simplicity Commander* (for SiLabs) are present in your system PATH.  
+Make sure that *GNU ARM Toolchain* (for Nordic/TI) and/or *Simplicity Commander* (for SiLabs) are present in your system PATH enviromental variable.  
 --> Try calling *arm-none-eabi-objcopy --version* in the terminal to make sure the GNU ARM Toolchain is available  
 --> Try calling *commander --version* in the terminal to make sure the Simplicity Commander is available
 
@@ -151,7 +151,7 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 ### 5. Flash edge device
 
 In this step you will program binaries onto your development kit.  
-There are two main files to flash: personalisation data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
+There are two main files to flash: device-specific data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
 
 Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:  
  --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
