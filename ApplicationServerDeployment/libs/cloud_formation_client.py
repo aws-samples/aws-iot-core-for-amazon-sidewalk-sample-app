@@ -3,7 +3,7 @@
 
 import boto3
 from botocore.exceptions import ClientError
-from datetime import datetime
+from datetime import datetime, timezone
 from time import sleep
 
 from libs.utils import *
@@ -36,12 +36,10 @@ class CloudFormationClient:
         :param dest_exists:     If True, Sidewalk destination will be created as a part of the stack.
                                 If False, it is assumed that destination already exists.
         """
-        sidewalk_stack_name = 'SidewalkSampleApplicationStack'
-        log_info(f'Creating {sidewalk_stack_name} from cloud formation template...')
+        log_info(f'Creating {self.SSA_STACK} from cloud formation template...')
         try:
-            stack_name = sidewalk_stack_name
             response = self._client.create_stack(
-                StackName=stack_name,
+                StackName=self.SSA_STACK,
                 TemplateBody=template,
                 Parameters=[
                     {
@@ -68,36 +66,28 @@ class CloudFormationClient:
                 OnFailure='DELETE'
             )
             stack_status = ''
-            stack_events = []
+            event_index = 0
             in_progress = True
             while in_progress:
-                response = self._client.describe_stacks(StackName=stack_name)
+                response = self._client.describe_stacks(StackName=self.SSA_STACK)
                 stack_status = response['Stacks'][0]['StackStatus']
                 status_end = stack_status.split('_')[-1]
                 if status_end in ['COMPLETE', 'FAILED']:
                     in_progress = False
-                response = self._client.describe_stack_events(StackName=stack_name)
-                stack_events_idx = len(stack_events)
-                stack_events = list(reversed(response['StackEvents']))
-                for event in stack_events[stack_events_idx:]:
-                    timestamp = str(event.get('Timestamp')).split('.')[0].split('+')[0]
-                    logical_id = event.get('LogicalResourceId', None)
-                    status = event.get('ResourceStatus', None)
-                    log_progress(f'[{timestamp}] \t{status}: {logical_id}')
-                if in_progress:
-                    sleep(1)
+                event_index = self._print_stack_events(stack_id=self.SSA_STACK, pointer=event_index)
+                if in_progress: sleep(1)
             if stack_status == 'CREATE_COMPLETE':
-                log_success(f'{sidewalk_stack_name} created successfully.')
+                log_success(f'{self.SSA_STACK} created successfully.')
             else:
                 terminate(
-                    f'{sidewalk_stack_name} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
+                    f'{self.SSA_STACK} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
                     ErrCode.EXCEPTION
                 )
         except ClientError as e:
             if e.response['Error']['Code'] == 'AlreadyExistsException':
-                log_success(f'{sidewalk_stack_name} already exists, skipping.')
+                log_success(f'{self.SSA_STACK} already exists, skipping.')
             else:
-                terminate(f'{sidewalk_stack_name} creation failed: {e}.', ErrCode.EXCEPTION)
+                terminate(f'{self.SSA_STACK} creation failed: {e}.', ErrCode.EXCEPTION)
 
     def update_stack(self, deploy_grafana: bool):
         """
@@ -105,6 +95,7 @@ class CloudFormationClient:
 
         :param deploy_grafana:      If True, Grafana related resources are included in the template.
         """
+        start_timestamp = datetime.now(timezone.utc)
         if deploy_grafana:
             log_info(f'Updating {self.SSA_STACK} stack with Grafana-related resources...')
         else:
@@ -133,7 +124,7 @@ class CloudFormationClient:
                 DisableRollback=False
             )
             stack_status = ''
-            stack_events = []
+            event_index = 0
             in_progress = True
             while in_progress:
                 response = self._client.describe_stacks(StackName=self.SSA_STACK)
@@ -141,14 +132,7 @@ class CloudFormationClient:
                 status_end = stack_status.split('_')[-1]
                 if status_end in ['COMPLETE', 'FAILED']:
                     in_progress = False
-                response = self._client.describe_stack_events(StackName=self.SSA_STACK)
-                stack_events_idx = len(stack_events)
-                stack_events = list(reversed(response['StackEvents']))
-                for event in stack_events[stack_events_idx:]:
-                    timestamp = str(event.get('Timestamp')).split('.')[0].split('+')[0]
-                    logical_id = event.get('LogicalResourceId', None)
-                    status = event.get('ResourceStatus', None)
-                    log_progress(f'[{timestamp}] \t{status}: {logical_id}')
+                event_index = self._print_stack_events(stack_id=self.SSA_STACK, pointer=event_index, start_date=start_timestamp)
                 if in_progress:
                     sleep(1)
             if stack_status == 'UPDATE_COMPLETE':
@@ -237,16 +221,18 @@ class CloudFormationClient:
                 terminate(f'{self.SSA_STACK} deletion failed: {e}.', ErrCode.EXCEPTION)
 
     def _delete_stack(self, stack_id: str, retain_resources: list = None) -> (str, list):
-        """Removes CloudFormation stack with option to retain resources.
+        """
+        Removes CloudFormation stack with option to retain resources.
 
         :param stack_id:            The name or the unique stack ID that's associated with the stack.
         :param retain_resources:    Tuple of logical IDs of the resources you want to retain.
                                     Applies for stack in the DELETE_FAILED state.
         :returns:                   (stack deletion status, [logical IDs of resources, which removal failed])
         """
-        start_timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
         stack_status = ''
-        stack_events = []
+        event_index = 0
+        start_timestamp = datetime.now(timezone.utc)
         failures = []
         in_progress = True
         if retain_resources:
@@ -259,17 +245,38 @@ class CloudFormationClient:
             status_end = stack_status.split('_')[-1]
             if status_end in ['COMPLETE', 'FAILED']:
                 in_progress = False
-            response = self._client.describe_stack_events(StackName=stack_id)
-            stack_events_idx = len(stack_events)
-            stack_events = list(reversed(response['StackEvents']))
-            for event in stack_events[stack_events_idx:]:
-                timestamp = str(event.get('Timestamp')).split('.')[0].split('+')[0]
-                # skip events from before deletion
-                if timestamp < start_timestamp: continue
+            event_index = self._print_stack_events(stack_id=self.SSA_STACK, pointer=event_index, start_date=start_timestamp)
+            if in_progress: sleep(1)
+        return stack_status, failures
+
+    def _print_stack_events(self, stack_id: str, pointer: int, start_date: datetime = None):
+        """
+        Prints stack events.
+
+        :param stack_id:        Stack ID.
+        :param pointer:         Indicates index of the first event to be printed.
+        :param start_date:      If given, prints only events newer than the start_date.
+        :returns:               Index of the last event + 1 (updated pointer, to be used in next iteration).
+        """
+        response = self._client.describe_stack_events(StackName=stack_id)
+        stack_events = response['StackEvents']
+        while "NextToken" in response:
+            response = self._client.describe_stack_events(StackName=stack_id, NextToken=response["NextToken"])
+            stack_events.extend(response['StackEvents'])
+        stack_events = list(reversed(stack_events))
+        if pointer >= len(stack_events):
+            # no new events
+            log_wait()
+        else:
+            for event in stack_events[pointer:]:
+                timestamp = event.get('Timestamp', datetime(2000, 1, 1, tzinfo=timezone.utc))
+                # no events newer than start_date
+                if start_date and start_date >= timestamp:
+                    continue
+                # log new events
+                timestamp = str(timestamp).split('.')[0].split('+')[0]
                 logical_id = event.get('LogicalResourceId', None)
                 status = event.get('ResourceStatus', None)
                 log_progress(f'[{timestamp}] \t{status}: {logical_id}')
-                if status == 'DELETE_FAILED':
-                    failures.append(logical_id)
-            if in_progress: sleep(1)
-        return stack_status, failures
+        pointer = len(stack_events)
+        return pointer

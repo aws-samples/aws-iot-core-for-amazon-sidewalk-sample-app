@@ -44,7 +44,7 @@ class S3Client:
                                             Delete={"Objects": object_names})
             log_success('Objects deleted, bucket is empty.')
         except ClientError as e:
-            if e.response['Error']['Code'] == 'ValidationError':
+            if e.response['Error']['Code'] in ['ValidationError', 'NoSuchBucket']:
                 log_success(f'{bucket_name} doesn\'t exist, skipping.')
             else:
                 terminate(f'Unable to delete objects from the bucket: {e}.', ErrCode.EXCEPTION)

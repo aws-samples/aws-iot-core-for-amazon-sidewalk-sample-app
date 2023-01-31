@@ -6,6 +6,8 @@ Script deploys SidewalkSampleApplication stack.
 """
 
 import boto3
+import webbrowser
+
 from botocore.exceptions import ClientError
 from io import BytesIO
 
@@ -26,15 +28,18 @@ config = Config()
 # --------------------
 log_info('Arguments to be used during the SidewalkSampleApplication deployment:')
 log_info(f'\tCONFIG_PROFILE: {config.aws_profile}')
+log_info(f'\tREGION: {config.region_name}')
 log_info(f'\tSIDEWALK_DESTINATION: {config.sid_dest_name}')
+log_info(f'This can take several minutes to complete.')
 log_info(f'Proceed with stack creation?')
 confirm()
 
 
 # -------------------------------------------------------------
 # Create boto3 session using given profile and service clients
+# Sidewalk is only enabled in the us-east-1 region
 # -------------------------------------------------------------
-session = boto3.Session(profile_name=config.aws_profile)
+session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 iam_client = session.client(service_name='iam')
 lambda_client = session.client(service_name='lambda')
@@ -151,7 +156,10 @@ s3_client.put_files(bucket_name, api_gw_id, Path(__file__).parent.joinpath('gui'
 # --------------------------------
 web_app_url = cf_client.get_output_var('CloudFrontDistribution')
 config.set_web_app_url(web_app_url)
+webbrowser.open(f'https://{web_app_url}')
+
 log_success('---------------------------------------------------------------')
-log_success('Sensor Monitoring App is available on the following link:')
-log_success(f'{web_app_url}')
+log_success('Opening Sensor Monitoring App on the following link:')
+log_success(f'https://{web_app_url}')
+log_success(f'This URL has been saved to config.yaml Outputs.WEB_APP_URL')
 log_success('---------------------------------------------------------------')
