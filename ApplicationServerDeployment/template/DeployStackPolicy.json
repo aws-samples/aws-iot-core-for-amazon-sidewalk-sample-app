@@ -61,9 +61,17 @@
                 "iotwireless:GetDestination",
                 "iotwireless:DeleteDestination",
                 "iotwireless:CreateDestination",
-                "iotwireless:UpdateDestination"
+                "iotwireless:UpdateDestination",
+                "iotwireless:CreateDeviceProfile",
+                "iotwireless:GetDeviceProfile",
+                "iotwireless:CreateWirelessDevice",
+                "iotwireless:GetWirelessDevice"
             ],
-            "Resource": "arn:aws:iotwireless:*:<account_ID>:Destination/*"
+            "Resource": [
+                "arn:aws:iotwireless:*:<account_ID>:Destination/*",
+                "arn:aws:iotwireless:*:<account_ID>:DeviceProfile/*",
+                "arn:aws:iotwireless:*:<account_ID>:WirelessDevice/*"
+            ]
         },
         {
             "Effect": "Allow",
