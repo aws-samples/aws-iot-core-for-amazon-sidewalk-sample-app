@@ -65,16 +65,17 @@ class CloudFormationClient:
                 TimeoutInMinutes=10,
                 OnFailure='DELETE'
             )
+            stack_id = response.get('StackId', self.SSA_STACK)
             stack_status = ''
             event_index = 0
             in_progress = True
             while in_progress:
-                response = self._client.describe_stacks(StackName=self.SSA_STACK)
+                response = self._client.describe_stacks(StackName=stack_id)
                 stack_status = response['Stacks'][0]['StackStatus']
                 status_end = stack_status.split('_')[-1]
                 if status_end in ['COMPLETE', 'FAILED']:
                     in_progress = False
-                event_index = self._print_stack_events(stack_id=self.SSA_STACK, pointer=event_index)
+                event_index = self._print_stack_events(stack_id=stack_id, pointer=event_index)
                 if in_progress: sleep(1)
             if stack_status == 'CREATE_COMPLETE':
                 log_success(f'{self.SSA_STACK} created successfully.')
@@ -192,17 +193,38 @@ class CloudFormationClient:
             # get stack_id so describe_stacks & describe_stack_events doesn't fail after deletion
             stack_id = response['Stacks'][0]['StackId']
             # delete stack
-            stack_status, failures = self._delete_stack(stack_id)
+            stack_status = self._delete_stack(stack_id)
+
             if stack_status == 'DELETE_COMPLETE':
                 log_success(f'{self.SSA_STACK} deleted successfully.')
-            elif 'SidewalkDestination' in failures and self.SSA_STACK in failures and len(failures) == 2:
-                # if only destination removal failed, retry to delete stack, while retaining SidewalkDestination
-                failures.remove(self.SSA_STACK)
-                log_warn('Cannot delete destination because at least 1 device with destination exists. '
-                         'Retrying to remove the stack, while keeping the SidewalkDestination...')
-                stack_status, _ = self._delete_stack(stack_id, failures)
-                if stack_status == 'DELETE_COMPLETE':
-                    log_success(f'{self.SSA_STACK} deleted successfully. SidewalkDestination left untouched.')
+                return
+            elif stack_status == 'DELETE_FAILED':
+                resources = self._client.describe_stack_resources(StackName=stack_id).get('StackResources', [])
+                failures = [resource for resource in resources if resource.get('ResourceStatus') == 'DELETE_FAILED']
+                # if DELETE_FAILED because of the SidewalkDestination, retry deletion while retaining destination
+                if 'SidewalkDestination' in [failure.get('LogicalResourceId') for failure in failures]:
+                    log_warn(f'Cannot delete SidewalkDestination. '
+                             f'Retrying to remove the stack, while keeping the SidewalkDestination...')
+                    stack_status = self._delete_stack(stack_id, ['SidewalkDestination'])
+                    if stack_status == 'DELETE_COMPLETE':
+                        log_success(f'{self.SSA_STACK} deleted successfully.\n'
+                                    f'SidewalkDestination left untouched and can be found under: AWS IoT -> Manage -> LPWAN devices -> Destinations.')
+                        return
+                # if DELETE_FAILED after retry, print info about resources that failed to be deleted
+                if stack_status == 'DELETE_FAILED':
+                    resources = self._client.describe_stack_resources(StackName=stack_id).get('StackResources', [])
+                    failures = [resource for resource in resources if resource.get('ResourceStatus') == 'DELETE_FAILED']
+                    log_error('---------------------------------------------------------------')
+                    log_error('Unable to delete following resources:\n')
+                    for failure in failures:
+                        log_error(f'{failure.get("LogicalResourceId")}'
+                                  f'\t{failure.get("ResourceType")}'
+                                  f'\n{failure.get("ResourceStatusReason")}\n')
+                    log_error('---------------------------------------------------------------')
+                    terminate(
+                        f'{self.SSA_STACK} deletion failed. Please resolve the issues, then rerun the script.',
+                        ErrCode.EXCEPTION
+                    )
                 else:
                     terminate(
                         f'{self.SSA_STACK} deletion failed. Status found: {stack_status}, status expected: DELETE_COMPLETE',
@@ -227,13 +249,11 @@ class CloudFormationClient:
         :param stack_id:            The name or the unique stack ID that's associated with the stack.
         :param retain_resources:    Tuple of logical IDs of the resources you want to retain.
                                     Applies for stack in the DELETE_FAILED state.
-        :returns:                   (stack deletion status, [logical IDs of resources, which removal failed])
+        :returns:                   Stack status.
         """
-
         stack_status = ''
         event_index = 0
         start_timestamp = datetime.now(timezone.utc)
-        failures = []
         in_progress = True
         if retain_resources:
             self._client.delete_stack(StackName=stack_id, RetainResources=retain_resources)
@@ -245,9 +265,9 @@ class CloudFormationClient:
             status_end = stack_status.split('_')[-1]
             if status_end in ['COMPLETE', 'FAILED']:
                 in_progress = False
-            event_index = self._print_stack_events(stack_id=self.SSA_STACK, pointer=event_index, start_date=start_timestamp)
+            event_index = self._print_stack_events(stack_id=stack_id, pointer=event_index, start_date=start_timestamp)
             if in_progress: sleep(1)
-        return stack_status, failures
+        return stack_status
 
     def _print_stack_events(self, stack_id: str, pointer: int, start_date: datetime = None):
         """
@@ -275,8 +295,12 @@ class CloudFormationClient:
                     continue
                 # log new events
                 timestamp = str(timestamp).split('.')[0].split('+')[0]
-                logical_id = event.get('LogicalResourceId', None)
-                status = event.get('ResourceStatus', None)
+                logical_id = event.get('LogicalResourceId')
+                status = event.get('ResourceStatus')
+                status_reason = event.get('ResourceStatusReason')
                 log_progress(f'[{timestamp}] \t{status}: {logical_id}')
+                if 'FAIL' in status.upper():
+                    log_error(f'{logical_id} resource status reason: {status_reason}')
+
         pointer = len(stack_events)
         return pointer
