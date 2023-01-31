@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 from enum import Enum
+from intelhex import bin2hex
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO)
@@ -35,12 +36,6 @@ class ProvisionWrapper:
         else:
             # In not provided, assumed that ARM tools are in PATH
             self.commander = "commander"
-
-        if arm_toolchain_dir:
-            self.arm_objcopy = os.path.abspath(os.path.join(arm_toolchain_dir, "arm-none-eabi-objcopy"))
-        else:
-            # If not passed, assumed that ARM tools are in PATH
-            self.arm_objcopy = "arm-none-eabi-objcopy"
 
         self.NORDIC_ADDR = '0xFD000'
         self.TI_P1_ADDR = '0x56000'
@@ -74,7 +69,7 @@ class ProvisionWrapper:
                                                  nordic_bin)
             else:
                 self.generate_bin_from_certificate_json(certificate_json, BoardType.Nordic, nordic_bin)
-            self.generate_hex_with_arm_objcopy(nordic_bin, nordic_hex, self.NORDIC_ADDR)
+            self.generate_hex_with_intelhex(nordic_bin, nordic_hex, self.NORDIC_ADDR)
 
         if board == BoardType.TI or board == BoardType.All:
             logger.info("  Generating MFG.hex for TI P1 and TI P7")
@@ -85,8 +80,8 @@ class ProvisionWrapper:
                 self.generate_bin_from_aws_jsons(wireless_device_path, device_profile_path, BoardType.TI, ti_bin)
             else:
                 self.generate_bin_from_certificate_json(certificate_json, BoardType.TI, ti_bin)
-            self.generate_hex_with_arm_objcopy(ti_bin, ti_p1_hex, self.TI_P1_ADDR)
-            self.generate_hex_with_arm_objcopy(ti_bin, ti_p7_hex, self.TI_P7_ADDR)
+            self.generate_hex_with_intelhex(ti_bin, ti_p1_hex, self.TI_P1_ADDR)
+            self.generate_hex_with_intelhex(ti_bin, ti_p7_hex, self.TI_P7_ADDR)
 
         if board == BoardType.SiLabs or board == BoardType.All:
             logger.info("  Generating MFG.S37 For SiLabs xG21 and xG24")
@@ -140,12 +135,9 @@ class ProvisionWrapper:
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
-    def generate_hex_with_arm_objcopy(self, bin, hex, address):
-        cmd = f'-I binary -O ihex {bin} {hex} --change-addresses {address}'
-        result = subprocess.run(args=[self.arm_objcopy,'-I', 'binary', '-O', 'ihex', f'{bin}', f'{hex}', 
-                                      '--change-addresses', f'{address}'], 
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print_subprocess_results(result, subprocess_name=self.arm_objcopy)
+    def generate_hex_with_intelhex(self, bin, hex, address):
+        result = bin2hex(fin=bin, fout=hex, offset=int(address, base=16))
+        assert result == 0, f"Converting {bin} to {hex} failed"
 
     def generate_s37_with_silabs_commander(self, nvm3_file, address, device, outfile_s37):
         # S37 initfile

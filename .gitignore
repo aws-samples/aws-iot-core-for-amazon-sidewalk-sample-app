@@ -1,6 +1,7 @@
 .DS_Store
 .idea
 .flake8
+EdgeDeviceProvisioning/DeviceProfile_*/
 **.env
 *env/
 **/__pycache__
