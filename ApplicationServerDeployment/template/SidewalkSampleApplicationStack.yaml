@@ -151,42 +151,42 @@ Resources:
                   - !GetAtt SidewalkDownlinkLambda.Arn
               - Effect: Allow
                 Action:
-                    - dynamodb:BatchGetItem
-                    - dynamodb:UpdateTimeToLive
-                    - dynamodb:PutItem
-                    - dynamodb:DescribeTable
-                    - dynamodb:DeleteItem
-                    - dynamodb:GetItem
-                    - dynamodb:Scan
-                    - dynamodb:Query
-                    - dynamodb:UpdateItem
-                    - dynamodb:DescribeTimeToLive
+                  - dynamodb:BatchGetItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
                 Resource:
-                    - !GetAtt SidewalkDevices.Arn
+                  - !GetAtt SidewalkDevices.Arn
               - Effect: Allow
                 Action:
-                    - timestream:ListTables
-                    - timestream:DescribeDatabase
-                    - timestream:DescribeTable
-                    - timestream:DescribeScheduledQuery
-                    - timestream:PrepareQuery
-                    - timestream:Select
-                    - timestream:DeleteScheduledQuery
-                    - timestream:ExecuteScheduledQuery
-                    - timestream:WriteRecords
-                    - timestream:UpdateTable
-                    - timestream:UpdateScheduledQuery
+                  - timestream:ListTables
+                  - timestream:DescribeDatabase
+                  - timestream:DescribeTable
+                  - timestream:DescribeScheduledQuery
+                  - timestream:PrepareQuery
+                  - timestream:Select
+                  - timestream:DeleteScheduledQuery
+                  - timestream:ExecuteScheduledQuery
+                  - timestream:WriteRecords
+                  - timestream:UpdateTable
+                  - timestream:UpdateScheduledQuery
                 Resource:
-                    - !GetAtt Measurements.Arn
+                  - !GetAtt Measurements.Arn
               - Effect: Allow
                 Action:
-                    - timestream:DescribeEndpoints
-                    - timestream:SelectValues
-                    - timestream:CancelQuery
-                    - timestream:ListScheduledQueries
-                    - timestream:CreateScheduledQuery
+                  - timestream:DescribeEndpoints
+                  - timestream:SelectValues
+                  - timestream:CancelQuery
+                  - timestream:ListScheduledQueries
+                  - timestream:CreateScheduledQuery
                 Resource:
-                    - '*'
+                  - '*'
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
@@ -445,11 +445,11 @@ Resources:
         RequestTemplates:
           application/json: '{"statusCode": 200}'
         IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseModels:
@@ -501,11 +501,11 @@ Resources:
         RequestTemplates:
           application/json: '{"statusCode": 200}'
         IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseModels:
@@ -885,53 +885,6 @@ Resources:
             S3OriginConfig:
               OriginAccessIdentity:
                  "" # empty access identity allows use of OAC
-          - DomainName:
-              Fn::Join:
-                - '.'
-                - - !Ref SidewalkApiGateway
-                  - "execute-api"
-                  - Fn::Sub: ${AWS::Region}
-                  - "amazonaws.com"
-            Id:
-              Fn::Sub: ${AWS::StackName}-root-Api-Gw
-            CustomOriginConfig:
-              OriginProtocolPolicy: https-only
-              OriginReadTimeout: 20
-            OriginPath: /dev
-        OriginGroups:
-          Items:
-            - FailoverCriteria:
-                StatusCodes:
-                  Items:
-                    - 400
-                  Quantity: 1
-              Id:
-                Bucket and apiGw
-              Members:
-                Items:
-                  - OriginId:
-                      Fn::Sub: ${AWS::StackName}-root-Api-Gw
-                  - OriginId:
-                      Fn::Sub: ${AWS::StackName}-root
-                Quantity: 2
-          Quantity: 1
-        CacheBehaviors:
-          -
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-              - PUT
-              - PATCH
-              - POST
-              - DELETE
-            PathPattern: /api/*
-            TargetOriginId:
-              Fn::Sub: ${AWS::StackName}-root-Api-Gw
-            ViewerProtocolPolicy:
-              redirect-to-https
-            CachePolicyId:
-              4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Caching disabled
         PriceClass: PriceClass_All
 
 Outputs:
