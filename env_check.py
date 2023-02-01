@@ -3,6 +3,7 @@
 
 try:
     import boto3
+
     boto3_installed = True
 except:
     boto3_installed = False
@@ -10,21 +11,20 @@ import logging
 import os
 import subprocess
 import sys
-
 import yaml
-from colorama import Fore, init
 
+# add ApplicationServerDeployment to path
+sys.path.append(os.path.dirname(__file__).join("ApplicationServerDeployment"))
+from ApplicationServerDeployment.libs.utils import log_success, log_error, log_check
 from EdgeDeviceProvisioning.libs.EnvConfig import EnvConfig
 from EdgeDeviceProvisioning.libs.ProvisionWrapper import BoardType
 
 logging.getLogger('botocore').setLevel(logging.CRITICAL)
-
 SUPPORTED_PLATFORMS = ['NORDIC', 'SILABS', 'TI', 'ALL']
 
+
 def main():
-    init() #colorama
     config_file = "config.yaml"
-    skip_next_checks = False
 
     log_check("PYTHON VERSION")
     if check_python_version():
@@ -34,48 +34,50 @@ def main():
 
     log_check("CONFIG.YAML SYNTAX")
     if check_config_is_proper_yaml(config_file):
-        log_success(f"PASS - {config_file} parsed with no issues")
+        log_success(f"PASS - {config_file} parsed with no issues!")
     else:
         log_error(f"FAIL! {config_file} is not a proper YAML file. Please check formatting of the file")
-        skip_next_checks = True
+        quit()
 
-    if not skip_next_checks:
-        log_check("CONFIG.YAML MANDATORY ATTRIBUTES")
-        config_err = evaluate_config_mandatory_fields(config_file)
-        if config_err is None:
-            log_success("PASS - config.yaml looks good")
+    log_check("CONFIG.YAML MANDATORY ATTRIBUTES")
+    config_err = evaluate_config_mandatory_fields(config_file)
+    if config_err is None:
+        log_success("PASS - config.yaml looks good!")
+    else:
+        log_error(f"FAIL! config.yaml problem. {config_err}")
+        quit()
+
+
+    log_check("BOTO3 INSTALLED")
+    if boto3_installed:
+        log_success("PASS - boto3 library is installed!")
+    else:
+        log_error("FAIL! Can't find boto3 library. Did you install requirements.txt?")
+        quit()
+
+    e = EnvConfig(config_file)
+    log_check("AWS PROFILE")
+    if check_aws_profile(e.aws_profile):
+        log_success("PASS - profile defined in config.yaml can connect to AWS!")
+    else:
+        log_error(
+            f"FAIL! Can't communicate with AWS using provided profile: '{e.aws_profile}'. Did you configure AWS credentials?")
+        quit()
+
+    log_check("BOTO3 VERSION")
+    if boto3_supports_sidewalk(e.aws_profile):
+        log_success("PASS - boto3 with Sidewalk support installed!")
+    else:
+        log_error(
+            f"FAIL! installed version of boto3 doesn't support Sidewalk AWS APIs. Did you install requirements.txt?")
+
+    if e.hardware_platform in [BoardType.SiLabs, BoardType.All]:
+        log_check("SIMPLICITY COMMANDER PRESENCE")
+        if check_simplicity_commander_available(location=e.commander_dir):
+            log_success("PASS - simplicity commander.exe available!")
         else:
-            log_error(f"FAIL! config.yaml problem. {config_err}")
-            skip_next_checks = True
-
-    if not skip_next_checks:
-        log_check("BOTO3 INSTALLED")
-        if boto3_installed:
-            log_success("PASS - boto3 library is installed")
-        else:
-            log_error("FAIL! Can't find boto3 library. Did you install requirements.txt?")
-            skip_next_checks = True
-
-    if not skip_next_checks:
-        e = EnvConfig(config_file)
-        log_check("AWS PROFILE")
-        if check_aws_profile(e.aws_profile):
-            log_success("PASS - profile defined in config.yaml can connect with AWS!")
-        else:
-            log_error(f"FAIL! Can't communicate with AWS using provided profile: '{e.aws_profile}' Check Prerequisites in README.md")
-
-        log_check("BOTO3 VERSION")
-        if boto3_supports_sidewalk(e.aws_profile):
-            log_success("PASS - boto3 with Sidewalk support installed!")
-        else:
-            log_error(f"FAIL! installed version of boto3 don't support Sidewalk AWS APIs. Did you install requirements.txt?")
-
-        if e.hardware_platform in [BoardType.SiLabs, BoardType.All]:
-            log_check("SIMPLICITY COMMANDER PRESENCE")
-            if check_simplicity_commander_available(location=e.commander_dir):
-                log_success("PASS - simplicity commander.exe available")
-            else:
-                log_error("FAIL! Unable to find Simplicity Commander! Please install https://community.silabs.com/s/article/simplicity-commander and add the path to config.yaml")
+            log_error(
+                "FAIL! Unable to find Simplicity Commander! Please install https://community.silabs.com/s/article/simplicity-commander and add the path to config.yaml")
 
 
 def check_config_is_proper_yaml(config_yaml):
@@ -102,7 +104,7 @@ def evaluate_config_mandatory_fields(config_yaml):
         if platform is None:
             return "HARDWARE_PLATFORM field missing!"
         elif platform not in SUPPORTED_PLATFORMS:
-                return f"HARDWARE_PLATFORM value not supported! Available values: {SUPPORTED_PLATFORMS}"
+            return f"HARDWARE_PLATFORM value not supported! Available values: {SUPPORTED_PLATFORMS}"
 
     if config_struct.get("_Paths") is None:
         return "'_Paths' section missing!"
@@ -111,6 +113,7 @@ def evaluate_config_mandatory_fields(config_yaml):
             return "PROVISION_SCRIPT_DIR field missing!"
 
     return None
+
 
 def check_aws_profile(aws_profile_name):
     try:
@@ -139,8 +142,7 @@ def boto3_supports_sidewalk(aws_profile_name):
     try:
         session = boto3.Session(profile_name=aws_profile_name)
         client = session.client('iotwireless')
-        client.list_device_profiles(DeviceProfileType="Sidewalk")
-        return True
+        return 'Sidewalk' in str(client.list_device_profiles.__doc__)
     except:
         return False
 
@@ -160,32 +162,6 @@ def check_simplicity_commander_available(location=None):
                 return False
     except:
         return False
-
-
-def log_clear():
-    """Clears the contents of the current line"""
-    global _log_wait_count
-    _log_wait_count = 0
-    LINE_CLEAR = '\x1b[2K'
-    print(end=LINE_CLEAR)
-
-
-def log_error(message):
-    """Formats and prints error message."""
-    log_clear()
-    print(Fore.RED + f'[ERROR]  \t{message}' + Fore.RESET)
-
-
-def log_check(message):
-    """Formats and prints progress message."""
-    log_clear()
-    print(Fore.CYAN + f'[CHECK]\t{message}' + Fore.RESET)
-
-
-def log_success(message):
-    """Formats and prints success message."""
-    log_clear()
-    print(Fore.GREEN + f'[SUCCESS]\t{message}' + Fore.RESET)
 
 
 main()

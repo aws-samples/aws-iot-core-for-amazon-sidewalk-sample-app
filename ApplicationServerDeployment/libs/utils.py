@@ -61,6 +61,12 @@ def log_progress(message):
     print(Fore.CYAN + f'[PROGRESS]\t{message}' + Fore.RESET)
 
 
+def log_check(message):
+    """Formats and prints progress message."""
+    log_clear()
+    print(Fore.CYAN + f'[CHECK]\t{message}' + Fore.RESET)
+
+
 def log_success(message):
     """Formats and prints success message."""
     log_clear()

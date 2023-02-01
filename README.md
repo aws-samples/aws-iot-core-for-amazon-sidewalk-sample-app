@@ -19,7 +19,7 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
 |---|
 
 ## Prerequisites
-- Downloand and install Python 3.6 or above (https://www.python.org/)
+- Download and install Python 3.6 or above (https://www.python.org/)
 - Create an AWS account (https://aws.amazon.com/)
 - Set up an AWS user using the AWS IAM service ([Creating IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console)) with:
   - authentication credentials configured ([Managing access keys -> To create an access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey))
@@ -38,6 +38,11 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
 
 Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.  
 --> Try calling *commander --version* in the terminal to make sure the Simplicity Commander is available
+
+You may want to run a helper *env_check.py* script to sanity check your environment against the most common errors.
+```
+python3 env_check.py
+```
 
 ## Getting Started
 
