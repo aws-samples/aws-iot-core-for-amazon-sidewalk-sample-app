@@ -36,7 +36,7 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
     - Flashing Tool: *Simplicity Commander* (https://community.silabs.com/s/article/simplicity-commander)
 
 
-Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.
+Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.  
 --> Try calling *commander --version* in the terminal to make sure the Simplicity Commander is available
 
 ## Getting Started
@@ -54,7 +54,7 @@ python3 -m pip install --user virtualenv
 python3 -m venv sample-app-env
 source sample-app-env/bin/activate
 python3 -m pip install --upgrade pip
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 - Windows:
@@ -63,7 +63,7 @@ python -m pip install --user virtualenv
 python -m venv sample-app-env
 sample-app-env\Scripts\activate.bat
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ### 2. Fill out configuration file

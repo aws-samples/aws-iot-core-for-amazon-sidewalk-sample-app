@@ -7,5 +7,4 @@ Outputs:
     WEB_APP_URL: null
 _Paths:
     PROVISION_SCRIPT_DIR: tools/provision
-    ARM_TOOLCHAIN_DIR: null  # Not needed if ARM Toolchain is in system Path. Only needed for NORDIC and TI.
     SILABS_COMMANDER_TOOLS_DIR: null  # Not needed if Silabs Commander is already in system Path. Only needed for SILABS.
