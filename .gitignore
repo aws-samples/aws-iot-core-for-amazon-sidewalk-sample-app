@@ -7,3 +7,5 @@ EdgeDeviceProvisioning/DeviceProfile_*/
 **/__pycache__
 **/public
 **/node_modules
+ApplicationServerDeployment/policies/DeployStackPolicy.json
+ApplicationServerDeployment/policies/DeployGrafanaPolicy.json
