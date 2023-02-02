@@ -48,6 +48,11 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
 Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.  
 --> Try calling *commander --version* in the terminal to make sure the Simplicity Commander is available
 
+You may want to run a helper *env_check.py* script to sanity check your environment against the most common errors.
+```
+python3 env_check.py
+```
+
 ## Getting Started
 
 ### 1. Install virtual environment

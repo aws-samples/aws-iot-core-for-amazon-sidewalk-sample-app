@@ -65,7 +65,7 @@ class EnvConfig:
 
         self.my_cwd = os.path.dirname(os.path.realpath(__file__))
 
-        logger.info(f"Loaded configuration: AWS_PROFILE: {self.aws_profile}, DESTINATION: {self.destination_name} , "
+        logger.debug(f"Loaded configuration: AWS_PROFILE: {self.aws_profile}, DESTINATION: {self.destination_name} , "
                     f"DEVICE_PROFILE: {self.device_profile_id}")
 
     def update_profile_id(self, device_profile_id):
