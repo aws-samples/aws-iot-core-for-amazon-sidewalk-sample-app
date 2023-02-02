@@ -1,1 +1,3 @@
-MCUSDK-1.14 #17
+nordic MCUSDK-1.14 #17
+ti MCUSDK-1.14 #17
+silabs MCUSDK-1.14 #18
