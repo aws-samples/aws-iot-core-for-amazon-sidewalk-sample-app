@@ -151,42 +151,42 @@ Resources:
                   - !GetAtt SidewalkDownlinkLambda.Arn
               - Effect: Allow
                 Action:
-                    - dynamodb:BatchGetItem
-                    - dynamodb:UpdateTimeToLive
-                    - dynamodb:PutItem
-                    - dynamodb:DescribeTable
-                    - dynamodb:DeleteItem
-                    - dynamodb:GetItem
-                    - dynamodb:Scan
-                    - dynamodb:Query
-                    - dynamodb:UpdateItem
-                    - dynamodb:DescribeTimeToLive
+                  - dynamodb:BatchGetItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
                 Resource:
-                    - !GetAtt SidewalkDevices.Arn
+                  - !GetAtt SidewalkDevices.Arn
               - Effect: Allow
                 Action:
-                    - timestream:ListTables
-                    - timestream:DescribeDatabase
-                    - timestream:DescribeTable
-                    - timestream:DescribeScheduledQuery
-                    - timestream:PrepareQuery
-                    - timestream:Select
-                    - timestream:DeleteScheduledQuery
-                    - timestream:ExecuteScheduledQuery
-                    - timestream:WriteRecords
-                    - timestream:UpdateTable
-                    - timestream:UpdateScheduledQuery
+                  - timestream:ListTables
+                  - timestream:DescribeDatabase
+                  - timestream:DescribeTable
+                  - timestream:DescribeScheduledQuery
+                  - timestream:PrepareQuery
+                  - timestream:Select
+                  - timestream:DeleteScheduledQuery
+                  - timestream:ExecuteScheduledQuery
+                  - timestream:WriteRecords
+                  - timestream:UpdateTable
+                  - timestream:UpdateScheduledQuery
                 Resource:
-                    - !GetAtt Measurements.Arn
+                  - !GetAtt Measurements.Arn
               - Effect: Allow
                 Action:
-                    - timestream:DescribeEndpoints
-                    - timestream:SelectValues
-                    - timestream:CancelQuery
-                    - timestream:ListScheduledQueries
-                    - timestream:CreateScheduledQuery
+                  - timestream:DescribeEndpoints
+                  - timestream:SelectValues
+                  - timestream:CancelQuery
+                  - timestream:ListScheduledQueries
+                  - timestream:CreateScheduledQuery
                 Resource:
-                    - '*'
+                  - '*'
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
@@ -445,11 +445,11 @@ Resources:
         RequestTemplates:
           application/json: '{"statusCode": 200}'
         IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseModels:
@@ -501,11 +501,11 @@ Resources:
         RequestTemplates:
           application/json: '{"statusCode": 200}'
         IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-            method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
-            method.response.header.Access-Control-Allow-Origin: "'*'"
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseModels:
@@ -801,11 +801,19 @@ Resources:
         - - sensor-monitoring-app
           - !Select [2, !Split [/, !Ref AWS::StackId ]]
       AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: TRUE
+        BlockPublicPolicy: TRUE
+        IgnorePublicAcls: TRUE
+        RestrictPublicBuckets: TRUE
     DeletionPolicy: Delete
 
   # Bucket policy to allow communication with cloudFront
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
+    DependsOn:
+      - SidewalkWebAppBucket
+      - CloudFrontDistribution
     Properties:
       Bucket:
         Ref: SidewalkWebAppBucket
@@ -821,20 +829,39 @@ Resources:
                 - - !GetAtt SidewalkWebAppBucket.Arn
                   - /*
             Principal:
-              CanonicalUser:
-                Fn::GetAtt:
-                  - CloudFrontOriginAccessIdentity
-                  - S3CanonicalUserId
+              Service:
+                cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceArn:
+                  Fn::Join:
+                    - '/'
+                    - - !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution
+                      - !Ref CloudFrontDistribution
+
 
   # ------------------------------
   # Cloud Front related resources
   # ------------------------------
+
+  # Cloud Front Origin Access Control
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Description: SidewalkSampleApplication OAC to s3 bucket
+        Name: SidewalkSampleApplicationOAC
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
 
   # Cloud Front distribution. Hosts S3 bucket
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     DependsOn:
       - SidewalkWebAppBucket
+      - SidewalkApiGateway
+      - CloudFrontOAC
     Properties:
       DistributionConfig:
         DefaultCacheBehavior:
@@ -853,22 +880,12 @@ Resources:
           - DomainName: !GetAtt SidewalkWebAppBucket.DomainName
             Id:
               Fn::Sub: ${AWS::StackName}-root
+            OriginAccessControlId:
+              !Ref CloudFrontOAC
             S3OriginConfig:
               OriginAccessIdentity:
-                Fn::Join:
-                  - ''
-                  - - origin-access-identity/cloudfront/
-                    - Ref: CloudFrontOriginAccessIdentity
+                 "" # empty access identity allows use of OAC
         PriceClass: PriceClass_All
-
-  # OriginAccessIdentity to allow communication with 3
-  CloudFrontOriginAccessIdentity:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment:
-          Fn::Sub: CloudFront OAI for SidewalkSampleApp
-
 
 Outputs:
 
