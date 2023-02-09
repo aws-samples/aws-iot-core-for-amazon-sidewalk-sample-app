@@ -12,10 +12,12 @@ from datetime import datetime, timezone, timedelta
 from typing import Final
 
 from measurements_handler import MeasurementsHandler
+from custom_data_handler import CustomDataHandler
 from sidewalk_devices_handler import SidewalkDevicesHandler
 
 device_handler: Final = SidewalkDevicesHandler()
 measurement_handler: Final = MeasurementsHandler()
+custom_data_handler: Final = CustomDataHandler()
 
 
 def get_all_devices():
@@ -68,9 +70,9 @@ def lambda_handler(event, context):
                 time_end = datetime.now(timezone.utc)
                 time_start = time_end - timedelta(hours=1)
 
-                measurements = measurement_handler.get_measurements(wireless_device_id=wireless_device_id,
-                                                                    time_range_start=time_start.timestamp(),
-                                                                    time_range_end=time_end.timestamp())
+                measurements = measurement_handler.get_measurements_for_device(wireless_device_id=wireless_device_id)
+                                                                    # time_range_start=time_start.timestamp(),
+                                                                    # time_range_end=time_end.timestamp())
                 measurements_json = []
                 for measurement in measurements:
                     measurements_json.append(measurement.to_dict())

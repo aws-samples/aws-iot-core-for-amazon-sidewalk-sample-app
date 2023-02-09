@@ -19,10 +19,10 @@ class Measurement(object):
             UTC time in seconds.
     """
 
-    def __init__(self, wireless_device_id, value: int = None, time: int = None):
+    def __init__(self, wireless_device_id, temperature: int = None, timestamp: int = None, time_to_live=None):
         self._wireless_device_id = wireless_device_id
-        self._value = value
-        self._time = time
+        self._value = temperature
+        self._time = timestamp
 
     def get_wireless_device_id(self) -> str:
         return self._wireless_device_id
@@ -31,7 +31,7 @@ class Measurement(object):
         return float(self._value)
 
     def get_time(self) -> int:
-        return self._time
+        return int(self._time)
 
     def to_dict(self) -> dict:
         """
@@ -40,7 +40,7 @@ class Measurement(object):
         :return:    Dict representation of the Measurement.
         """
         return {
-                'wireless_device_id': self._wireless_device_id,
-                'value': self.get_value(),
-                'time': self.get_time()
-            }
+            'wireless_device_id': self._wireless_device_id,
+            'value': self.get_value(),
+            'time': self.get_time()
+        }

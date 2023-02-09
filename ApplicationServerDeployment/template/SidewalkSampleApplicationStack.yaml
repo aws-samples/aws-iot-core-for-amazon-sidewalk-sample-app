@@ -76,16 +76,34 @@ Resources:
 
   # Table for storing sensor measurements
   Measurements:
-    Type: AWS::Timestream::Table
-    DependsOn: SidewalkTimestream
+    Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Measurements
-      DatabaseName: SidewalkTimestream
-      MagneticStoreWriteProperties:
-        EnableMagneticStoreWrites: false
-      RetentionProperties:
-        MemoryStoreRetentionPeriodInHours: 12
-        MagneticStoreRetentionPeriodInDays: 7
+      TableName: SsaMeasurements
+      AttributeDefinitions:
+        - AttributeName: timestamp
+          AttributeType: "N"
+        - AttributeName: wireless_device_id
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: timestamp
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName:
+            "wireless_device_id"
+          KeySchema:
+            - AttributeName: wireless_device_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 10
+            WriteCapacityUnits: 10
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: true
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
 
   # ---------------------------
   # DynamoDb related resources
@@ -162,31 +180,8 @@ Resources:
                   - dynamodb:UpdateItem
                   - dynamodb:DescribeTimeToLive
                 Resource:
-                  - !GetAtt SidewalkDevices.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:ListTables
-                  - timestream:DescribeDatabase
-                  - timestream:DescribeTable
-                  - timestream:DescribeScheduledQuery
-                  - timestream:PrepareQuery
-                  - timestream:Select
-                  - timestream:DeleteScheduledQuery
-                  - timestream:ExecuteScheduledQuery
-                  - timestream:WriteRecords
-                  - timestream:UpdateTable
-                  - timestream:UpdateScheduledQuery
-                Resource:
-                  - !GetAtt Measurements.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:DescribeEndpoints
-                  - timestream:SelectValues
-                  - timestream:CancelQuery
-                  - timestream:ListScheduledQueries
-                  - timestream:CreateScheduledQuery
-                Resource:
-                  - '*'
+                    - !GetAtt SidewalkDevices.Arn
+                    - !GetAtt Measurements.Arn
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
@@ -263,27 +258,7 @@ Resources:
                   - dynamodb:DescribeTimeToLive
                 Resource:
                   - !GetAtt SidewalkDevices.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:ListTables
-                  - timestream:DescribeDatabase
-                  - timestream:DescribeTable
-                  - timestream:DescribeScheduledQuery
-                  - timestream:PrepareQuery
-                  - timestream:Select
-                  - timestream:DeleteScheduledQuery
-                  - timestream:ExecuteScheduledQuery
-                Resource:
                   - !GetAtt Measurements.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:DescribeEndpoints
-                  - timestream:SelectValues
-                  - timestream:CancelQuery
-                  - timestream:ListScheduledQueries
-                  - timestream:CreateScheduledQuery
-                Resource:
-                  - '*'
 
   # SidewalkUplinkLambda function. Handles uplink messages
   SidewalkUplinkLambda:
