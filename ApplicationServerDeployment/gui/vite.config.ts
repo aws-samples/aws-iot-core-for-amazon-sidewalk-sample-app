@@ -24,4 +24,12 @@ export default defineConfig({
       "./runtimeConfig": "./runtimeConfig.browser",
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://mlxwxd261l.execute-api.us-east-1.amazonaws.com/dev',
+        changeOrigin: true
+      }
+    }
+  }
 });

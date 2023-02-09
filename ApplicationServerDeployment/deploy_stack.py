@@ -147,9 +147,8 @@ for idx, (lam, dir) in enumerate(zip(lambdas, dirs)):
 # ---------------------------
 # Upload WebApp assets to S3
 # ---------------------------
-api_gw_id = cf_client.get_output_var('SidewalkApiGwId')
 bucket_name = cf_client.get_output_var('SidewalkWebAppBucketName')
-s3_client.put_files(bucket_name, api_gw_id, Path(__file__).parent.joinpath('gui', 'build'))
+s3_client.put_files(bucket_name, Path(__file__).parent.joinpath('gui', 'build'))
 
 # --------------------------------
 # Print Sensor Monitoring App URL

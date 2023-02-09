@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT-0
 
 export const ENDPOINTS = {
-  devices: "/api/devices",
-  device: "/api/devices/:id",
-  measurement: "/api/measurements/:id",
-  led: "/api"
+  devices: "/devices",
+  device: "/devices/:id",
+  measurement: "/measurements/:id",
+  led: "",
 };
 
 export const interpolateParams = (
