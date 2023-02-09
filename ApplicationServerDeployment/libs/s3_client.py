@@ -49,15 +49,13 @@ class S3Client:
             else:
                 terminate(f'Unable to delete objects from the bucket: {e}.', ErrCode.EXCEPTION)
 
-    def put_files(self, bucket_name, api_gw_id, build_dir):
+    def put_files(self, bucket_name, build_dir):
         """
         Puts content of web application to s3 bucket
         :param bucket_name: name of s3 bucket
-        :param api_gw_id: id of api gateway they will be used for execution of backend requests
         :param build_dir: path to gui directory. Needs to be provided to provide compatibility with mac build
         (it takes parent as lib)
         """
-        api_gw_invoke_url = f'https://{api_gw_id}.execute-api.{self.region_name}.amazonaws.com/dev'
         web_app = 'SensorMonitoringApp'
 
         try:
@@ -80,7 +78,7 @@ class S3Client:
                     if file_path.stem.startswith('index') and file_path.suffix == '.js':
                         with open(file_path, 'r') as fd:
                             # override template: replace <api_gw_invoke_url> placeholder with actual value
-                            content = fd.read().replace('<api_gw_invoke_url>', api_gw_invoke_url)
+                            content = fd.read()
                             data = BytesIO(bytes(content, 'utf-8'))
                             self._client.put_object(Bucket=bucket_name, Key=key, Body=data, ContentType=suffix_map[file_path.suffix])
                     else:

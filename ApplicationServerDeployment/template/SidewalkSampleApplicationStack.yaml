@@ -884,24 +884,61 @@ Resources:
               !Ref CloudFrontOAC
             S3OriginConfig:
               OriginAccessIdentity:
-                 "" # empty access identity allows use of OAC
+                "" # empty access identity allows use of OAC
+          - DomainName:
+              Fn::Join:
+                - '.'
+                - - !Ref SidewalkApiGateway
+                  - "execute-api"
+                  - Fn::Sub: ${AWS::Region}
+                  - "amazonaws.com"
+            Id:
+              Fn::Sub: ${AWS::StackName}-root-Api-Gw
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginReadTimeout: 20
+            OriginPath: /dev
+        OriginGroups:
+          Items:
+            - FailoverCriteria:
+                StatusCodes:
+                  Items:
+                    - 400
+                  Quantity: 1
+              Id:
+                Bucket and apiGw
+              Members:
+                Items:
+                  - OriginId:
+                      Fn::Sub: ${AWS::StackName}-root-Api-Gw
+                  - OriginId:
+                      Fn::Sub: ${AWS::StackName}-root
+                Quantity: 2
+          Quantity: 1
+        CacheBehaviors:
+          -
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - PATCH
+              - POST
+              - DELETE
+            PathPattern: /api/*
+            TargetOriginId:
+              Fn::Sub: ${AWS::StackName}-root-Api-Gw
+            ViewerProtocolPolicy:
+              redirect-to-https
+            CachePolicyId:
+              4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Caching disabled
         PriceClass: PriceClass_All
 
 Outputs:
 
-  SensorMonitoringAppUrl:
-    Value: !GetAtt
-      - SidewalkWebAppBucket
-      - WebsiteURL
-    Description: Sensor Monitoring App URL
-
   SidewalkWebAppBucketName:
     Value: !Ref SidewalkWebAppBucket
     Description: SidewalkWebAppBucketName
-
-  SidewalkApiGwId:
-    Value: !Ref SidewalkApiGateway
-    Description: Sidewalk API Gateway identifier
 
   CloudFrontDistribution:
     Description: CloudFront distribution
