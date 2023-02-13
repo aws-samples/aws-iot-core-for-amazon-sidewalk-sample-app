@@ -1,11 +1,16 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
-import traceback
-
 import boto3
-from datetime import datetime, timezone
+import logging
+import time
+
+from botocore.exceptions import ClientError
+from decimal import Decimal
+from boto3.dynamodb.conditions import Attr
 
 from measurement import Measurement
+
+logger = logging.getLogger(__name__)
 
 
 class MeasurementsHandler:
@@ -13,119 +18,74 @@ class MeasurementsHandler:
     A class that provides read and write methods for the Measurements table.
     """
 
-    DATABASE_NAME = 'SidewalkTimestream'
-    TABLE_NAME = 'Measurements'
+    TABLE_NAME = 'SidewalkMeasurements'
 
     def __init__(self):
-        self._boto3_query_client = boto3.client('timestream-query')
-        self._boto3_write_client = boto3.client('timestream-write')
+        self._table = boto3.resource('dynamodb').Table(self.TABLE_NAME)
 
     # ----------------
     # Read operations
     # ----------------
-    def get_measurements(
-            self, wireless_device_id: str, time_range_start: int, time_range_end: int
-    ) -> [Measurement]:
+
+    def get_measurements_for_device(self, wireless_device_id: str) -> [Measurement]:
         """
         Queries Measurements table for the records coming from given device withing a given time span.
 
         :param wireless_device_id:  Id of the wireless device.
-        :param time_range_start:    Start time (UTC time in seconds).
-        :param time_range_end:      End time (UTC time in seconds).
         :return:                    List of Measurement objects.
         """
-        query = "SELECT * " \
-                "FROM \"SidewalkTimestream\".\"Measurements\" " \
-                "WHERE \"wireless_device_id\" = '{}' AND time between '{}' AND '{}'"
-        return self._run_query(
-            query.format(
-                wireless_device_id,
-                datetime.fromtimestamp(time_range_start, tz=timezone.utc),
-                datetime.fromtimestamp(time_range_end, tz=timezone.utc)
-            )
-        )
+        items = []
+        try:
+            response = self._table.scan(IndexName='wireless_device_id',
+                                        FilterExpression=Attr('wireless_device_id').eq(wireless_device_id))
+            items.extend(response.get('Items', []))
+        except ClientError as err:
+            logger.error(f'Error while calling get_all_devices: {err}')
+            raise
+        else:
+            measurements = []
+            for item in items:
+                measurement = Measurement(**item)
+                measurements.append(measurement)
+            return measurements
 
     # -----------------
     # Write operations
     # -----------------
     def add_measurement(self, measurement: Measurement):
         """
-        Writes Measurement object into the Measurements table.
+        Adds measurement object to the SidewalkMeasurement table.
 
-        :param measurement: Measurement object.
+        _time_to_live attribute is ignored.
+        time_to_live field is set to the current_time + 24 hours.
+
+        :param measurement:  Measurement object.
+        :return:             Updated Measurement object.
         """
-        self._boto3_write_client.write_records(
-            DatabaseName=self.DATABASE_NAME,
-            TableName=self.TABLE_NAME,
-            Records=[
-                {
-                    'Time': str(measurement.get_time()),
-                    'TimeUnit': 'MILLISECONDS',
-                    'Dimensions': [
-                        {
-                            'Name': 'wireless_device_id',
-                            'Value': measurement.get_wireless_device_id()
-                        }
-                    ],
-                    'MeasureName': "temperature",
-                    'MeasureValue': str(measurement.get_value()),
-                    'MeasureValueType': 'DOUBLE'
-                }
-            ]
-        )
+        try:
+            timestamp = int(time.time())
+            ttl = self._get_dynamodb_item_time_to_live(timestamp)
+            self._table.put_item(
+                Item={
+                    'timestamp': timestamp,
+                    'wireless_device_id': measurement.get_wireless_device_id(),
+                    'temperature': Decimal(measurement.get_value()),
+                    'time_to_live': ttl
+                },
+                ReturnValues="ALL_OLD"
+            )
+        except ClientError as err:
+            logger.error(
+                f'Error while calling add_measurement for wireless_device_id: {measurement.get_wireless_device_id()}: {err}'
+            )
+            raise
+        else:
+            measurement._time_to_live = ttl
+            return measurement
 
     # -----------------
     # For internal use
     # -----------------
-    def _run_query(self, query: str) -> [Measurement]:
-        measurements: [Measurement] = []
-        try:
-            pages = []
-            paginator = self._boto3_query_client.get_paginator('query')
-            page_iterator = paginator.paginate(QueryString=query)
-            for page in page_iterator:
-                pages.append(page)
-
-            for page in pages:
-                wireless_device_id_position = None
-                time_position = None
-                measure_value_position = None
-
-                column_info = page['ColumnInfo']
-
-                for position, column in enumerate(column_info):
-                    name = column['Name']
-
-                    if name == 'wireless_device_id':
-                        wireless_device_id_position = position
-                    elif name == 'time':
-                        time_position = position
-                    elif name == 'measure_value::double':
-                        measure_value_position = position
-
-                rows = page['Rows']
-                for row in rows:
-                    data: list = row['Data']
-                    wireless_device_id: str = ""
-                    measure_value = None
-                    timestamp = 0
-
-                    if 'ScalarValue' in data[wireless_device_id_position]:
-                        wireless_device_id = data[wireless_device_id_position]['ScalarValue']
-
-                    if 'ScalarValue' in data[measure_value_position]:
-                        measure_value = data[measure_value_position]['ScalarValue']
-
-                    if 'ScalarValue' in data[time_position]:
-                        timestamp = int(round(
-                            datetime.strptime(data[time_position]['ScalarValue'][:-3], "%Y-%m-%d %H:%M:%S.%f")
-                            .replace(tzinfo=timezone.utc)
-                            .timestamp() * 1000
-                        ))
-
-                    measurement: Measurement = Measurement(wireless_device_id, measure_value, timestamp)
-                    measurements.append(measurement)
-        except Exception:
-            print(f'Unexpected error occurred while fetching measurements: {traceback.format_exc()}')
-
-        return measurements
+    @staticmethod
+    def _get_dynamodb_item_time_to_live(timestamp: int) -> int:
+        return timestamp + 3600

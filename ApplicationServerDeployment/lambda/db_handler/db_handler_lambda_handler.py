@@ -8,7 +8,6 @@ Handles read request to SidewalkDevices and Measurements tables.
 import json
 import traceback
 import cors_utils
-from datetime import datetime, timezone, timedelta
 from typing import Final
 
 from measurements_handler import MeasurementsHandler
@@ -65,12 +64,8 @@ def lambda_handler(event, context):
                                                          "path /measurements/{wirelessDeviceId}")
                 remaining_path = split_path[1].split("/", 1)
                 wireless_device_id = remaining_path[0]
-                time_end = datetime.now(timezone.utc)
-                time_start = time_end - timedelta(hours=1)
 
-                measurements = measurement_handler.get_measurements(wireless_device_id=wireless_device_id,
-                                                                    time_range_start=time_start.timestamp(),
-                                                                    time_range_end=time_end.timestamp())
+                measurements = measurement_handler.get_measurements_for_device(wireless_device_id=wireless_device_id)
                 measurements_json = []
                 for measurement in measurements:
                     measurements_json.append(measurement.to_dict())

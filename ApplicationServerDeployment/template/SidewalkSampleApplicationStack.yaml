@@ -74,18 +74,6 @@ Resources:
         MemoryStoreRetentionPeriodInHours: 12
         MagneticStoreRetentionPeriodInDays: 7
 
-  # Table for storing sensor measurements
-  Measurements:
-    Type: AWS::Timestream::Table
-    DependsOn: SidewalkTimestream
-    Properties:
-      TableName: Measurements
-      DatabaseName: SidewalkTimestream
-      MagneticStoreWriteProperties:
-        EnableMagneticStoreWrites: false
-      RetentionProperties:
-        MemoryStoreRetentionPeriodInHours: 12
-        MagneticStoreRetentionPeriodInDays: 7
 
   # ---------------------------
   # DynamoDb related resources
@@ -109,6 +97,38 @@ Resources:
         WriteCapacityUnits: 10
       TableName: SidewalkDevices
 
+  # Table for storing sensor measurements
+  SidewalkMeasurements:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: SidewalkMeasurements
+      AttributeDefinitions:
+        - AttributeName: timestamp
+          AttributeType: "N"
+        - AttributeName: wireless_device_id
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: timestamp
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName:
+            "wireless_device_id"
+          KeySchema:
+            - AttributeName: wireless_device_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 10
+            WriteCapacityUnits: 10
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: true
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+
+
 
   # -------------------------
   # Lambda related resources
@@ -120,7 +140,7 @@ Resources:
     DependsOn:
       - SidewalkDownlinkLambda
       - SidewalkDevices
-      - Measurements
+      - SidewalkMeasurements
     Properties:
       RoleName: SidewalkUplinkLambdaExecutionRole
       Description: Allows SidewalkUplinkLambda to call AWS services on your behalf.
@@ -162,31 +182,8 @@ Resources:
                   - dynamodb:UpdateItem
                   - dynamodb:DescribeTimeToLive
                 Resource:
-                  - !GetAtt SidewalkDevices.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:ListTables
-                  - timestream:DescribeDatabase
-                  - timestream:DescribeTable
-                  - timestream:DescribeScheduledQuery
-                  - timestream:PrepareQuery
-                  - timestream:Select
-                  - timestream:DeleteScheduledQuery
-                  - timestream:ExecuteScheduledQuery
-                  - timestream:WriteRecords
-                  - timestream:UpdateTable
-                  - timestream:UpdateScheduledQuery
-                Resource:
-                  - !GetAtt Measurements.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:DescribeEndpoints
-                  - timestream:SelectValues
-                  - timestream:CancelQuery
-                  - timestream:ListScheduledQueries
-                  - timestream:CreateScheduledQuery
-                Resource:
-                  - '*'
+                    - !GetAtt SidewalkDevices.Arn
+                    - !GetAtt SidewalkMeasurements.Arn
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
@@ -225,7 +222,7 @@ Resources:
     Type: AWS::IAM::Role
     DependsOn:
       - SidewalkDevices
-      - Measurements
+      - SidewalkMeasurements
     Properties:
       RoleName: SidewalkDbHandlerLambdaExecutionRole
       Description: Allows SidewalkDbHandlerLambda to call AWS services on your behalf.
@@ -263,27 +260,7 @@ Resources:
                   - dynamodb:DescribeTimeToLive
                 Resource:
                   - !GetAtt SidewalkDevices.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:ListTables
-                  - timestream:DescribeDatabase
-                  - timestream:DescribeTable
-                  - timestream:DescribeScheduledQuery
-                  - timestream:PrepareQuery
-                  - timestream:Select
-                  - timestream:DeleteScheduledQuery
-                  - timestream:ExecuteScheduledQuery
-                Resource:
-                  - !GetAtt Measurements.Arn
-              - Effect: Allow
-                Action:
-                  - timestream:DescribeEndpoints
-                  - timestream:SelectValues
-                  - timestream:CancelQuery
-                  - timestream:ListScheduledQueries
-                  - timestream:CreateScheduledQuery
-                Resource:
-                  - '*'
+                  - !GetAtt SidewalkMeasurements.Arn
 
   # SidewalkUplinkLambda function. Handles uplink messages
   SidewalkUplinkLambda:

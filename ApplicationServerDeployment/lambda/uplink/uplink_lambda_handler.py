@@ -176,8 +176,8 @@ def lambda_handler(event, context):
 
                 time_now = datetime_now.timestamp()
                 measurement = Measurement(wireless_device_id=wireless_device_id,
-                                          value=sensor_data,
-                                          time=int(round(time_now * 1000)))
+                                          temperature=sensor_data,
+                                          timestamp=int(round(time_now * 1000)))
                 measurement_handler.add_measurement(measurement)
 
             if "button_press" in decoded_payload:
