@@ -557,7 +557,7 @@ Resources:
                 Action:
                   - iot:Publish
                 Resource:
-                  - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/rules/SidewalkUplinkRule
+                  - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/sidewalk/app_data
               - Effect: Allow
                 Action:
                   - iot:DescribeEndpoint
@@ -573,8 +573,8 @@ Resources:
       Name:
         Ref: SidewalkDestinationName
       Description: Destination for uplink messages from Sidewalk devices.
-      ExpressionType: RuleName
-      Expression: SidewalkUplinkRule
+      ExpressionType: MqttTopic
+      Expression: sidewalk/app_data
       RoleArn: !GetAtt SidewalkDestinationRole.Arn
 
   # AWS IoT wireless rule role with write access to the SidewalkRuleErrors and SidewalkTimestream tables
@@ -632,7 +632,7 @@ Resources:
       TopicRulePayload:
         AwsIotSqlVersion: 2016-03-23
         Description: Rule for processing Sidewalk uplink messages.
-        Sql: SELECT * as uplink FROM '$aws/rules/SidewalkUplinkRule'
+        Sql: SELECT * as uplink FROM 'sidewalk/app_data'
         Actions:
           - Lambda:
               FunctionArn: !GetAtt SidewalkUplinkLambda.Arn

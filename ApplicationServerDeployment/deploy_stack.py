@@ -113,8 +113,8 @@ if sid_dest_already_exists:
         role_arn = response['Role']['Arn']
         response = wireless_client.update_destination(
             Name=config.sid_dest_name,
-            ExpressionType='RuleName',
-            Expression='SidewalkUplinkRule',
+            ExpressionType='MqttTopic',
+            Expression='sidewalk/app_data',
             Description='Destination for uplink messages from Sidewalk devices.',
             RoleArn=role_arn
         )
