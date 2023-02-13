@@ -42,6 +42,7 @@ Resources:
 
   # SidewalkTimestream database
   SidewalkTimestream:
+    Condition: ShouldDeployGrafana
     Type: AWS::Timestream::Database
     Properties:
       DatabaseName: SidewalkTimestream
