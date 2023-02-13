@@ -94,7 +94,8 @@ stack = read_file(stack_path)
 cf_client.create_stack(
     template=stack,
     sid_dest=config.sid_dest_name,
-    dest_exists=sid_dest_already_exists
+    dest_exists=sid_dest_already_exists,
+    tag='SidewalkSampleApplication'
 )
 
 

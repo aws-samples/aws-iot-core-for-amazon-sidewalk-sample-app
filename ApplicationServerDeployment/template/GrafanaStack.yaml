@@ -1,0 +1,281 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description:
+  'This template creates Grafana stack.
+  **WARNING** You will be billed for the AWS resources used if you create a stack from this template'
+
+Parameters:
+
+  SidewalkDestinationName:
+    Type: String
+    Default: SidewalkDestination
+
+  SidewalkDestinationAlreadyExists:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
+
+Conditions:
+
+  ShouldCreateDestination: !Equals
+    - !Ref SidewalkDestinationAlreadyExists
+    - false
+
+
+Resources:
+
+  # --------------------------------------
+  # Timestream database related resources
+  # --------------------------------------
+
+  # GrafanaTimestream database
+  GrafanaTimestream:
+    Type: AWS::Timestream::Database
+    Properties:
+      DatabaseName: GrafanaTimestream
+
+  # Table for storing uplink data
+  UplinkMessages:
+    Type: AWS::Timestream::Table
+    DependsOn: GrafanaTimestream
+    Properties:
+      TableName: UplinkMessages
+      DatabaseName: GrafanaTimestream
+      MagneticStoreWriteProperties:
+        EnableMagneticStoreWrites: false
+      RetentionProperties:
+        MemoryStoreRetentionPeriodInHours: 12
+        MagneticStoreRetentionPeriodInDays: 7
+
+  # Table for storing notification data
+  Notifications:
+    Type: AWS::Timestream::Table
+    DependsOn: GrafanaTimestream
+    Properties:
+      TableName: Notifications
+      DatabaseName: GrafanaTimestream
+      MagneticStoreWriteProperties:
+        EnableMagneticStoreWrites: false
+      RetentionProperties:
+        MemoryStoreRetentionPeriodInHours: 12
+        MagneticStoreRetentionPeriodInDays: 7
+
+
+  # -----------------------------
+  # CloudWatch related resources
+  # -----------------------------
+
+  # Log group for storing IoT rule errors
+  GrafanaRuleErrorsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: GrafanaRuleErrors
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+
+  # -------------------------------------------
+  # IoT related resources for uplink reception
+  # -------------------------------------------
+
+  # AWS IoT wireless destination role with access to the sidewalk/app_data topic
+  GrafanaDestinationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GrafanaDestinationRole
+      Description: Allows destination to publish to the sidewalk/app_data topic on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - iotwireless.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: GrafanaDestinationRoleInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iot:Publish
+                Resource:
+                  - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/sidewalk/app_data
+              - Effect: Allow
+                Action:
+                  - iot:DescribeEndpoint
+                Resource:
+                  - '*'
+
+  # AWS IoT wireless destination
+  SidewalkDestination:
+    Type: AWS::IoTWireless::Destination
+    DependsOn: GrafanaDestinationRole
+    Condition: ShouldCreateDestination
+    Properties:
+      Name:
+        Ref: SidewalkDestinationName
+      Description: Destination for uplink messages from Sidewalk devices.
+      ExpressionType: MqttTopic
+      Expression: sidewalk/app_data
+      RoleArn: !GetAtt GrafanaDestinationRole.Arn
+
+  # AWS IoT wireless rule role with write access to the GrafanaRuleErrors and GrafanaTimestream tables
+  GrafanaRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GrafanaRuleRole
+      Description: Role assumed by the sidewalk rules, which preprocess and dispatch messages.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - iot.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: GrafanaRuleInlinePolicy-GrafanaRuleErrorsWriteAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:GrafanaRuleErrors:*
+        - PolicyName: GrafanaRuleInlinePolicy-GrafanaTimestreamWriteAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - timestream:WriteRecords
+                Resource:
+                  - !Sub arn:aws:timestream:${AWS::Region}:${AWS::AccountId}:database/GrafanaTimestream/table/UplinkMessages
+                  - !Sub arn:aws:timestream:${AWS::Region}:${AWS::AccountId}:database/GrafanaTimestream/table/Notifications
+              - Effect: Allow
+                Action:
+                  - timestream:DescribeEndpoints
+                Resource:
+                  - '*'
+
+  # AWS IoT wireless rule for uplink messages
+  # Passes incoming uplink messages to the UplinkMessages table
+  GrafanaUplinkRule:
+    Type: AWS::IoT::TopicRule
+    DependsOn:
+      - GrafanaRuleRole
+    Properties:
+      RuleName: GrafanaUplinkRule
+      TopicRulePayload:
+        AwsIotSqlVersion: 2016-03-23
+        Description: Rule for processing Sidewalk uplink messages for Grafana purposes.
+        Sql: SELECT * as uplink FROM 'sidewalk/app_data'
+        Actions:
+          - Timestream:
+              DatabaseName: GrafanaTimestream
+              RoleArn: !GetAtt GrafanaRuleRole.Arn
+              TableName: UplinkMessages
+              Dimensions:
+                - Name: wireless_device_id
+                  Value: ${WirelessDeviceId}
+                - Name: payload_base64
+                  Value: ${PayloadData}
+                - Name: payload
+                  Value: ${decode(PayloadData, 'base64')}
+        ErrorAction:
+          CloudwatchLogs:
+            LogGroupName: GrafanaRuleErrors
+            RoleArn: !GetAtt GrafanaRuleRole.Arn
+        RuleDisabled: False
+
+
+  # -------------------------------------------------
+  # IoT related resources for notification reception
+  # -------------------------------------------------
+
+  # Policy for receiving wireless event notifications
+  GrafanaReceiveWirelessEventNotificationsPolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyName: GrafanaReceiveWirelessEventNotificationsPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - iot:Subscribe
+              - iot:Receive
+            Resource:
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/device_registration_state/*
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/proximity/*
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/message_delivery_status/*
+
+  # AWS IoT wireless rule for notification
+  # Passes incoming notifications to the Notifications table
+  GrafanaNotificationRule:
+    Type: AWS::IoT::TopicRule
+    DependsOn:
+      - GrafanaRuleRole
+    Properties:
+      RuleName: GrafanaNotificationRule
+      TopicRulePayload:
+        AwsIotSqlVersion: 2016-03-23
+        Description: Rule for processing Sidewalk notifications for Grafana purposes.
+        Sql: SELECT * as notification FROM '$aws/iotwireless/events/+/+/sidewalk/wireless_devices'
+        Actions:
+          - Timestream:
+              DatabaseName: GrafanaTimestream
+              RoleArn: !GetAtt GrafanaRuleRole.Arn
+              TableName: Notifications
+              Dimensions:
+                - Name: wireless_device_id
+                  Value: ${ WirelessDeviceId }
+                - Name: notification
+                  Value: ${ topic(4) }
+                - Name: event_type
+                  Value: ${ eventType }
+                - Name: event_id
+                  Value: ${ eventId }
+        ErrorAction:
+          CloudwatchLogs:
+            LogGroupName: GrafanaRuleErrors
+            RoleArn: !GetAtt GrafanaRuleRole.Arn
+        RuleDisabled: False
+
+
+  # -------------------------------------------
+  # Grafana related resources
+  # -------------------------------------------
+
+  # Workspace role ARN
+  GrafanaWorkspaceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GrafanaWorkspaceRole
+      Description: Allows GrafanaWorkspace to access your AWS services.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - grafana.amazonaws.com
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Sub ${AWS::AccountId}
+              StringLike:
+                aws:SourceArn: !Sub arn:aws:grafana:${AWS::Region}:${AWS::AccountId}:/workspaces/*
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonTimestreamReadOnlyAccess

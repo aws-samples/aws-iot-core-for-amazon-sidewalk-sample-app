@@ -17,64 +17,13 @@ Parameters:
       - false
     Default: false
 
-  DeployGrafana:
-    Type: String
-    AllowedValues:
-      - true
-      - false
-    Default: false
-
 Conditions:
 
   ShouldCreateDestination: !Equals
     - !Ref SidewalkDestinationAlreadyExists
     - false
 
-  ShouldDeployGrafana: !Equals
-    - !Ref DeployGrafana
-    - true
-
 Resources:
-
-  # --------------------------------------
-  # Timestream database related resources
-  # --------------------------------------
-
-  # SidewalkTimestream database
-  SidewalkTimestream:
-    Condition: ShouldDeployGrafana
-    Type: AWS::Timestream::Database
-    Properties:
-      DatabaseName: SidewalkTimestream
-
-  # Table for storing uplink data
-  UplinkMessages:
-    Condition: ShouldDeployGrafana
-    Type: AWS::Timestream::Table
-    DependsOn: SidewalkTimestream
-    Properties:
-      TableName: UplinkMessages
-      DatabaseName: SidewalkTimestream
-      MagneticStoreWriteProperties:
-        EnableMagneticStoreWrites: false
-      RetentionProperties:
-        MemoryStoreRetentionPeriodInHours: 12
-        MagneticStoreRetentionPeriodInDays: 7
-
-  # Table for storing notification data
-  Notifications:
-    Condition: ShouldDeployGrafana
-    Type: AWS::Timestream::Table
-    DependsOn: SidewalkTimestream
-    Properties:
-      TableName: Notifications
-      DatabaseName: SidewalkTimestream
-      MagneticStoreWriteProperties:
-        EnableMagneticStoreWrites: false
-      RetentionProperties:
-        MemoryStoreRetentionPeriodInHours: 12
-        MagneticStoreRetentionPeriodInDays: 7
-
 
   # ---------------------------
   # DynamoDb related resources
@@ -128,7 +77,6 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 10
         WriteCapacityUnits: 10
-
 
 
   # -------------------------
@@ -329,6 +277,7 @@ Resources:
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
 
+
   # -----------------------------
   # CloudWatch related resources
   # -----------------------------
@@ -371,6 +320,7 @@ Resources:
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
+
 
   # ------------------------------
   # API Gateway related resources
@@ -529,16 +479,17 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/*
 
+
   # -------------------------------------------
   # IoT related resources for uplink reception
   # -------------------------------------------
 
-  # AWS IoT wireless destination role with access to the SidewalkUplinkRule
+  # AWS IoT wireless destination role with access to the sidewalk/app_data topic
   SidewalkDestinationRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: SidewalkDestinationRole
-      Description: Allows SidewalkDestination to call SidewalkUplinkRule on your behalf.
+      Description: Allows destination to publish to the sidewalk/app_data topic on your behalf.
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -577,7 +528,7 @@ Resources:
       Expression: sidewalk/app_data
       RoleArn: !GetAtt SidewalkDestinationRole.Arn
 
-  # AWS IoT wireless rule role with write access to the SidewalkRuleErrors and SidewalkTimestream tables
+  # AWS IoT wireless rule role with write access to the SidewalkRuleErrors
   SidewalkRuleRole:
     Type: AWS::IAM::Role
     Properties:
@@ -604,24 +555,9 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:SidewalkRuleErrors:*
-        - PolicyName: SidewalkRuleInlinePolicy-SidewalkTimestreamWriteAccess
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - timestream:WriteRecords
-                Resource:
-                  - !Sub arn:aws:timestream:${AWS::Region}:${AWS::AccountId}:database/SidewalkTimestream/table/UplinkMessages
-                  - !Sub arn:aws:timestream:${AWS::Region}:${AWS::AccountId}:database/SidewalkTimestream/table/Notifications
-              - Effect: Allow
-                Action:
-                  - timestream:DescribeEndpoints
-                Resource:
-                  - '*'
 
   # AWS IoT wireless rule for uplink messages
-  # Passes incoming uplink messages to the SidewalkUplinkLambda and UplinkMessages table
+  # Passes incoming uplink messages to the SidewalkUplinkLambda
   SidewalkUplinkRule:
     Type: AWS::IoT::TopicRule
     DependsOn:
@@ -631,25 +567,11 @@ Resources:
       RuleName: SidewalkUplinkRule
       TopicRulePayload:
         AwsIotSqlVersion: 2016-03-23
-        Description: Rule for processing Sidewalk uplink messages.
+        Description: Rule for processing Sidewalk uplink messages for Sample Application purposes.
         Sql: SELECT * as uplink FROM 'sidewalk/app_data'
         Actions:
           - Lambda:
               FunctionArn: !GetAtt SidewalkUplinkLambda.Arn
-          - !If
-            - ShouldDeployGrafana
-            - Timestream:
-                DatabaseName: SidewalkTimestream
-                RoleArn: !GetAtt SidewalkRuleRole.Arn
-                TableName: UplinkMessages
-                Dimensions:
-                  - Name: wireless_device_id
-                    Value: ${WirelessDeviceId}
-                  - Name: payload_base64
-                    Value: ${PayloadData}
-                  - Name: payload
-                    Value: ${decode(PayloadData, 'base64')}
-            - !Ref 'AWS::NoValue'
         ErrorAction:
           CloudwatchLogs:
             LogGroupName: SidewalkRuleErrors
@@ -666,6 +588,7 @@ Resources:
       FunctionName: SidewalkUplinkLambda
       Principal: iot.amazonaws.com
       SourceArn: !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:rule/SidewalkUplinkRule
+
 
   # -------------------------------------------------
   # IoT related resources for notification reception
@@ -689,7 +612,7 @@ Resources:
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/message_delivery_status/*
 
   # AWS IoT wireless rule for notification
-  # Passes incoming notifications to the SidewalkUplinkLambda and Notifications table
+  # Passes incoming notifications to the SidewalkUplinkLambda
   SidewalkNotificationRule:
     Type: AWS::IoT::TopicRule
     DependsOn:
@@ -704,22 +627,6 @@ Resources:
         Actions:
           - Lambda:
               FunctionArn: !GetAtt SidewalkUplinkLambda.Arn
-          - !If
-            - ShouldDeployGrafana
-            - Timestream:
-                DatabaseName: SidewalkTimestream
-                RoleArn: !GetAtt SidewalkRuleRole.Arn
-                TableName: Notifications
-                Dimensions:
-                  - Name: wireless_device_id
-                    Value: ${ WirelessDeviceId }
-                  - Name: notification
-                    Value: ${ topic(4) }
-                  - Name: event_type
-                    Value: ${ eventType }
-                  - Name: event_id
-                    Value: ${ eventId }
-            - !Ref 'AWS::NoValue'
         ErrorAction:
           CloudwatchLogs:
             LogGroupName: SidewalkRuleErrors
@@ -737,33 +644,6 @@ Resources:
       Principal: iot.amazonaws.com
       SourceArn: !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:rule/SidewalkNotificationRule
 
-  # -------------------------------------------
-  # Grafana related resources
-  # -------------------------------------------
-
-  # Workspace role ARN
-  SidewalkSampleApplicationGrafanaWorkspaceRole:
-    Condition: ShouldDeployGrafana
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: SidewalkSampleApplicationGrafanaWorkspaceRole
-      Description: Allows SidewalkSampleApplicationWorkspace to access your AWS services.
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - grafana.amazonaws.com
-            Action:
-              - sts:AssumeRole
-            Condition:
-              StringEquals:
-                aws:SourceAccount: !Sub ${AWS::AccountId}
-              StringLike:
-                aws:SourceArn: !Sub arn:aws:grafana:${AWS::Region}:${AWS::AccountId}:/workspaces/*
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonTimestreamReadOnlyAccess
 
   # ---------------------
   # S3 related resources

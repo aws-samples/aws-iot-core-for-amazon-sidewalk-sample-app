@@ -27,14 +27,15 @@ class CloudFormationClient:
     # -------
     # Deploy
     # -------
-    def create_stack(self, template: str, sid_dest: str, dest_exists: bool):
+    def create_stack(self, template: str, sid_dest: str, dest_exists: bool, tag: str):
         """
-        Creates SidewalkSampleApplicationStack.
+        Creates CloudFormation stack.
 
         :param template:        Cloud formation template.
         :param sid_dest:        Sidewalk destination to be used.
         :param dest_exists:     If True, Sidewalk destination will be created as a part of the stack.
                                 If False, it is assumed that destination already exists.
+        :param tag:             Tag assigned to created resources; describes application.
         """
         log_info(f'Creating {self.SSA_STACK} from cloud formation template...')
         try:
@@ -49,17 +50,13 @@ class CloudFormationClient:
                     {
                         'ParameterKey': 'SidewalkDestinationAlreadyExists',
                         'ParameterValue': "true" if dest_exists else "false"
-                    },
-                    {
-                        'ParameterKey': 'DeployGrafana',
-                        'ParameterValue': "false"
                     }
                 ],
                 Capabilities=['CAPABILITY_NAMED_IAM'],
                 Tags=[
                     {
                         'Key': 'Application',
-                        'Value': 'SidewalkSampleApplication'
+                        'Value': tag
                     },
                 ],
                 TimeoutInMinutes=10,
