@@ -19,7 +19,7 @@ class Measurement(object):
             UTC time in seconds.
     """
 
-    def __init__(self, wireless_device_id, temperature: int = None, timestamp: int = None, time_to_live=None):
+    def __init__(self, wireless_device_id, temperature: int = None, timestamp: int = None, time_to_live: int = None):
         self._wireless_device_id = wireless_device_id
         self._value = temperature
         self._time = timestamp

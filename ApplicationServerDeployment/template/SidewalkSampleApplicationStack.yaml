@@ -74,11 +74,34 @@ Resources:
         MemoryStoreRetentionPeriodInHours: 12
         MagneticStoreRetentionPeriodInDays: 7
 
-  # Table for storing sensor measurements
-  Measurements:
+
+  # ---------------------------
+  # DynamoDb related resources
+  # ---------------------------
+
+  # Table for storing Sidewalk devices
+  SidewalkDevices:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: SsaMeasurements
+      AttributeDefinitions:
+        - AttributeName: wireless_device_id
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: wireless_device_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: true
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+      TableName: SidewalkDevices
+
+  # Table for storing sensor measurements
+  SidewalkMeasurements:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: SidewalkMeasurements
       AttributeDefinitions:
         - AttributeName: timestamp
           AttributeType: "N"
@@ -105,27 +128,6 @@ Resources:
         ReadCapacityUnits: 10
         WriteCapacityUnits: 10
 
-  # ---------------------------
-  # DynamoDb related resources
-  # ---------------------------
-
-  # Table for storing Sidewalk devices
-  SidewalkDevices:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: wireless_device_id
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: wireless_device_id
-          KeyType: HASH
-      TimeToLiveSpecification:
-        AttributeName: time_to_live
-        Enabled: true
-      ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
-      TableName: SidewalkDevices
 
 
   # -------------------------
@@ -138,7 +140,7 @@ Resources:
     DependsOn:
       - SidewalkDownlinkLambda
       - SidewalkDevices
-      - Measurements
+      - SidewalkMeasurements
     Properties:
       RoleName: SidewalkUplinkLambdaExecutionRole
       Description: Allows SidewalkUplinkLambda to call AWS services on your behalf.
@@ -181,7 +183,7 @@ Resources:
                   - dynamodb:DescribeTimeToLive
                 Resource:
                     - !GetAtt SidewalkDevices.Arn
-                    - !GetAtt Measurements.Arn
+                    - !GetAtt SidewalkMeasurements.Arn
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
@@ -220,7 +222,7 @@ Resources:
     Type: AWS::IAM::Role
     DependsOn:
       - SidewalkDevices
-      - Measurements
+      - SidewalkMeasurements
     Properties:
       RoleName: SidewalkDbHandlerLambdaExecutionRole
       Description: Allows SidewalkDbHandlerLambda to call AWS services on your behalf.
@@ -258,7 +260,7 @@ Resources:
                   - dynamodb:DescribeTimeToLive
                 Resource:
                   - !GetAtt SidewalkDevices.Arn
-                  - !GetAtt Measurements.Arn
+                  - !GetAtt SidewalkMeasurements.Arn
 
   # SidewalkUplinkLambda function. Handles uplink messages
   SidewalkUplinkLambda:

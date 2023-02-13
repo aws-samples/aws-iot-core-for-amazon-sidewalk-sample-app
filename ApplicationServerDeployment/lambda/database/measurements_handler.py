@@ -1,8 +1,8 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
+import boto3
 import logging
 import time
-import boto3
 
 from botocore.exceptions import ClientError
 from decimal import Decimal
@@ -18,7 +18,7 @@ class MeasurementsHandler:
     A class that provides read and write methods for the Measurements table.
     """
 
-    TABLE_NAME = 'SsaMeasurements'
+    TABLE_NAME = 'SidewalkMeasurements'
 
     def __init__(self):
         self._table = boto3.resource('dynamodb').Table(self.TABLE_NAME)
@@ -32,15 +32,8 @@ class MeasurementsHandler:
         Queries Measurements table for the records coming from given device withing a given time span.
 
         :param wireless_device_id:  Id of the wireless device.
-        :param time_range_start:    Start time (UTC time in seconds).
-        :param time_range_end:      End time (UTC time in seconds).
         :return:                    List of Measurement objects.
         """
-        # if time_range_start > time_range_end:
-        #     timestamp_start = time_range_start
-        #     time_range_start = time_range_end
-        #     time_range_end = timestamp_start
-
         items = []
         try:
             response = self._table.scan(IndexName='wireless_device_id',
@@ -61,13 +54,13 @@ class MeasurementsHandler:
     # -----------------
     def add_measurement(self, measurement: Measurement):
         """
-        Adds measurement object to the SsaMeasurement table.
+        Adds measurement object to the SidewalkMeasurement table.
 
         _time_to_live attribute is ignored.
         time_to_live field is set to the current_time + 24 hours.
 
-        :param  measurement:  Measurement object.
-        :return:        Updated Measurement object.
+        :param measurement:  Measurement object.
+        :return:             Updated Measurement object.
         """
         try:
             timestamp = int(time.time())
