@@ -94,8 +94,8 @@ Resources:
         AttributeName: time_to_live
         Enabled: true
       ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
       TableName: SidewalkDevices
 
   # Table for storing sensor measurements
@@ -117,17 +117,19 @@ Resources:
           KeySchema:
             - AttributeName: wireless_device_id
               KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
           ProvisionedThroughput:
-            ReadCapacityUnits: 10
-            WriteCapacityUnits: 10
+            ReadCapacityUnits: 2
+            WriteCapacityUnits: 2
       TimeToLiveSpecification:
         AttributeName: time_to_live
         Enabled: true
       ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
 
 
 
