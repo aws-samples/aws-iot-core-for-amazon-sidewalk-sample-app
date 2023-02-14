@@ -26,10 +26,11 @@ class GrafanaClient:
             AWS region for a current session.
 
     """
-    WORKSPACE = 'SidewalkSampleApplicationGrafanaWorkspace'
+    WORKSPACE = 'SidewalkGrafanaWorkspace'
+    WORKSPACE_ROLE = 'GrafanaWorkspaceRole'
     WORKSPACE_API_KEY = f'{WORKSPACE}ApiKey'
-    DATASOURCE = 'SidewalkTimestream'
-    DASHBOARD = 'SidewalkSampleApplication'
+    DATASOURCE = 'GrafanaTimestream'
+    DASHBOARD = 'SidewalkGrafanaApplication'
 
     def __init__(self, session: boto3.Session):
         self._grafana_client = session.client(service_name='grafana')
@@ -57,13 +58,13 @@ class GrafanaClient:
                     workspace_id = ws['id']
                     workspace_url = f'{workspace_id}.grafana-workspace.{self._region}.amazonaws.com'
                     raise FileExistsError
-            response = self._iam_client.get_role(RoleName=f'{self.WORKSPACE}Role')
+            response = self._iam_client.get_role(RoleName=self.WORKSPACE_ROLE)
             workspace_role_arn = response['Role']['Arn']
             response = self._grafana_client.create_workspace(
                 accountAccessType='CURRENT_ACCOUNT',
                 authenticationProviders=['AWS_SSO'],
                 permissionType='CUSTOMER_MANAGED',
-                tags={'Application': 'SidewalkSampleApplication'},
+                tags={'Application': 'SidewalkGrafana'},
                 workspaceDataSources=['TIMESTREAM'],
                 workspaceDescription='Workspace for SidewalkSampleApplication',
                 workspaceName=self.WORKSPACE,
