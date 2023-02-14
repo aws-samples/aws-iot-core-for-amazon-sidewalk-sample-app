@@ -15,6 +15,7 @@ from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
 from libs.s3_client import S3Client
 from libs.utils import *
+from libs.wireless_client import WirelessClient
 
 
 # -----------------
@@ -41,44 +42,20 @@ confirm()
 # -------------------------------------------------------------
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
-iam_client = session.client(service_name='iam')
 lambda_client = session.client(service_name='lambda')
 s3_client = S3Client(session)
-wireless_client = session.client(service_name='iotwireless')
+wireless_client = WirelessClient(session)
 
 
 # ------------------------------------
 # Enable Sidewalk event notifications
 # ------------------------------------
-try:
-    log_info('Enabling Sidewalk event notification in iotwireless...')
-    response = wireless_client.update_event_configuration_by_resource_types(
-        DeviceRegistrationState={'Sidewalk': {'WirelessDeviceEventTopic': 'Enabled'}},
-        Proximity={'Sidewalk': {'WirelessDeviceEventTopic': 'Enabled'}},
-        MessageDeliveryStatus={'Sidewalk': {'WirelessDeviceEventTopic': 'Enabled'}}
-    )
-    eval_client_response(response, 'Notifications enabled.')
-except ClientError as e:
-    terminate(f'Notifications not enabled: {e}.', ErrCode.EXCEPTION)
-
+wireless_client.enable_notifications()
 
 # ---------------------------------------------------
 # Check if given Sidewalk destination already exists
 # ---------------------------------------------------
-sid_dest_already_exists = False
-try:
-    log_info(f'Checking if {config.sid_dest_name} destination exists...')
-    response = wireless_client.get_destination(Name=config.sid_dest_name)
-    eval_client_response(
-        response,
-        f'{config.sid_dest_name} already exists and will not be included in the SidewalkSampleApplicationStack.'
-    )
-    sid_dest_already_exists = True
-except ClientError as e:
-    if e.response['Error']['Code'] == 'ResourceNotFoundException':
-        log_success(f'{config.sid_dest_name} does not exist and will be included in the SidewalkSampleApplicationStack.')
-    else:
-        terminate(f'Unable to get {config.sid_dest_name} destination: {e}.', ErrCode.EXCEPTION)
+sid_dest_already_exists = wireless_client.check_if_destination_exists(name=config.sid_dest_name)
 
 
 # -----------------------------
@@ -93,6 +70,7 @@ stack = read_file(stack_path)
 # --------------------------------------
 cf_client.create_stack(
     template=stack,
+    name=cf_client.SSA_STACK,
     sid_dest=config.sid_dest_name,
     dest_exists=sid_dest_already_exists,
     tag='SidewalkSampleApplication'
@@ -103,25 +81,10 @@ cf_client.create_stack(
 # Update given Sidewalk destination (only if destination already existed)
 # ------------------------------------------------------------------------
 if sid_dest_already_exists:
-    log_info(f'{config.sid_dest_name} already exists and will be modified. Proceed?')
-    confirm()
-    sid_dest_role = 'SidewalkDestinationRole'
-    try:
-        log_info(f'Getting {sid_dest_role} role ARN...')
-        response = iam_client.get_role(RoleName=f'{sid_dest_role}')
-        log_success(f'{sid_dest_role} ARN obtained.')
-        log_info(f'Updating {config.sid_dest_name} destination...')
-        role_arn = response['Role']['Arn']
-        response = wireless_client.update_destination(
-            Name=config.sid_dest_name,
-            ExpressionType='MqttTopic',
-            Expression='sidewalk/app_data',
-            Description='Destination for uplink messages from Sidewalk devices.',
-            RoleArn=role_arn
-        )
-        eval_client_response(response, f'{config.sid_dest_name} role updated.')
-    except ClientError as e:
-        terminate(f'Unable to update {config.sid_dest_name} destination: {e}.', ErrCode.EXCEPTION)
+    wireless_client.update_existing_destination(
+        dest_name=config.sid_dest_name,
+        role_name='SidewalkDestinationRole'
+    )
 
 
 # --------------------

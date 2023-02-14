@@ -21,6 +21,7 @@ from libs.utils import *
 # -----------------
 config = Config()
 
+
 # --------------------
 # Ask user to proceed
 # --------------------
@@ -37,8 +38,6 @@ confirm()
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 s3_client = S3Client(session)
-grafana_client = GrafanaClient(session)
-idstore_client = IdentityStoreClient(session, config.identity_store_id)
 
 
 # --------------------------------------
@@ -52,24 +51,8 @@ if bucket:
 # --------------------------------------
 # Delete CloudFormation stack
 # --------------------------------------
-cf_client.delete_stack()
+cf_client.delete_stack(name=cf_client.SSA_STACK)
 config.set_web_app_url(None)
-
-
-# ----------------------------------------
-# Delete Amazon Managed Grafana workspace
-# ----------------------------------------
-grafana_client.delete_workspace()
-config.set_workspace_url(None)
-
-
-# ---------------------------------
-# Delete IAM Identity Center group
-# ---------------------------------
-if config.identity_store_id:
-    idstore_client.delete_group()
-else:
-    log_warn(f'IDENTITY_STORE_ID not given. If IAM Identity Center group/users were created, they will not be removed.')
 
 
 # -------------------------
@@ -78,18 +61,3 @@ else:
 log_success('---------------------------------------------------------------')
 log_success('The SidewalkSampleApplication has been deleted.')
 log_success('---------------------------------------------------------------')
-
-
-# ----------------------------------------------
-# Optionally: delete users given in config file
-# ----------------------------------------------
-if config.identity_store_id and config.identity_center_users:
-    log_info('Do you want to delete following IAM Identity Center users?')
-    for idx, user in enumerate(config.identity_center_users):
-        log_info(
-            f'\t{idx + 1}. '
-            f'{user.username}'
-        )
-    confirm()
-    for user in config.identity_center_users:
-        idstore_client.delete_user(user)

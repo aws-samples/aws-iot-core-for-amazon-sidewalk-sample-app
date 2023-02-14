@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 """
-Script deletes Grafana-related resources only.
+Script deletes SidewalkGrafana stack.
 """
 
 import boto3
@@ -23,7 +23,7 @@ config = Config()
 # --------------------
 # Ask user to proceed
 # --------------------
-log_info('Arguments to be used during the Grafana-related resources deletion:')
+log_info('Arguments to be used during the SidewalkGrafana deletion:')
 log_info(f'\tCONFIG_PROFILE: {config.aws_profile}')
 log_info(f'\tREGION: {config.region_name}')
 log_warn('This is a destructive action and can not be undone!')
@@ -39,10 +39,10 @@ grafana_client = GrafanaClient(session)
 idstore_client = IdentityStoreClient(session, config.identity_store_id)
 
 
-# ------------------------------------------------------------------
-# Update CloudFormation stack by removing Grafana-related resources
-# ------------------------------------------------------------------
-cf_client.update_stack(deploy_grafana=False)
+# --------------------------------------
+# Delete CloudFormation stack
+# --------------------------------------
+cf_client.delete_stack(name=cf_client.GRAFANA_STACK)
 
 
 # ----------------------------------------
@@ -65,7 +65,7 @@ else:
 # Print success message
 # -------------------------
 log_success('---------------------------------------------------------------')
-log_success('Grafana related resources has been deleted.')
+log_success('The SidewalkGrafana has been deleted.')
 log_success('---------------------------------------------------------------')
 
 
