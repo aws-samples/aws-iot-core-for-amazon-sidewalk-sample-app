@@ -19,6 +19,8 @@ class WirelessClient:
             Client to AWS IAM.
 
     """
+    SSA_DESTINATION_ROLE = 'SidewalkDestinationRole'
+    GRAFANA_DESTINATION_ROLE = 'GrafanaDestinationRole'
 
     def __init__(self, session: boto3.Session):
         self._wireless_client = session.client(service_name='iotwireless')
@@ -71,9 +73,46 @@ class WirelessClient:
                 Description='Destination for uplink messages from Sidewalk devices.',
                 RoleArn=role_arn
             )
-            eval_client_response(response, f'{dest_name} role updated.')
+            eval_client_response(response, f'{dest_name} destination updated.')
         except ClientError as e:
             terminate(f'Unable to update {dest_name} destination: {e}.', ErrCode.EXCEPTION)
+
+    def reassign_role_to_destination(self, dest_name):
+        """
+        Checks if any of the following roles exist:
+            SSA_DESTINATION_ROLE
+            GRAFANA_DESTINATION_ROLE
+        and reassigns existing one to a given destination.
+
+        SidewalkSampleApplication and SidewalkGrafana can run simultaneously sharing the same destination;
+        when one of the stacks is deleted (along with its destination role), the destination role of another one should
+        be assigned to the destination, so that it keeps permission to publish to the sidewalk/app_data topic.
+        """
+        # Check if destination exists
+        try:
+            self._wireless_client.get_destination(Name=dest_name)
+        except ClientError:
+            return
+
+        # Check if any role exists and if so, reassign it to a destination
+        roles = [self.SSA_DESTINATION_ROLE, self.GRAFANA_DESTINATION_ROLE]
+        for role in roles:
+            try:
+                response = self._iam_client.get_role(RoleName=f'{role}')
+                role_arn = response['Role']['Arn']
+
+                log_info(f'Reassigning {role} to the {dest_name} destination...')
+                response = self._wireless_client.update_destination(
+                    Name=dest_name,
+                    ExpressionType='MqttTopic',
+                    Expression='sidewalk/app_data',
+                    Description='Destination for uplink messages from Sidewalk devices.',
+                    RoleArn=role_arn
+                )
+                eval_client_response(response, f'{dest_name} destination updated.')
+                break
+            except:
+                continue
 
     def enable_notifications(self):
         """

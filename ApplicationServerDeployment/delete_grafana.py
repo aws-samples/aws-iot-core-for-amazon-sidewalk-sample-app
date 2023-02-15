@@ -12,6 +12,7 @@ from libs.config import Config
 from libs.grafana_client import GrafanaClient
 from libs.identity_store_client import IdentityStoreClient
 from libs.utils import *
+from libs.wireless_client import WirelessClient
 
 
 # -----------------
@@ -37,7 +38,7 @@ session = boto3.Session(profile_name=config.aws_profile, region_name=config.regi
 cf_client = CloudFormationClient(session)
 grafana_client = GrafanaClient(session)
 idstore_client = IdentityStoreClient(session, config.identity_store_id)
-
+wireless_client = WirelessClient(session)
 
 # --------------------------------------
 # Delete CloudFormation stack
@@ -67,6 +68,14 @@ else:
 log_success('---------------------------------------------------------------')
 log_success('The SidewalkGrafana has been deleted.')
 log_success('---------------------------------------------------------------')
+
+
+# --------------------------------------------------------------------------------
+# Check if destination still exists.
+# If True, try to reassign to it an existing destination role from another stack,
+# so that destination keeps permissions to publish to the sidewalk/app_data topic
+# --------------------------------------------------------------------------------
+wireless_client.reassign_role_to_destination(dest_name=config.sid_dest_name)
 
 
 # ----------------------------------------------

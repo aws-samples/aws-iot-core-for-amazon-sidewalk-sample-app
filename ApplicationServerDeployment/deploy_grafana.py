@@ -92,7 +92,7 @@ cf_client.create_stack(
 if sid_dest_already_exists:
     wireless_client.update_existing_destination(
         dest_name=config.sid_dest_name,
-        role_name='GrafanaDestinationRole'
+        role_name=wireless_client.GRAFANA_DESTINATION_ROLE
     )
 
 

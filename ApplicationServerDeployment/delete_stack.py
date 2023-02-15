@@ -10,11 +10,9 @@ import boto3
 
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
-from libs.grafana_client import GrafanaClient
-from libs.identity_store_client import IdentityStoreClient
 from libs.s3_client import S3Client
 from libs.utils import *
-
+from libs.wireless_client import WirelessClient
 
 # -----------------
 # Read config file
@@ -38,7 +36,7 @@ confirm()
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 s3_client = S3Client(session)
-
+wireless_client = WirelessClient(session)
 
 # --------------------------------------
 # Delete bucket contents
@@ -61,3 +59,11 @@ config.set_web_app_url(None)
 log_success('---------------------------------------------------------------')
 log_success('The SidewalkSampleApplication has been deleted.')
 log_success('---------------------------------------------------------------')
+
+
+# --------------------------------------------------------------------------------
+# Check if destination still exists.
+# If True, try to reassign to it an existing destination role from another stack,
+# so that destination keeps permissions to publish to the sidewalk/app_data topic
+# --------------------------------------------------------------------------------
+wireless_client.reassign_role_to_destination(dest_name=config.sid_dest_name)
