@@ -177,7 +177,7 @@ You can press buttons on the edge device and see the button state changes in the
 You can press LED button in the web UI and see that the LED on your edge device toggles.
 You can open the window in your room (or turn on the heating, upon preference) and observe how temperature readouts change in the web UI.
 
-This is what you should see in the Web app after both Server and EdgeDevice start communicating:
+This is what you should see in the Web app after both Server and EdgeDevice start communicating:  
 ![Alt text](./ApplicationServerDeployment/doc/web_app_device.png "Web App - device status")
 
 ## Sensor Monitoring App - implementation details
@@ -203,13 +203,13 @@ Color denotes message type:
 It also creates necessary roles and permissions, not included on the diagram.
 Its main components are:
 
-- *SIDEWALK_DESTINATION* - maps a device message to an AWS IoT rule.
+- *SIDEWALK_DESTINATION* - maps a device message to the MQTT topic.
   Each Sidewalk device need to have its destination defined, so that AWS IoT knows where to redirect the message.
   You can change destination of your device using *UpdateDestination* method from the AWS IoT Wireless API.
-  All the uplink messages from the *SIDEWALK_DESTINATION* are redirected to the *SidewalkUplinkRule*.
+  All the uplink messages from the *SIDEWALK_DESTINATION* are redirected to the *sidewalk/app_data* topic.
 
 
-- *SidewalkUplinkRule* - receives uplink messages from the *SIDEWALK_DESTINATION*.
+- *SidewalkUplinkRule* - receives uplink messages from the *sidewalk/app_data* topic.
   It forwards incoming uplinks to the *SidewalkUplinkLambda*, where they are further processed.
   In case of error, error messages are stored in the *SidewalkRuleError* log group.
 
@@ -268,8 +268,8 @@ python3 ApplicationServerDeployment/delete_stack.py
 | Resource Type | Console Location | Name
 | --- | --- | --- |
 | AWS::CloudFormation::Stack                        | CloudFormation -> Stacks                          | SidewalkSampleApplicationStack
-| AWS::IoTWireless::Destination                     | AWS IoT -> Manage -> LPWAN devices -> Destinations| SensorAppDestination
-| AWS::IoT::TopicRule                               | AWS IoT -> Message routing -> Rules               | SidewalkNotificationRule  SidewalkUplinkRule
+| AWS::IoTWireless::Destination                     | AWS IoT -> Manage -> LPWAN devices -> Destinations| config.yaml -> DESTINATION_NAME
+| AWS::IoT::TopicRule                               | AWS IoT -> Message routing -> Rules               | SidewalkNotificationRule
 | AWS::IoT::TopicRule                               | AWS IoT -> Message routing -> Rules               | SidewalkUplinkRule
 | AWS::IoT::Policy                                  | AWS IoT -> Security -> Policies                   | SidewalkReceiveWirelessEventNotificationsPolicy
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkDbHandlerLambda
@@ -289,10 +289,9 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkDownlinkLambdaExecutionRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkUplinkLambdaExecutionRole
 | AWS::DynamoDB::Table                              | DynamoDB -> Tables                                | SidewalkDevices
-| AWS::Timestream::Database                         | Timestream -> Databases                           | SidewalkTimestream
-| AWS::Timestream::Table                            | Timestream -> Databases -> SidewalkTimestream     | Measurements
+| AWS::DynamoDB::Table                              | DynamoDB -> Tables                                | SidewalkMeasurements
 | AWS::CloudFront::Distribution                     | CloudFront -> Distributions                       | CloudFrontDistribution
-| AWS::CloudFront::CloudFrontOriginAccessIdentity   | CloudFront -> Origin access                       | CloudFrontOriginAccessIdentity
+| AWS::CloudFront::OriginAccessControl              | CloudFront -> Origin access                       | SidewalkSampleApplicationOAC
 | AWS::ApiGateway::RestApi                          | API Gateway -> APIs -> sensor-monitoring-app      | SidewalkApiGateway
 | AWS::ApiGateway::Resource                         | API Gateway -> APIs -> sensor-monitoring-app      | ApiResource
 | AWS::ApiGateway::Resource                         | API Gateway -> APIs -> sensor-monitoring-app      | ProxyResource

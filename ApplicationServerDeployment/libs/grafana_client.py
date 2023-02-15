@@ -66,7 +66,7 @@ class GrafanaClient:
                 permissionType='CUSTOMER_MANAGED',
                 tags={'Application': 'SidewalkGrafana'},
                 workspaceDataSources=['TIMESTREAM'],
-                workspaceDescription='Workspace for SidewalkSampleApplication',
+                workspaceDescription='Workspace for SidewalkGrafanaApplication',
                 workspaceName=self.WORKSPACE,
                 workspaceRoleArn=workspace_role_arn
             )
@@ -81,8 +81,8 @@ class GrafanaClient:
                     log_progress(f"[{timestamp}] \t{workspace_status}: {self.WORKSPACE}")
                 if workspace_status in ['ACTIVE', 'FAILED', 'CREATION_FAILED']:
                     in_progress = False
+                log_wait()
                 sleep(1)
-
             if workspace_status == 'ACTIVE':
                 workspace_url = f'{workspace_id}.grafana-workspace.{self._region}.amazonaws.com'
                 log_success(f'{self.WORKSPACE} created successfully. Workspace url: {workspace_url}')
@@ -196,7 +196,7 @@ class GrafanaClient:
             dashboard_template = json.loads(template)
             payload = {
                 "dashboard": dashboard_template,
-                "message": "Creating SidewalkSampleApplication dashboard",
+                "message": f"Creating {self.DASHBOARD} dashboard",
                 "overwrite": True
             }
             status, response, dashboard_id = self._grafana_http_client.create_dashboard(payload)

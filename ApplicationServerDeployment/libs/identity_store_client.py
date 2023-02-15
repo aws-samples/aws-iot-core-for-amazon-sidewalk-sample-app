@@ -19,7 +19,7 @@ class IdentityStoreClient:
         _store_id: str
             Id of the identity store.
     """
-    GROUP = 'SidewalkSampleApplication-GrafanaUsers'
+    GROUP = 'SidewalkGrafanaApplicationUsers'
 
     def __init__(self, session: boto3.Session, store_id: str):
         self._client = session.client(service_name='identitystore')
@@ -40,7 +40,7 @@ class IdentityStoreClient:
             response = self._client.create_group(
                 IdentityStoreId=self._store_id,
                 DisplayName=self.GROUP,
-                Description='Groups SidewalkSampleApplication Grafana dashboard viewers.'
+                Description='Groups SidewalkGrafanaApplication dashboard viewers.'
             )
             eval_client_response(response, 'Group created.')
             group_id = response['GroupId']
