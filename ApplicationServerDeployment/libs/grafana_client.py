@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 import boto3
+import json
 from botocore.exceptions import ClientError
 from datetime import datetime
 from time import sleep
@@ -191,7 +192,7 @@ class GrafanaClient:
         dashboard_id = ''
         try:
             template = read_file(template)
-            log_info("Adding SidewalkTestApplication dashboard to Grafana...")
+            log_info("Adding SidewalkGrafanaApplication dashboard to Grafana...")
             template = template.replace("<datasource_uid>", datasource_uid)
             dashboard_template = json.loads(template)
             payload = {

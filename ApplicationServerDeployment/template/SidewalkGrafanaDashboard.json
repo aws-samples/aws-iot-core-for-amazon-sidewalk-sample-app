@@ -230,7 +230,7 @@
       },
       "targets": [
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -241,7 +241,7 @@
           "table": "\"UplinkMessages\""
         },
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -253,7 +253,7 @@
           "table": "\"Notifications\""
         },
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -265,7 +265,7 @@
           "table": "\"Notifications\""
         },
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -346,7 +346,7 @@
       "pluginVersion": "9.2.0",
       "targets": [
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -624,7 +624,7 @@
       },
       "targets": [
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -635,7 +635,7 @@
           "table": "\"UplinkMessages\""
         },
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -647,7 +647,7 @@
           "table": "\"Notifications\""
         },
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -659,7 +659,7 @@
           "table": "\"Notifications\""
         },
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -747,7 +747,7 @@
       "pluginVersion": "9.2.0",
       "targets": [
         {
-          "database": "\"SidewalkTimestream\"",
+          "database": "\"GrafanaTimestream\"",
           "datasource": {
             "type": "grafana-timestream-datasource",
             "uid": "<datasource_uid>"
@@ -842,7 +842,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "SidewalkSampleApplication",
+  "title": "SidewalkGrafanaApplication",
   "uid": null,
   "version": 0,
   "weekStart": ""
