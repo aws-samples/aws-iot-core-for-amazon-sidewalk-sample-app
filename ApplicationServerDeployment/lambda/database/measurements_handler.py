@@ -64,7 +64,7 @@ class MeasurementsHandler:
         """
         try:
             timestamp = int(time.time_ns() / 1000000)
-            ttl = self._get_dynamodb_item_time_to_live(timestamp)
+            ttl = self._get_dynamodb_item_time_to_live(int(time.time()))
             self._table.put_item(
                 Item={
                     'timestamp': timestamp,
@@ -88,4 +88,4 @@ class MeasurementsHandler:
     # -----------------
     @staticmethod
     def _get_dynamodb_item_time_to_live(timestamp: int) -> int:
-        return timestamp + 3600 * 1000
+        return timestamp + 3600
