@@ -75,6 +75,7 @@ def log_success(message):
     log_clear()
     print(Fore.GREEN + f'[SUCCESS]\t{message}' + Fore.RESET)
 
+
 def confirm():
     """Asks user to confirm an action."""
     log_clear()

@@ -257,6 +257,7 @@ class GrafanaClient:
                     terminate(
                         f'{self.WORKSPACE} deletion failed. Status found: {workspace_status}', ErrCode.EXCEPTION
                     )
+                log_wait()
                 sleep(1)
         except FileNotFoundError:
             log_success(f'{self.WORKSPACE} doesn\'t exist, skipping.')

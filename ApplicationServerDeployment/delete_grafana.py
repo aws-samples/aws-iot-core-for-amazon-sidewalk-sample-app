@@ -46,6 +46,14 @@ wireless_client = WirelessClient(session)
 cf_client.delete_stack(name=cf_client.GRAFANA_STACK)
 
 
+# --------------------------------------------------------------------------------
+# Check if destination still exists.
+# If True, try to reassign to it an existing destination role from another stack,
+# so that destination keeps permissions to publish to the sidewalk/app_data topic
+# --------------------------------------------------------------------------------
+wireless_client.reassign_role_to_destination(dest_name=config.sid_dest_name)
+
+
 # ----------------------------------------
 # Delete Amazon Managed Grafana workspace
 # ----------------------------------------
@@ -68,14 +76,6 @@ else:
 log_success('---------------------------------------------------------------')
 log_success('The SidewalkGrafana has been deleted.')
 log_success('---------------------------------------------------------------')
-
-
-# --------------------------------------------------------------------------------
-# Check if destination still exists.
-# If True, try to reassign to it an existing destination role from another stack,
-# so that destination keeps permissions to publish to the sidewalk/app_data topic
-# --------------------------------------------------------------------------------
-wireless_client.reassign_role_to_destination(dest_name=config.sid_dest_name)
 
 
 # ----------------------------------------------
