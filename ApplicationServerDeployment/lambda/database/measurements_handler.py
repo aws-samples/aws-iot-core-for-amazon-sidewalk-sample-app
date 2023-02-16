@@ -36,8 +36,10 @@ class MeasurementsHandler:
         """
         items = []
         try:
+            t_now = int(time.time())
             response = self._table.scan(IndexName='wireless_device_id',
-                                        FilterExpression=Attr('wireless_device_id').eq(wireless_device_id))
+                                        FilterExpression=Attr('wireless_device_id').
+                                        eq(wireless_device_id) & Attr('time_to_live').gte(t_now))
             items.extend(response.get('Items', []))
         except ClientError as err:
             logger.error(f'Error while calling get_all_devices: {err}')
