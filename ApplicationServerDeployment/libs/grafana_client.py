@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 import boto3
+import json
 from botocore.exceptions import ClientError
 from datetime import datetime
 from time import sleep
@@ -26,10 +27,6 @@ class GrafanaClient:
             AWS region for a current session.
 
     """
-    WORKSPACE = 'SidewalkSampleApplicationGrafanaWorkspace'
-    WORKSPACE_API_KEY = f'{WORKSPACE}ApiKey'
-    DATASOURCE = 'SidewalkTimestream'
-    DASHBOARD = 'SidewalkSampleApplication'
 
     def __init__(self, session: boto3.Session):
         self._grafana_client = session.client(service_name='grafana')
@@ -40,33 +37,35 @@ class GrafanaClient:
     # -------
     # Deploy
     # -------
-    def create_workspace(self) -> (str, str):
+    def create_workspace(self, workspace_name: str, workspace_role: str) -> (str, str):
         """
         Creates Grafana workspace.
 
-        :return:    (workspace_id, workspace_url) Tuple with metadata of created workspace.
+        :param workspace_name:  Name of the workspace.
+        :param workspace_role:  Name of the workspace role.
+        :return:                (workspace_id, workspace_url) Tuple with metadata of created workspace.
         """
         workspace_id = ''
         workspace_url = ''
-        log_info(f'Creating {self.WORKSPACE} in Amazon Grafana...')
+        log_info(f'Creating {workspace_name} in Amazon Grafana...')
         confirm()
 
         try:
             for ws in self._grafana_client.list_workspaces()['workspaces']:
-                if self.WORKSPACE == ws['name']:
+                if workspace_name == ws['name']:
                     workspace_id = ws['id']
                     workspace_url = f'{workspace_id}.grafana-workspace.{self._region}.amazonaws.com'
                     raise FileExistsError
-            response = self._iam_client.get_role(RoleName=f'{self.WORKSPACE}Role')
+            response = self._iam_client.get_role(RoleName=workspace_role)
             workspace_role_arn = response['Role']['Arn']
             response = self._grafana_client.create_workspace(
                 accountAccessType='CURRENT_ACCOUNT',
                 authenticationProviders=['AWS_SSO'],
                 permissionType='CUSTOMER_MANAGED',
-                tags={'Application': 'SidewalkSampleApplication'},
+                tags={'Application': 'SidewalkGrafana'},
                 workspaceDataSources=['TIMESTREAM'],
-                workspaceDescription='Workspace for SidewalkSampleApplication',
-                workspaceName=self.WORKSPACE,
+                workspaceDescription='Workspace for SidewalkGrafanaApplication',
+                workspaceName=workspace_name,
                 workspaceRoleArn=workspace_role_arn
             )
             in_progress = True
@@ -77,52 +76,53 @@ class GrafanaClient:
                 if workspace_status != response['workspace']['status']:
                     workspace_status = response['workspace']['status']
                     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                    log_progress(f"[{timestamp}] \t{workspace_status}: {self.WORKSPACE}")
+                    log_progress(f"[{timestamp}] \t{workspace_status}: {workspace_name}")
                 if workspace_status in ['ACTIVE', 'FAILED', 'CREATION_FAILED']:
                     in_progress = False
+                log_wait()
                 sleep(1)
-
             if workspace_status == 'ACTIVE':
                 workspace_url = f'{workspace_id}.grafana-workspace.{self._region}.amazonaws.com'
-                log_success(f'{self.WORKSPACE} created successfully. Workspace url: {workspace_url}')
+                log_success(f'{workspace_name} created successfully. Workspace url: {workspace_url}')
             else:
                 terminate(
-                    f'{self.WORKSPACE} creation failed. Status found: {workspace_status}, status expected: ACTIVE',
+                    f'{workspace_name} creation failed. Status found: {workspace_status}, status expected: ACTIVE',
                     ErrCode.EXCEPTION
                 )
         except FileExistsError:
             log_success(
-                f'{self.WORKSPACE} already exists: {workspace_id}.grafana-workspace.{self._region}.amazonaws.com, skipping.')
+                f'{workspace_name} already exists: {workspace_id}.grafana-workspace.{self._region}.amazonaws.com, skipping.')
         except ClientError as e:
-            terminate(f'{self.WORKSPACE} creation failed: {e}.', ErrCode.EXCEPTION)
+            terminate(f'{workspace_name} creation failed: {e}.', ErrCode.EXCEPTION)
         return workspace_id, workspace_url
 
-    def create_workspace_api_key(self, workspace_id: str) -> str:
+    def create_workspace_api_key(self, workspace_id: str, api_key_name: str) -> str:
         """
         Creates workspace api key.
 
-        :param:     Workspace id.
-        :return:    Workspace api key.
+        :param workspace_id:    Workspace id.
+        :param api_key_name:    Name of the api key.
+        :return:                Workspace api key.
         """
         workspace_api_key = ''
         try:
             log_info("Creating workspace API key...")
             response = self._grafana_client.create_workspace_api_key(
-                keyName=self.WORKSPACE_API_KEY, keyRole='ADMIN', secondsToLive=900, workspaceId=workspace_id
+                keyName=api_key_name, keyRole='ADMIN', secondsToLive=900, workspaceId=workspace_id
             )
             workspace_api_key = response['key']
         except ClientError:
             # Try to delete and recreate API key
             try:
                 self._grafana_client.delete_workspace_api_key(
-                    keyName=self.WORKSPACE_API_KEY, workspaceId=workspace_id
+                    keyName=api_key_name, workspaceId=workspace_id
                 )
                 response = self._grafana_client.create_workspace_api_key(
-                    keyName=self.WORKSPACE_API_KEY, keyRole='ADMIN', secondsToLive=900, workspaceId=workspace_id
+                    keyName=api_key_name, keyRole='ADMIN', secondsToLive=900, workspaceId=workspace_id
                 )
                 workspace_api_key = response['key']
             except (ClientError, KeyError) as e:
-                terminate(f'Unable to create {self.WORKSPACE_API_KEY}: {e}.', ErrCode.EXCEPTION)
+                terminate(f'Unable to create {api_key_name}: {e}.', ErrCode.EXCEPTION)
         log_success('API key created.')
         return workspace_api_key
 
@@ -135,17 +135,18 @@ class GrafanaClient:
         """
         self._grafana_http_client = Grafana(workspace_url, workspace_api_key)
 
-    def ws_add_datasource(self) -> str:
+    def ws_add_datasource(self, datasource_name: str) -> str:
         """
         Adds datasource to the Grafana workspace.
 
-        :return:    Datasource uid.
+        :param datasource_name: Name of the datasource.
+        :return:                Datasource uid.
         """
         self._check_http_client()
         datasource_uid = ''
         try:
             payload = {
-                "name": self.DATASOURCE,
+                "name": datasource_name,
                 "type": "grafana-timestream-datasource",
                 "typeName": "Amazon Timestream",
                 "access": "proxy",
@@ -162,12 +163,12 @@ class GrafanaClient:
             log_info('Adding timestream database as a Grafana datasource...')
             status, response, datasource_uid = self._grafana_http_client.create_data_source(payload)
             if status:
-                log_success(f'{self.DATASOURCE} datasource added.')
+                log_success(f'{datasource_name} datasource added.')
             elif response.status_code == 409:
-                log_info(f'{self.DATASOURCE} datasource already exists, getting its uid...')
-                status, response, datasource_uid = self._grafana_http_client.get_data_source(self.DATASOURCE)
+                log_info(f'{datasource_name} datasource already exists, getting its uid...')
+                status, response, datasource_uid = self._grafana_http_client.get_data_source(datasource_name)
                 if status:
-                    log_success(f'{self.DATASOURCE} datasource in place.')
+                    log_success(f'{datasource_name} datasource in place.')
                 else:
                     terminate(f'Unexpected status code: {response.status_code}. Message: {response.content}',
                               ErrCode.EXCEPTION)
@@ -190,17 +191,17 @@ class GrafanaClient:
         dashboard_id = ''
         try:
             template = read_file(template)
-            log_info("Adding SidewalkTestApplication dashboard to Grafana...")
+            log_info("Adding dashboard to Grafana...")
             template = template.replace("<datasource_uid>", datasource_uid)
             dashboard_template = json.loads(template)
             payload = {
                 "dashboard": dashboard_template,
-                "message": "Creating SidewalkSampleApplication dashboard",
+                "message": f"Creating dashboard",
                 "overwrite": True
             }
             status, response, dashboard_id = self._grafana_http_client.create_dashboard(payload)
             if status:
-                log_success(f'{self.DASHBOARD} dashboard added.')
+                log_success(f'Dashboard added.')
             else:
                 terminate(f'Unexpected status code: {response.status_code}. Message: {response.content}',
                           ErrCode.EXCEPTION)
@@ -220,7 +221,7 @@ class GrafanaClient:
             payload = {"homeDashboardId": dashboard_id}
             status, response = self._grafana_http_client.update_org_preferences(payload)
             if status:
-                log_success(f'{self.DASHBOARD} dashboard added.')
+                log_success(f'Dashboard added.')
             else:
                 terminate(f'Unexpected status code: {response.status_code}. Message: {response.content}',
                           ErrCode.EXCEPTION)
@@ -230,15 +231,17 @@ class GrafanaClient:
     # -------
     # Delete
     # -------
-    def delete_workspace(self):
+    def delete_workspace(self, workspace_name: str):
         """
         Deletes Grafana workspace.
+        
+        :param workspace_name:  Name of the workspace.
         """
-        log_info(f'Deleting {self.WORKSPACE} from Amazon Grafana...')
+        log_info(f'Deleting {workspace_name} from Amazon Grafana...')
         workspace_id = ''
         try:
             for ws in self._grafana_client.list_workspaces()['workspaces']:
-                if self.WORKSPACE == ws['name']:
+                if workspace_name == ws['name']:
                     workspace_id = ws['id']
             if not workspace_id:
                 raise FileNotFoundError
@@ -250,39 +253,41 @@ class GrafanaClient:
                 if workspace_status != response['workspace']['status']:
                     workspace_status = response['workspace']['status']
                     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                    log_progress(f"[{timestamp}] \t{workspace_status}: {self.WORKSPACE}")
+                    log_progress(f"[{timestamp}] \t{workspace_status}: {workspace_name}")
                 if workspace_status != 'DELETING':
                     terminate(
-                        f'{self.WORKSPACE} deletion failed. Status found: {workspace_status}', ErrCode.EXCEPTION
+                        f'{workspace_name} deletion failed. Status found: {workspace_status}', ErrCode.EXCEPTION
                     )
+                log_wait()
                 sleep(1)
         except FileNotFoundError:
-            log_success(f'{self.WORKSPACE} doesn\'t exist, skipping.')
+            log_success(f'{workspace_name} doesn\'t exist, skipping.')
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
                 timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                log_progress(f"[{timestamp}] \tDELETE_COMPLETE: {self.WORKSPACE}")
-                log_success(f'{self.WORKSPACE} successfully deleted')
+                log_progress(f"[{timestamp}] \tDELETE_COMPLETE: {workspace_name}")
+                log_success(f'{workspace_name} successfully deleted')
             elif e.response['Error']['Code'] == 'ConflictException':
                 msg = e.response['Error']['Message']
                 terminate(f'{msg}.', ErrCode.EXCEPTION)
             else:
-                terminate(f'{self.WORKSPACE} deletion failed: {e}.', ErrCode.EXCEPTION)
+                terminate(f'{workspace_name} deletion failed: {e}.', ErrCode.EXCEPTION)
 
-    def delete_workspace_api_key(self, workspace_id: str):
+    def delete_workspace_api_key(self, workspace_id: str, api_key_name: str):
         """
         Deletes workspace api key.
 
-        :param:     Workspace id.
+        :param workspace_id:    Workspace id.
+        :param api_key_name:    Name of the api key.
         """
         try:
             log_info("Removing workspace API key...")
             response = self._grafana_client.delete_workspace_api_key(
-                workspaceId=workspace_id, keyName=self.WORKSPACE_API_KEY
+                workspaceId=workspace_id, keyName=api_key_name
             )
             eval_client_response(response, 'API key deleted.')
         except ClientError as e:
-            terminate(f'Unable to delete {self.WORKSPACE_API_KEY}: {e}.', ErrCode.EXCEPTION)
+            terminate(f'Unable to delete {api_key_name}: {e}.', ErrCode.EXCEPTION)
 
     # ------
     # Utils

@@ -20,7 +20,6 @@
             "Resource": [
                 "arn:aws:iam::<account_ID>:role/SidewalkDestinationRole",
                 "arn:aws:iam::<account_ID>:role/SidewalkRuleRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkSampleApplicationGrafanaWorkspaceRole",
                 "arn:aws:iam::<account_ID>:role/SidewalkUplinkLambdaExecutionRole",
                 "arn:aws:iam::<account_ID>:role/SidewalkDownlinkLambdaExecutionRole",
                 "arn:aws:iam::<account_ID>:role/SidewalkDbHandlerLambdaExecutionRole"
@@ -98,16 +97,6 @@
         {
             "Effect": "Allow",
             "Action": [
-                "logs:CreateLogGroup",
-                "logs:DeleteLogGroup",
-                "logs:TagLogGroup",
-                "logs:PutRetentionPolicy"
-            ],
-            "Resource": "arn:aws:logs:us-east-1:<account_ID>:log-group:SidewalkRuleErrors:*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
                 "dynamodb:DescribeTable",
                 "dynamodb:CreateTable",
                 "dynamodb:DeleteTable",
@@ -121,7 +110,8 @@
                 "dynamodb:DescribeTimeToLive"
             ],
             "Resource": [
-                "arn:aws:dynamodb:*:<account_ID>:table/SidewalkDevices"
+                "arn:aws:dynamodb:*:<account_ID>:table/SidewalkDevices",
+                "arn:aws:dynamodb:*:<account_ID>:table/SidewalkMeasurements"
             ]
         },
         {
@@ -151,11 +141,10 @@
             "Effect": "Allow",
             "Action": [
                 "cloudfront:CreateDistribution",
+                "cloudfront:DeleteDistribution",
                 "cloudfront:GetDistribution",
-                "cloudfront:GetOriginAccessControl",
                 "cloudfront:GetOriginRequestPolicy",
                 "cloudfront:ListDistributions",
-                "cloudfront:DeleteDistribution",
                 "cloudfront:UpdateDistribution",
                 "cloudfront:TagResource"
             ],
@@ -168,10 +157,13 @@
             "Action": [
                 "cloudfront:CreateOriginAccessControl",
                 "cloudfront:DeleteOriginAccessControl",
-                "cloudfront:UpdateOriginAccessControl"
+                "cloudfront:GetOriginAccessControl",
+                "cloudfront:UpdateOriginAccessControl",
+                "cloudfront:TagResource"
             ],
             "Resource": [
-                "arn:aws:cloudfront::<account_ID>:distribution/*"
+                "arn:aws:cloudfront::<account_ID>:distribution/*",
+                "arn:aws:cloudfront::<account_ID>:origin-access-control/*"
             ]
         },
         {
@@ -188,42 +180,6 @@
         {
             "Effect": "Allow",
             "Action": [
-                "timestream:CreateDatabase",
-                "timestream:CreateTable",
-                "timestream:DeleteDatabase",
-                "timestream:DeleteTable",
-                "timestream:DescribeEndpoints",
-                "timestream:DescribeTable",
-                "timestream:ListDatabases",
-                "timestream:ListTables",
-                "timestream:ListTagsForResource",
-                "timestream:UpdateDatabase",
-                "timestream:UpdateTable",
-                "timestream:DescribeDatabase",
-                "timestream:DescribeScheduledQuery",
-                "timestream:PrepareQuery",
-                "timestream:Select",
-                "timestream:DeleteScheduledQuery",
-                "timestream:ExecuteScheduledQuery",
-                "timestream:SelectValues",
-                "timestream:CancelQuery",
-                "timestream:ListScheduledQueries",
-                "timestream:CreateScheduledQuery",
-                "timestream:TagResource"
-            ],
-            "Resource": [
-                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream",
-                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/*",
-                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/table/Notifications",
-                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/table/Measurements",
-                "arn:aws:timestream:*:<account_ID>:database/SidewalkTimestream/table/UplinkMessages"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "timestream:DescribeEndpoints",
-                "cloudformation:*",
                 "s3:CreateBucket",
                 "s3:DeleteBucket",
                 "s3:PutObject",
@@ -232,7 +188,8 @@
                 "s3:DeleteBucketPolicy",
                 "s3:PutBucketPolicy",
                 "s3:GetBucketPolicy",
-                "s3:ListBucket"
+                "s3:ListBucket",
+                "s3:PutBucketPublicAccessBlock"
             ],
             "Resource": "*"
         },
@@ -247,6 +204,7 @@
                 "logs:DescribeLogGroups",
                 "logs:PutRetentionPolicy",
                 "logs:PutLogEvents",
+                "logs:TagLogGroup",
                 "logs:TagResource"
             ],
             "Resource":[

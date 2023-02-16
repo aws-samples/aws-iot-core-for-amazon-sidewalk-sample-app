@@ -1,6 +1,6 @@
-# Amazon Sidewalk Sample IoT App - Grafana extension
+# Amazon Sidewalk Sample IoT App - Grafana dashboard
 
-Grafana extension enables you to create an AWS Grafana workspace to visualize incoming uplinks and notifications.
+`deploy_grafana.py` enables you to create an AWS Grafana workspace to visualize incoming uplinks and notifications.
 
 ### Additional prerequisties
 
@@ -8,7 +8,7 @@ Grafana extension enables you to create an AWS Grafana workspace to visualize in
 
 ### Grafana workspace
 
-Grafana stack provides the data visualization via Grafana dashboard. 
+SidewalkGrafanaStack provides the data visualization via Grafana dashboard. 
 Dashboard reads the data stored in *Notifications* and *UplinkMessages* tables 
 and displays information in a single view with different widgets. 
 Whenever new uplink or notification appears, it is visible on the dashboard. You can filter the data using *wireless_device_id* variable.
@@ -23,16 +23,15 @@ workspace.
 
 ### Cloud infrastructure
 
-Grafana extension works on top of the Sensor Monitoring Application stack.
-It adds two tables to the *SidewalkTimestream* database:
+SidewalkGrafana stack works independently of the Sensor Monitoring Application stack.
+It forwards incoming messages to two tables in the *SidewalkTimestream* database:
 - *UplinkMessages* - which stores payload of the incoming uplink messages
 - *Notifications* - which stores incoming notifications
 
 It also provides a Grafana dashboard for tracing incoming messages.
 Mentioned tables are datasource for the dashboard.
 
-Components of the Grafana extension are depicted by the diagram below.
-In order not to obscure the picture, some resources of the main stack are not shown.
+Components of the SidewalkGrafana stack are depicted by the diagram below.
 Components are connected by arrows, which represent dataflow. Color denotes message type:
 - green --> *uplink*
 - blue --> *notification*
@@ -40,14 +39,26 @@ Components are connected by arrows, which represent dataflow. Color denotes mess
 
 | ![Alt text](./doc/grafana_diagram.png "Grafana extension - resources and dataflow") |
 |---|
-| *Grafana extension - resources and dataflow* |
+| *SidewalkGrafana  - resources and dataflow* |
 
-*SidewalkSampleApplicationStack* has a *DeployGrafana* parameter, which, when set, modifies/deploys following resources:
+*SidewalkGrafanaStack* CloudFormation stack provides resources that handle messages coming from Sidewalk-enabled devices.
+It also creates necessary roles and permissions, not included on the diagram. 
+Its main components are:
 
-- *SidewalkUplinkRule* - an action is added, which forwards incoming uplinks to the *UplinkMessages* table
-  
+- *SIDEWALK_DESTINATION* - maps a device message to the MQTT topic.
+  Each Sidewalk device need to have its destination defined, so that AWS IoT knows where to redirect the message.
+  You can change destination of your device using *UpdateDestination* method from the AWS IoT Wireless API.
+  All the uplink messages from the *SIDEWALK_DESTINATION* are redirected to the *sidewalk/app_data* topic.
 
-- *SidewalkNotificationRule* - an action is added, which forwards incoming notifications to the *Notifications* table
+
+- *GrafanaUplinkRule* - receives uplink messages from the sidewalk/app_data topic. 
+  It forwards incoming uplinks to the  *UplinkMessages* table. 
+  In case of error, error messages are stored in the *GrafanaRuleError* log group.
+
+
+- *GrafanaNotificationRule* - receives event notifications for Sidewalk resources.
+  It forwards incoming notifications to the *Notifications* table
+  In case of error, error messages are stored in the *GrafanaRuleError* log group.
   
 
 - *UplinkMessages* - stores uplink messages
@@ -60,21 +71,18 @@ Components are connected by arrows, which represent dataflow. Color denotes mess
 |WARNING: You will be billed for the usage of AWS resources created by this application. In particular, you will be charged for every active user of the Grafana dashboard. Keep in mind that every deployment creates an API key needed to setup the dashboard and data sources, what is counted as a single user with admin permissions. |
 |---|
 
-1. Ensure that you already deployed the main stack by running *deploy_stack.py*
-
-
-2. Update the [config_grafana](./config_grafana.yaml) in the SidewalkSampleApplication package if needed:  
+1. Update the [config_grafana](./config_grafana.yaml) if needed:  
 
     - *IDENTITY_STORE_ID* - The globally unique identifier for the identity store, such as d-1234567890.   
       This value can be read from the IAM Identity Center -> Settings view.  
       If you want the script to create Grafana workspace users for you, you need to specify this value.
       
-      | ![Alt text](./doc/identity_store_id.png "SidewalkSampleApplication dashboard") |
+      | ![Alt text](./doc/identity_store_id.png "Identity Center view") |
       |---|
       | *Identity store ID can be read from the IAM Identity Center -> Settings view* |
     
     - *IDENTITY_CENTER_USERS* - list of users to be created in the identity store and grouped into the 
-      *SidewalkSampleApplication-GrafanaUsers group*.  
+      *SidewalkGrafanaApplicationUsers* group.  
       By default, script creates a single user - *GrafanaUser*. 
       Each user must be described with the following mandatory fields:
         - *USER_NAME* -  user's unique identifier
@@ -84,32 +92,32 @@ Components are connected by arrows, which represent dataflow. Color denotes mess
         If you want the script to create Grafana workspace users for you, you need to specify this value.
     
     
-3. Update base stack with Grafana-related resources and create Grafana workspace using the *deploy_grafana.py* script:
+2. Create SidewalkGrafana stack and Grafana workspace using the *deploy_grafana.py* script:
    ```
    python3 ApplicationServerDeployment/deploy_grafana.py
    ```
    
-4. Assign users to the Grafana workspace.  
+3. Assign users to the Grafana workspace.  
    Log into your AWS account, navigate to the *AmazonGrafana* and click *All workspaces*.  
-   Select *SidewalkSampleApplicationGrafanaWorkspace* and then *Assign new user or group*. 
+   Select *SidewalkGrafanaWorkspace* and then *Assign new user or group*. 
    
-   | ![Alt text](./doc/grafana_ssa_workspace.png "Grafana - SidewalkSampleApplicationGrafanaWorkspace") |
+   | ![Alt text](./doc/grafana_workspace.png "Grafana - SidewalkGrafanaWorkspace") |
    |---|
-   | *Grafana - SidewalkSampleApplicationGrafanaWorkspace* |
+   | *Grafana - SidewalkGrafanaWorkspace* |
    
    Switch to the *Groups* tab.   
-   Select *SidewalkSampleApplication-GrafanaUsers* group.
-   All users created by the *deploy_stack.py* belong to this group.  
+   Select *SidewalkGrafanaApplicationUsers* group.
+   All users created by the *deploy_grafana.py* belong to this group.  
    Click *Assign users and groups*.
-   *SidewalkSampleApplication-GrafanaUsers* will be assigned to the workspace with *Viewer* permissions.
+   *SidewalkGrafanaApplicationUsers* will be assigned to the workspace with *Viewer* permissions.
 
    | ![Alt text](./doc/grafana_assign_group.png "Grafana - Assign group to the workspace") |
    |---|
    | *Grafana - Assign group to the workspace* |
 
-5. Create One-time password for your user.  
+4. Create One-time password for your user.  
    Navigate to the IAM Identity Center and click on the name of the user you want to use to log in 
-   (it should be a member of *SidewalkSampleApplication-GrafanaUsers*).
+   (it should be a member of *SidewalkGrafanaApplicationUsers*).
    
    | ![Alt text](./doc/identity_center_users.png "Identity center - Users") |
    |---|
@@ -134,36 +142,30 @@ Components are connected by arrows, which represent dataflow. Color denotes mess
     | *One-time password panel* |
 
 
-6. Navigate to the Grafana dashboard using address provided by the *deploy_stack.py* script 
-   (it is also stored in the *config.json* and accessible via Amazon Grafana console).  
+5. Navigate to the Grafana dashboard using address provided by the *deploy_grafana.py* script 
+   (it is also stored in the *config_grafana.yaml* under *WORKSPACE_URL* and accessible via Amazon Grafana console).  
    Log in using One-time password configured in the previous step.
    
    | ![Alt text](./doc/grafana_sign_in.png "Grafana dashboard - sign in page") |
    |---|
    | *Grafana dashboard - sign in page* |
    
-   After logging in, you should be able to see the SidewalkSampleApplication dashboard. 
+   After logging in, you should be able to see the SidewalkGrafanaApplication dashboard. 
    Send an uplink message from your device and refresh the dashboard, to confirm that it was successfully received by 
    the deployed infrastructure.
    
 
 ### Stack Deletion
 
-Deletion of the stack and grafana workspace can be done automatically (using the *delete_stack.py*) or manually (from the AWS console).  
+Deletion of the stack and grafana workspace can be done automatically (using the *delete_grafana.py*) or manually (from the AWS console).  
 IAM Identity Center users (read from the [config_grafana](./config_grafana.yaml)), may or may not be deleted depending on the user input.
 
  - OPTION A - automatically using script
-   - deleting only the Grafana extension: 
         ```
         python3 ApplicationServerDeployment/delete_grafana.py
         ```
-   - deleting the whole stack: 
-        ```
-        python3 ApplicationServerDeployment/delete_stack.py
-        ```
  - OPTION B - manually from the AWS console  
-   Go to the AWS console, select the resource, and click delete.  
-   The links bellow are for us-east-1; if you created your stack in another region make sure you go there.
+   Go to the AWS console, select the resource, and click delete.
     - CloudFormation: https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks
     - Grafana: https://us-east-1.console.aws.amazon.com/grafana/home?region=us-east-1#/workspaces
     
@@ -171,10 +173,19 @@ IAM Identity Center users (read from the [config_grafana](./config_grafana.yaml)
 
 | Resource Type | Console Location | Name |
 | ------------- | -------- | ---- |
-| AWS::CloudFormation::Stack     | Lambda -> Applications                                   | SidewalkSampleApplicationStack
-| AWS::Timestream::Table         | Timestream -> Databases -> SidewalkTimestream -> Tables  | UplinkMessages
-| AWS::Timestream::Table         | Timestream -> Databases -> SidewalkTimestream -> Tables  | Notifications
-| Amazon Grafana Workspace       | Amazon Grafana -> Workspaces                             | SidewalkSampleApplicationGrafanaWorkspace
+| AWS::CloudFormation::Stack     | CloudFormation -> Stacks                               | SidewalkGrafanaStack
+| AWS::IoTWireless::Destination  | AWS IoT -> Manage -> LPWAN devices -> Destinations     | config.yaml -> DESTINATION_NAME
+| AWS::IoT::TopicRule            | AWS IoT -> Message routing -> Rules                    | GrafanaNotificationRule
+| AWS::IoT::TopicRule            | AWS IoT -> Message routing -> Rules                    | GrafanaUplinkRule
+| AWS::IoT::Policy               | AWS IoT -> Security -> Policies                        | GrafanaReceiveWirelessEventNotificationsPolicy
+| AWS::Timestream::Database      | Timestream -> Databases                                | GrafanaTimestream
+| AWS::Timestream::Table         | Timestream -> Databases -> GrafanaTimestream -> Tables | UplinkMessages
+| AWS::Timestream::Table         | Timestream -> Databases -> GrafanaTimestream -> Tables | Notifications
+| AWS::Logs::LogGroup            | CloudWatch -> Log groups                               | GrafanaRuleErrors
+| AWS::IAM::Role                 | IAM -> Roles                                           | GrafanaDestinationRole
+| AWS::IAM::Role                 | IAM -> Roles                                           | GrafanaGrafanaRuleRole
+| AWS::IAM::Role                 | IAM -> Roles                                           | GrafanaWorkspaceRole
+| Amazon Grafana Workspace       | Amazon Grafana -> Workspaces                           | SidewalkGrafanaWorkspace
 
 ## Security
 

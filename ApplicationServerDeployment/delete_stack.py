@@ -8,18 +8,23 @@ It deletes also Grafana-related resources (if exist).
 
 import boto3
 
+from constants.GrafanaConstants import DESTINATION_ROLE as GRAFANA_DESTINATION_ROLE
+from constants.SampleApplicationConstants import *
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
-from libs.grafana_client import GrafanaClient
-from libs.identity_store_client import IdentityStoreClient
 from libs.s3_client import S3Client
 from libs.utils import *
+from libs.iot_wireless_client import IoTWirelessClient
+
+
+SSA_STACK = 'SidewalkSampleApplicationStack'
 
 
 # -----------------
 # Read config file
 # -----------------
 config = Config()
+
 
 # --------------------
 # Ask user to proceed
@@ -37,14 +42,12 @@ confirm()
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 s3_client = S3Client(session)
-grafana_client = GrafanaClient(session)
-idstore_client = IdentityStoreClient(session, config.identity_store_id)
-
+wireless_client = IoTWirelessClient(session)
 
 # --------------------------------------
 # Delete bucket contents
 # --------------------------------------
-bucket = cf_client.get_output_var("SidewalkWebAppBucketName")
+bucket = cf_client.get_output_var(SSA_STACK, "SidewalkWebAppBucketName")
 if bucket:
     s3_client.delete_bucket_content(bucket)
 
@@ -52,24 +55,8 @@ if bucket:
 # --------------------------------------
 # Delete CloudFormation stack
 # --------------------------------------
-cf_client.delete_stack()
+cf_client.delete_stack(stack_name=STACK_NAME)
 config.set_web_app_url(None)
-
-
-# ----------------------------------------
-# Delete Amazon Managed Grafana workspace
-# ----------------------------------------
-grafana_client.delete_workspace()
-config.set_workspace_url(None)
-
-
-# ---------------------------------
-# Delete IAM Identity Center group
-# ---------------------------------
-if config.identity_store_id:
-    idstore_client.delete_group()
-else:
-    log_warn(f'IDENTITY_STORE_ID not given. If IAM Identity Center group/users were created, they will not be removed.')
 
 
 # -------------------------
@@ -80,16 +67,12 @@ log_success('The SidewalkSampleApplication has been deleted.')
 log_success('---------------------------------------------------------------')
 
 
-# ----------------------------------------------
-# Optionally: delete users given in config file
-# ----------------------------------------------
-if config.identity_store_id and config.identity_center_users:
-    log_info('Do you want to delete following IAM Identity Center users?')
-    for idx, user in enumerate(config.identity_center_users):
-        log_info(
-            f'\t{idx + 1}. '
-            f'{user.username}'
-        )
-    confirm()
-    for user in config.identity_center_users:
-        idstore_client.delete_user(user)
+# --------------------------------------------------------------------------------
+# Check if destination still exists.
+# If True, try to reassign to it an existing destination role from another stack,
+# so that destination keeps permissions to publish to the sidewalk/app_data topic
+# --------------------------------------------------------------------------------
+wireless_client.reassign_role_to_destination(
+    dest_name=config.sid_dest_name,
+    role_name=GRAFANA_DESTINATION_ROLE
+)

@@ -5,11 +5,9 @@
 Utility functions
 """
 
-import json
 import os
 import zipfile
 
-from json.decoder import JSONDecodeError
 from enum import Enum
 from pathlib import Path
 from colorama import init, Fore
@@ -22,7 +20,10 @@ class ErrCode(Enum):
     EXCEPTION = 1
     CANCELLED_BY_USER = 2
 
+
 _log_wait_count = 0
+
+
 def log_wait():
     """Formats and prints a wait line and resets the cursor to the start of the line."""
     global _log_wait_count
@@ -30,12 +31,14 @@ def log_wait():
     if _log_wait_count > 3: log_clear()
     print(Fore.CYAN + f' {"." * _log_wait_count}\r' + Fore.RESET, end='')
 
+
 def log_clear():
     """Clears the contents of the current line"""
     global _log_wait_count
     _log_wait_count = 0
     LINE_CLEAR = '\x1b[2K'
     print(end=LINE_CLEAR)
+
 
 def log_error(message):
     """Formats and prints error message."""
@@ -71,6 +74,7 @@ def log_success(message):
     """Formats and prints success message."""
     log_clear()
     print(Fore.GREEN + f'[SUCCESS]\t{message}' + Fore.RESET)
+
 
 def confirm():
     """Asks user to confirm an action."""

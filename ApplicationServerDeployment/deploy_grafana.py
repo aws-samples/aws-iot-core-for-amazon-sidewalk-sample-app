@@ -2,20 +2,19 @@
 # SPDX-License-Identifier: MIT-0
 
 """
-Script extends SidewalkSampleApplication stack by creating data sources for Grafana.
+Scripts deploys Grafana stack.
 It also creates Grafana workspace and configures dashboard.
-
-IMPORTANT!
-You need to deploy SidewalkSampleApplication stack first.
 """
 
 import boto3
 
+from constants.GrafanaConstants import *
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
 from libs.grafana_client import GrafanaClient
 from libs.identity_store_client import IdentityStoreClient
 from libs.utils import *
+from libs.iot_wireless_client import IoTWirelessClient
 
 
 # -----------------
@@ -55,12 +54,47 @@ session = boto3.Session(profile_name=config.aws_profile, region_name=config.regi
 cf_client = CloudFormationClient(session)
 grafana_client = GrafanaClient(session)
 idstore_client = IdentityStoreClient(session, config.identity_store_id)
-
+wireless_client = IoTWirelessClient(session)
 
 # ------------------------------------
-# Trigger CloudFormation stack update
+# Enable Sidewalk event notifications
 # ------------------------------------
-cf_client.update_stack(deploy_grafana=True)
+wireless_client.enable_notifications()
+
+
+# ---------------------------------------------------
+# Check if given Sidewalk destination already exists
+# ---------------------------------------------------
+sid_dest_already_exists = wireless_client.check_if_destination_exists(name=config.sid_dest_name)
+
+
+# -----------------------------
+# Read CloudFormation template
+# -----------------------------
+stack_path = Path(__file__).parent.joinpath('template', 'SidewalkGrafanaStack.yaml')
+stack = read_file(stack_path)
+
+
+# --------------------------------------
+# Trigger CloudFormation stack creation
+# --------------------------------------
+cf_client.create_stack(
+    template=stack,
+    stack_name=STACK_NAME,
+    sid_dest=config.sid_dest_name,
+    dest_exists=sid_dest_already_exists,
+    tag=TAG
+)
+
+
+# ------------------------------------------------------------------------
+# Update given Sidewalk destination (only if destination already existed)
+# ------------------------------------------------------------------------
+if sid_dest_already_exists:
+    wireless_client.update_existing_destination(
+        dest_name=config.sid_dest_name,
+        role_name=DESTINATION_ROLE
+    )
 
 
 # ------------------------------------------------------
@@ -68,21 +102,21 @@ cf_client.update_stack(deploy_grafana=True)
 # ------------------------------------------------------
 
 # Create workspace
-workspace_id, workspace_url = grafana_client.create_workspace()
+workspace_id, workspace_url = grafana_client.create_workspace(WORKSPACE_NAME, WORKSPACE_ROLE)
 
 # Store workspace url in config.json
 config.set_workspace_url(workspace_url)
 
 # Create workspace API key
-workspace_api_key = grafana_client.create_workspace_api_key(workspace_id)
+workspace_api_key = grafana_client.create_workspace_api_key(workspace_id, WORKSPACE_API_KEY)
 
 # Add timestream datasource
 grafana_client.init_http_client(workspace_url, workspace_api_key)
-datasource_uid = grafana_client.ws_add_datasource()
+datasource_uid = grafana_client.ws_add_datasource(DATASOURCE)
 
 # Create dashboard from template
 dashboard_id = grafana_client.ws_create_dashboard(
-    template=Path(__file__).parent.joinpath('template', 'SidewalkSampleApplicationDashboard.json'),
+    template=Path(__file__).parent.joinpath('template', 'SidewalkGrafanaDashboard.json'),
     datasource_uid=datasource_uid
 )
 
@@ -90,7 +124,7 @@ dashboard_id = grafana_client.ws_create_dashboard(
 grafana_client.ws_set_home_dashboard(dashboard_id)
 
 # Remove workspace API key
-grafana_client.delete_workspace_api_key(workspace_id)
+grafana_client.delete_workspace_api_key(workspace_id, WORKSPACE_API_KEY)
 
 
 # -------------------------
@@ -112,7 +146,7 @@ else:
     confirm()
 
     # Create group in IAM Identity Center
-    group_id = idstore_client.create_group()
+    group_id = idstore_client.create_group(GROUP_NAME)
 
     # Create user in IAM Identity Center
     for idx, user in enumerate(config.identity_center_users):
