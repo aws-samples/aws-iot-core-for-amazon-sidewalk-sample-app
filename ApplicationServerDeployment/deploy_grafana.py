@@ -8,12 +8,13 @@ It also creates Grafana workspace and configures dashboard.
 
 import boto3
 
+from constants.GrafanaConstants import *
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
 from libs.grafana_client import GrafanaClient
 from libs.identity_store_client import IdentityStoreClient
 from libs.utils import *
-from libs.wireless_client import WirelessClient
+from libs.iot_wireless_client import IoTWirelessClient
 
 
 # -----------------
@@ -53,7 +54,7 @@ session = boto3.Session(profile_name=config.aws_profile, region_name=config.regi
 cf_client = CloudFormationClient(session)
 grafana_client = GrafanaClient(session)
 idstore_client = IdentityStoreClient(session, config.identity_store_id)
-wireless_client = WirelessClient(session)
+wireless_client = IoTWirelessClient(session)
 
 # ------------------------------------
 # Enable Sidewalk event notifications
@@ -79,10 +80,10 @@ stack = read_file(stack_path)
 # --------------------------------------
 cf_client.create_stack(
     template=stack,
-    name=cf_client.GRAFANA_STACK,
+    stack_name=STACK_NAME,
     sid_dest=config.sid_dest_name,
     dest_exists=sid_dest_already_exists,
-    tag='SidewalkGrafana'
+    tag=TAG
 )
 
 
@@ -92,7 +93,7 @@ cf_client.create_stack(
 if sid_dest_already_exists:
     wireless_client.update_existing_destination(
         dest_name=config.sid_dest_name,
-        role_name=wireless_client.GRAFANA_DESTINATION_ROLE
+        role_name=DESTINATION_ROLE
     )
 
 
@@ -101,17 +102,17 @@ if sid_dest_already_exists:
 # ------------------------------------------------------
 
 # Create workspace
-workspace_id, workspace_url = grafana_client.create_workspace()
+workspace_id, workspace_url = grafana_client.create_workspace(WORKSPACE_NAME, WORKSPACE_ROLE)
 
 # Store workspace url in config.json
 config.set_workspace_url(workspace_url)
 
 # Create workspace API key
-workspace_api_key = grafana_client.create_workspace_api_key(workspace_id)
+workspace_api_key = grafana_client.create_workspace_api_key(workspace_id, WORKSPACE_API_KEY)
 
 # Add timestream datasource
 grafana_client.init_http_client(workspace_url, workspace_api_key)
-datasource_uid = grafana_client.ws_add_datasource()
+datasource_uid = grafana_client.ws_add_datasource(DATASOURCE)
 
 # Create dashboard from template
 dashboard_id = grafana_client.ws_create_dashboard(
@@ -123,7 +124,7 @@ dashboard_id = grafana_client.ws_create_dashboard(
 grafana_client.ws_set_home_dashboard(dashboard_id)
 
 # Remove workspace API key
-grafana_client.delete_workspace_api_key(workspace_id)
+grafana_client.delete_workspace_api_key(workspace_id, WORKSPACE_API_KEY)
 
 
 # -------------------------
@@ -145,7 +146,7 @@ else:
     confirm()
 
     # Create group in IAM Identity Center
-    group_id = idstore_client.create_group()
+    group_id = idstore_client.create_group(GROUP_NAME)
 
     # Create user in IAM Identity Center
     for idx, user in enumerate(config.identity_center_users):

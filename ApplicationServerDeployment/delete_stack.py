@@ -8,11 +8,17 @@ It deletes also Grafana-related resources (if exist).
 
 import boto3
 
+from constants.GrafanaConstants import DESTINATION_ROLE as GRAFANA_DESTINATION_ROLE
+from constants.SampleApplicationConstants import *
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
 from libs.s3_client import S3Client
 from libs.utils import *
-from libs.wireless_client import WirelessClient
+from libs.iot_wireless_client import IoTWirelessClient
+
+
+SSA_STACK = 'SidewalkSampleApplicationStack'
+
 
 # -----------------
 # Read config file
@@ -36,12 +42,12 @@ confirm()
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 s3_client = S3Client(session)
-wireless_client = WirelessClient(session)
+wireless_client = IoTWirelessClient(session)
 
 # --------------------------------------
 # Delete bucket contents
 # --------------------------------------
-bucket = cf_client.get_output_var("SidewalkWebAppBucketName")
+bucket = cf_client.get_output_var(SSA_STACK, "SidewalkWebAppBucketName")
 if bucket:
     s3_client.delete_bucket_content(bucket)
 
@@ -49,7 +55,7 @@ if bucket:
 # --------------------------------------
 # Delete CloudFormation stack
 # --------------------------------------
-cf_client.delete_stack(name=cf_client.SSA_STACK)
+cf_client.delete_stack(stack_name=STACK_NAME)
 config.set_web_app_url(None)
 
 
@@ -66,4 +72,7 @@ log_success('---------------------------------------------------------------')
 # If True, try to reassign to it an existing destination role from another stack,
 # so that destination keeps permissions to publish to the sidewalk/app_data topic
 # --------------------------------------------------------------------------------
-wireless_client.reassign_role_to_destination(dest_name=config.sid_dest_name)
+wireless_client.reassign_role_to_destination(
+    dest_name=config.sid_dest_name,
+    role_name=GRAFANA_DESTINATION_ROLE
+)

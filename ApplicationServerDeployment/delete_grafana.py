@@ -2,17 +2,19 @@
 # SPDX-License-Identifier: MIT-0
 
 """
-Script deletes SidewalkGrafana stack.
+Script deletes SidewalkGrafanaStack.
 """
 
 import boto3
 
+from constants.GrafanaConstants import *
+from constants.SampleApplicationConstants import DESTINATION_ROLE as SSA_DESTINATION_ROLE
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
 from libs.grafana_client import GrafanaClient
 from libs.identity_store_client import IdentityStoreClient
 from libs.utils import *
-from libs.wireless_client import WirelessClient
+from libs.iot_wireless_client import IoTWirelessClient
 
 
 # -----------------
@@ -38,12 +40,12 @@ session = boto3.Session(profile_name=config.aws_profile, region_name=config.regi
 cf_client = CloudFormationClient(session)
 grafana_client = GrafanaClient(session)
 idstore_client = IdentityStoreClient(session, config.identity_store_id)
-wireless_client = WirelessClient(session)
+wireless_client = IoTWirelessClient(session)
 
 # --------------------------------------
 # Delete CloudFormation stack
 # --------------------------------------
-cf_client.delete_stack(name=cf_client.GRAFANA_STACK)
+cf_client.delete_stack(stack_name=STACK_NAME)
 
 
 # --------------------------------------------------------------------------------
@@ -51,13 +53,16 @@ cf_client.delete_stack(name=cf_client.GRAFANA_STACK)
 # If True, try to reassign to it an existing destination role from another stack,
 # so that destination keeps permissions to publish to the sidewalk/app_data topic
 # --------------------------------------------------------------------------------
-wireless_client.reassign_role_to_destination(dest_name=config.sid_dest_name)
+wireless_client.reassign_role_to_destination(
+    dest_name=config.sid_dest_name,
+    role_name=SSA_DESTINATION_ROLE
+)
 
 
 # ----------------------------------------
 # Delete Amazon Managed Grafana workspace
 # ----------------------------------------
-grafana_client.delete_workspace()
+grafana_client.delete_workspace(WORKSPACE_NAME)
 config.set_workspace_url(None)
 
 
@@ -65,7 +70,7 @@ config.set_workspace_url(None)
 # Delete IAM Identity Center group
 # ---------------------------------
 if config.identity_store_id:
-    idstore_client.delete_group()
+    idstore_client.delete_group(GROUP_NAME)
 else:
     log_warn(f'IDENTITY_STORE_ID not given. If IAM Identity Center group/users were created, they will not be removed.')
 
@@ -74,7 +79,7 @@ else:
 # Print success message
 # -------------------------
 log_success('---------------------------------------------------------------')
-log_success('The SidewalkGrafana has been deleted.')
+log_success(f'The {STACK_NAME} has been deleted.')
 log_success('---------------------------------------------------------------')
 
 

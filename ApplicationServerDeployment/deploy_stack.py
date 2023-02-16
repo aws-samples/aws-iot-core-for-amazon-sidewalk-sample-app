@@ -11,11 +11,12 @@ import webbrowser
 from botocore.exceptions import ClientError
 from io import BytesIO
 
+from constants.SampleApplicationConstants import *
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
 from libs.s3_client import S3Client
 from libs.utils import *
-from libs.wireless_client import WirelessClient
+from libs.iot_wireless_client import IoTWirelessClient
 
 
 # -----------------
@@ -44,7 +45,7 @@ session = boto3.Session(profile_name=config.aws_profile, region_name=config.regi
 cf_client = CloudFormationClient(session)
 lambda_client = session.client(service_name='lambda')
 s3_client = S3Client(session)
-wireless_client = WirelessClient(session)
+wireless_client = IoTWirelessClient(session)
 
 
 # ------------------------------------
@@ -70,10 +71,10 @@ stack = read_file(stack_path)
 # --------------------------------------
 cf_client.create_stack(
     template=stack,
-    name=cf_client.SSA_STACK,
+    stack_name=STACK_NAME,
     sid_dest=config.sid_dest_name,
     dest_exists=sid_dest_already_exists,
-    tag='SidewalkSampleApplication'
+    tag=TAG
 )
 
 
@@ -83,7 +84,7 @@ cf_client.create_stack(
 if sid_dest_already_exists:
     wireless_client.update_existing_destination(
         dest_name=config.sid_dest_name,
-        role_name=wireless_client.SSA_DESTINATION_ROLE
+        role_name=DESTINATION_ROLE
     )
 
 
@@ -111,13 +112,13 @@ for idx, (lam, dir) in enumerate(zip(lambdas, dirs)):
 # ---------------------------
 # Upload WebApp assets to S3
 # ---------------------------
-bucket_name = cf_client.get_output_var('SidewalkWebAppBucketName')
+bucket_name = cf_client.get_output_var(STACK_NAME, 'SidewalkWebAppBucketName')
 s3_client.put_files(bucket_name, Path(__file__).parent.joinpath('gui', 'build'))
 
 # --------------------------------
 # Print Sensor Monitoring App URL
 # --------------------------------
-web_app_url = cf_client.get_output_var('CloudFrontDistribution')
+web_app_url = cf_client.get_output_var(STACK_NAME, 'CloudFrontDistribution')
 config.set_web_app_url(web_app_url)
 webbrowser.open(f'https://{web_app_url}')
 

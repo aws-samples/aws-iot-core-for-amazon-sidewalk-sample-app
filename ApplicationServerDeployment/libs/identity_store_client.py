@@ -19,7 +19,6 @@ class IdentityStoreClient:
         _store_id: str
             Id of the identity store.
     """
-    GROUP = 'SidewalkGrafanaApplicationUsers'
 
     def __init__(self, session: boto3.Session, store_id: str):
         self._client = session.client(service_name='identitystore')
@@ -28,31 +27,32 @@ class IdentityStoreClient:
     # -------
     # Deploy
     # -------
-    def create_group(self) -> str:
+    def create_group(self, group_name: str) -> str:
         """
         Creates users' group.
-
-        :return:    Id of created users' group.
+        
+        :param group_name:  Name of the group to be created.
+        :return:            Id of created users' group.
         """
         group_id = ''
         try:
-            log_info(f'Creating {self.GROUP} group in IAM Identity Center...')
+            log_info(f'Creating {group_name} group in IAM Identity Center...')
             response = self._client.create_group(
                 IdentityStoreId=self._store_id,
-                DisplayName=self.GROUP,
+                DisplayName=group_name,
                 Description='Groups SidewalkGrafanaApplication dashboard viewers.'
             )
             eval_client_response(response, 'Group created.')
             group_id = response['GroupId']
         except ClientError as e:
             if e.response['Error']['Code'] == 'ConflictException':
-                log_info(f'{self.GROUP} already exists. Getting its ID...')
+                log_info(f'{group_name} already exists. Getting its ID...')
                 response = self._client.get_group_id(
                     IdentityStoreId=self._store_id,
                     AlternateIdentifier={
                         'UniqueAttribute': {
                             'AttributePath': 'displayName',
-                            'AttributeValue': self.GROUP
+                            'AttributeValue': group_name
                         }
                     }
                 )
@@ -109,7 +109,7 @@ class IdentityStoreClient:
         :param group_id:    Id of the already created group.
         """
         try:
-            log_info(f'Adding {user.username} to the {self.GROUP}...')
+            log_info(f'Adding {user.username} to the group...')
             response = self._client.create_group_membership(
                 GroupId=group_id,
                 IdentityStoreId=self._store_id,
@@ -120,25 +120,27 @@ class IdentityStoreClient:
             eval_client_response(response, 'User added to the group.')
         except ClientError as e:
             if e.response['Error']['Code'] == 'ConflictException':
-                log_success(f'{user.username} is already member of the {self.GROUP}.')
+                log_success(f'{user.username} is already member of the group.')
             else:
                 terminate(f'Unable to add user to the group: {e}.', ErrCode.EXCEPTION)
 
     # -------
     # Delete
     # -------
-    def delete_group(self):
+    def delete_group(self, group_name: str):
         """
         Deletes user's group.
+        
+        :param group_name:  Name of the group to be deleted.
         """
         try:
-            log_info(f'Deleting {self.GROUP} group from IAM Identity Center...')
+            log_info(f'Deleting {group_name} group from IAM Identity Center...')
             response = self._client.get_group_id(
                 IdentityStoreId=self._store_id,
                 AlternateIdentifier={
                     'UniqueAttribute': {
                         'AttributePath': 'displayName',
-                        'AttributeValue': self.GROUP
+                        'AttributeValue': group_name
                     }
                 }
             )
@@ -150,9 +152,9 @@ class IdentityStoreClient:
             eval_client_response(response, 'Group deleted.')
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                log_success(f'{self.GROUP} doesn\'t exist, skipping.')
+                log_success(f'{group_name} doesn\'t exist, skipping.')
             else:
-                terminate(f'{self.GROUP} deletion failed: {e}.', ErrCode.EXCEPTION)
+                terminate(f'{group_name} deletion failed: {e}.', ErrCode.EXCEPTION)
 
     def delete_user(self, user: User):
         """

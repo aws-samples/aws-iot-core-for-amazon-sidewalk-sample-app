@@ -19,8 +19,6 @@ class CloudFormationClient:
             Client to AWS Cloud Formation.
 
     """
-    SSA_STACK = 'SidewalkSampleApplicationStack'
-    GRAFANA_STACK = 'SidewalkGrafanaStack'
 
     def __init__(self, session: boto3.Session):
         self._client = session.client(service_name='cloudformation')
@@ -28,21 +26,21 @@ class CloudFormationClient:
     # -------
     # Deploy
     # -------
-    def create_stack(self, template: str, name: str, sid_dest: str, dest_exists: bool, tag: str):
+    def create_stack(self, template: str, stack_name: str, sid_dest: str, dest_exists: bool, tag: str):
         """
         Creates CloudFormation stack.
 
         :param template:        Cloud formation template.
-        :param name:            Stack name.
+        :param stack_name:      Stack name.
         :param sid_dest:        Sidewalk destination to be used.
         :param dest_exists:     If True, Sidewalk destination will be created as a part of the stack.
                                 If False, it is assumed that destination already exists.
         :param tag:             Tag assigned to created resources; describes application.
         """
-        log_info(f'Creating {name} from cloud formation template...')
+        log_info(f'Creating {stack_name} from cloud formation template...')
         try:
             response = self._client.create_stack(
-                StackName=name,
+                StackName=stack_name,
                 TemplateBody=template,
                 Parameters=[
                     {
@@ -64,7 +62,7 @@ class CloudFormationClient:
                 TimeoutInMinutes=10,
                 OnFailure='DELETE'
             )
-            stack_id = response.get('StackId', name)
+            stack_id = response.get('StackId', stack_name)
             stack_status = ''
             event_index = 0
             in_progress = True
@@ -77,93 +75,30 @@ class CloudFormationClient:
                 event_index = self._print_stack_events(stack_id=stack_id, pointer=event_index)
                 if in_progress: sleep(1)
             if stack_status == 'CREATE_COMPLETE':
-                log_success(f'{name} created successfully.')
+                log_success(f'{stack_name} created successfully.')
             else:
                 terminate(
-                    f'{name} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
+                    f'{stack_name} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
                     ErrCode.EXCEPTION
                 )
         except ClientError as e:
             if e.response['Error']['Code'] == 'AlreadyExistsException':
-                log_success(f'{name} already exists, skipping.')
+                log_success(f'{stack_name} already exists, skipping.')
             else:
-                terminate(f'{name} creation failed: {e}.', ErrCode.EXCEPTION)
+                terminate(f'{stack_name} creation failed: {e}.', ErrCode.EXCEPTION)
 
-    def update_stack(self, deploy_grafana: bool):
-        """
-        Updates existing stack by adding/removing Grafana related resources.
-
-        :param deploy_grafana:      If True, Grafana related resources are included in the template.
-        """
-        start_timestamp = datetime.now(timezone.utc)
-        if deploy_grafana:
-            log_info(f'Updating {self.SSA_STACK} stack with Grafana-related resources...')
-        else:
-            log_info(f'Removing Grafana-related resources from {self.SSA_STACK} stack...')
-        try:
-            response = self._client.update_stack(
-                StackName=self.SSA_STACK,
-                UsePreviousTemplate=True,
-                Parameters=[
-                    {
-                        'ParameterKey': 'SidewalkDestinationAlreadyExists',
-                        'ParameterValue': "true"
-                    },
-                    {
-                        'ParameterKey': 'DeployGrafana',
-                        'ParameterValue': "true" if deploy_grafana else "false"
-                    }
-                ],
-                Capabilities=['CAPABILITY_NAMED_IAM'],
-                Tags=[
-                    {
-                        'Key': 'Application',
-                        'Value': 'SidewalkSampleApplication'
-                    },
-                ],
-                DisableRollback=False
-            )
-            stack_status = ''
-            event_index = 0
-            in_progress = True
-            while in_progress:
-                response = self._client.describe_stacks(StackName=self.SSA_STACK)
-                stack_status = response['Stacks'][0]['StackStatus']
-                status_end = stack_status.split('_')[-1]
-                if status_end in ['COMPLETE', 'FAILED']:
-                    in_progress = False
-                event_index = self._print_stack_events(stack_id=self.SSA_STACK, pointer=event_index, start_date=start_timestamp)
-                if in_progress:
-                    sleep(1)
-            if stack_status == 'UPDATE_COMPLETE':
-                log_success(f'{self.SSA_STACK} updated successfully.')
-            else:
-                terminate(
-                    f'{self.SSA_STACK} update failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
-                    ErrCode.EXCEPTION
-                )
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ValidationError' and 'No updates' in e.response['Error']['Message']:
-                if deploy_grafana:
-                    log_success(f'Grafana resources already exist in {self.SSA_STACK} stack, skipping.')
-                else:
-                    log_success(f'Grafana resources are not part of {self.SSA_STACK} stack, skipping.')
-            elif e.response['Error']['Code'] == 'ValidationError' and 'does not exist' in e.response['Error']['Message']:
-                log_success(f'{self.SSA_STACK} stack does not exist, skipping.')
-            else:
-                terminate(f'{self.SSA_STACK} update failed: {e}.', ErrCode.EXCEPTION)
-
-    def get_output_var(self, key: str) -> str:
+    def get_output_var(self, stack_name: str, key: str) -> str:
         """
         Gets stack output variable value.
 
-        :param key:     Output variable key.
-        :returns:       Value associated with the given key. Returns 'None' if variable not found.
+        :param stack_name   Stack name.
+        :param key:         Output variable key.
+        :returns:           Value associated with the given key. Returns 'None' if variable not found.
         """
         try:
-            log_info(f'Getting {key} value from the {self.SSA_STACK} stack Outputs...')
+            log_info(f'Getting {key} value from the {stack_name} stack Outputs...')
             value = ''
-            response = self._client.describe_stacks(StackName=self.SSA_STACK)
+            response = self._client.describe_stacks(StackName=stack_name)
             outputs = response['Stacks'][0]['Outputs']
             for output in outputs:
                 if output['OutputKey'] == key:
@@ -180,16 +115,16 @@ class CloudFormationClient:
     # -------
     # Delete
     # -------
-    def delete_stack(self, name: str):
+    def delete_stack(self, stack_name: str):
         """
-        Deletes SidewalkSampleApplicationStack.
+        Deletes the stack with the provided name.
         
-        :param name:    Stack name.
+        :param stack_name:    Stack name.
         """
-        log_info(f'Deleting {name} from cloud formation template...')
+        log_info(f'Deleting {stack_name} from cloud formation template...')
         try:
             # check if the stack exists
-            response = self._client.describe_stacks(StackName=name)
+            response = self._client.describe_stacks(StackName=stack_name)
             stack_status = response['Stacks'][0]['StackStatus']
             # get stack_id so describe_stacks & describe_stack_events doesn't fail after deletion
             stack_id = response['Stacks'][0]['StackId']
@@ -197,7 +132,7 @@ class CloudFormationClient:
             stack_status = self._delete_stack(stack_id)
 
             if stack_status == 'DELETE_COMPLETE':
-                log_success(f'{name} deleted successfully.')
+                log_success(f'{stack_name} deleted successfully.')
                 return
             elif stack_status == 'DELETE_FAILED':
                 resources = self._client.describe_stack_resources(StackName=stack_id).get('StackResources', [])
@@ -208,7 +143,7 @@ class CloudFormationClient:
                              f'Retrying to remove the stack, while keeping the SidewalkDestination...')
                     stack_status = self._delete_stack(stack_id, ['SidewalkDestination'])
                     if stack_status == 'DELETE_COMPLETE':
-                        log_success(f'{name} deleted successfully.\n'
+                        log_success(f'{stack_name} deleted successfully.\n'
                                     f'SidewalkDestination left untouched and can be found under: AWS IoT -> Manage -> LPWAN devices -> Destinations.')
                         return
                 # if DELETE_FAILED after retry, print info about resources that failed to be deleted
@@ -223,25 +158,25 @@ class CloudFormationClient:
                                   f'\n{failure.get("ResourceStatusReason")}\n')
                     log_error('---------------------------------------------------------------')
                     terminate(
-                        f'{name} deletion failed. Please resolve the issues, then rerun the script.',
+                        f'{stack_name} deletion failed. Please resolve the issues, then rerun the script.',
                         ErrCode.EXCEPTION
                     )
                 else:
                     terminate(
-                        f'{name} deletion failed. Status found: {stack_status}, status expected: DELETE_COMPLETE',
+                        f'{stack_name} deletion failed. Status found: {stack_status}, status expected: DELETE_COMPLETE',
                         ErrCode.EXCEPTION
                     )
             else:
                 terminate(
-                    f'{name} deletion failed. Status found: {stack_status}, status expected: DELETE_COMPLETE',
+                    f'{stack_name} deletion failed. Status found: {stack_status}, status expected: DELETE_COMPLETE',
                     ErrCode.EXCEPTION
                 )
         except ClientError as e:
             # will hit this if the initial describe_stacks fails with sidewalk_stack_name
             if e.response['Error']['Code'] == 'ValidationError':
-                log_success(f'{name} doesn\'t exist, skipping.')
+                log_success(f'{stack_name} doesn\'t exist, skipping.')
             else:
-                terminate(f'{name} deletion failed: {e}.', ErrCode.EXCEPTION)
+                terminate(f'{stack_name} deletion failed: {e}.', ErrCode.EXCEPTION)
 
     def _delete_stack(self, stack_id: str, retain_resources: list = None) -> (str, list):
         """
