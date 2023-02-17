@@ -15,7 +15,9 @@
                 "iam:PassRole",
                 "iam:PutRolePolicy",
                 "iam:TagPolicy",
-                "iam:TagRole"
+                "iam:TagRole",
+                "iam:List*",
+                "iam:Update*"
             ],
             "Resource": [
                 "arn:aws:iam::<account_ID>:role/GrafanaDestinationRole",
@@ -30,7 +32,8 @@
                 "cloudformation:DescribeStackEvents",
                 "cloudformation:DescribeStacks",
                 "cloudformation:DeleteStack",
-                "cloudformation:TagResource"
+                "cloudformation:TagResource",
+                "cloudformation:UpdateStack"
             ],
             "Resource": "arn:aws:cloudformation:*:<account_ID>:stack/SidewalkGrafanaStack/*"
         },
@@ -44,7 +47,9 @@
                 "iot:GetPolicy",
                 "iot:GetTopicRule",
                 "iot:ListPolicyVersions",
-                "iot:TagResource"
+                "iot:TagResource",
+                "iot:List*",
+                "iot:Update*"
             ],
             "Resource": [
                 "arn:aws:iot:*:<account_ID>:policy/GrafanaReceiveWirelessEventNotificationsPolicy",
@@ -62,7 +67,9 @@
                 "iotwireless:CreateDeviceProfile",
                 "iotwireless:GetDeviceProfile",
                 "iotwireless:CreateWirelessDevice",
-                "iotwireless:GetWirelessDevice"
+                "iotwireless:GetWirelessDevice",
+                "iotwireless:List*",
+                "iotwireless:Update*"
             ],
             "Resource": [
                 "arn:aws:iotwireless:*:<account_ID>:Destination/*",
@@ -99,7 +106,9 @@
                 "timestream:CancelQuery",
                 "timestream:ListScheduledQueries",
                 "timestream:CreateScheduledQuery",
-                "timestream:TagResource"
+                "timestream:TagResource",
+                "timestream:List*",
+                "timestream:Update*"
             ],
             "Resource": [
                 "arn:aws:timestream:*:<account_ID>:database/GrafanaTimestream",
@@ -123,7 +132,9 @@
                 "grafana:DeleteWorkspaceApiKey",
                 "grafana:DescribeWorkspace",
                 "grafana:DescribeWorkspaceAuthentication",
-                "grafana:TagResource"
+                "grafana:TagResource",
+                "grafana:List*",
+                "grafana:Update*"
             ],
             "Resource": "arn:aws:grafana:*:<account_ID>:/workspaces*"
         },
@@ -146,7 +157,9 @@
                 "identitystore:DeleteUser",
                 "identitystore:GetGroupId",
                 "identitystore:GetUserId",
-                "identitystore:ListGroups"
+                "identitystore:ListGroups",
+                "identitystore:List*",
+                "identitystore:Update*"
             ],
             "Resource": [
                 "arn:aws:identitystore::<account_ID>:identitystore/*",
@@ -162,7 +175,9 @@
                 "sso:DescribeRegisteredRegions",
                 "sso:GetManagedApplicationInstance",
                 "sso:DeleteManagedApplicationInstance",
-                "sso:GetSharedSsoConfiguration"
+                "sso:GetSharedSsoConfiguration",
+                "sso:List*",
+                "sso:Update*"
             ],
             "Resource": "*"
         },
@@ -178,7 +193,9 @@
                 "logs:PutRetentionPolicy",
                 "logs:PutLogEvents",
                 "logs:TagLogGroup",
-                "logs:TagResource"
+                "logs:TagResource",
+                "logs:List*",
+                "logs:Update*"
             ],
             "Resource": [
                 "arn:aws:logs:us-east-1:<account_ID>:log-group:GrafanaRuleErrors:*"

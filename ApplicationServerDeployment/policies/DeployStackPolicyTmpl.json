@@ -15,7 +15,9 @@
                 "iam:PassRole",
                 "iam:PutRolePolicy",
                 "iam:TagPolicy",
-                "iam:TagRole"
+                "iam:TagRole",
+                "iam:List*",
+                "iam:Update*"
             ],
             "Resource": [
                 "arn:aws:iam::<account_ID>:role/SidewalkDestinationRole",
@@ -32,7 +34,8 @@
                 "cloudformation:DescribeStackEvents",
                 "cloudformation:DescribeStacks",
                 "cloudformation:DeleteStack",
-                "cloudformation:TagResource"
+                "cloudformation:TagResource",
+                "cloudformation:UpdateStack"
             ],
             "Resource": "arn:aws:cloudformation:*:<account_ID>:stack/SidewalkSampleApplicationStack/*"
         },
@@ -46,7 +49,10 @@
                 "iot:GetPolicy",
                 "iot:GetTopicRule",
                 "iot:ListPolicyVersions",
-                "iot:TagResource"
+                "iot:TagResource",
+                "iot:Replace*",
+                "iot:List*",
+                "iot:Update*"
             ],
             "Resource": [
                 "arn:aws:iot:*:<account_ID>:policy/SidewalkReceiveWirelessEventNotificationsPolicy",
@@ -64,7 +70,9 @@
                 "iotwireless:CreateDeviceProfile",
                 "iotwireless:GetDeviceProfile",
                 "iotwireless:CreateWirelessDevice",
-                "iotwireless:GetWirelessDevice"
+                "iotwireless:GetWirelessDevice",
+                "iotwireless:List*",
+                "iotwireless:Update*"
             ],
             "Resource": [
                 "arn:aws:iotwireless:*:<account_ID>:Destination/*",
@@ -86,7 +94,9 @@
                 "lambda:GetFunction",
                 "lambda:RemovePermission",
                 "lambda:TagResource",
-                "lambda:UpdateFunctionCode"
+                "lambda:UpdateFunctionCode",
+                "lambda:List*",
+                "lambda:Update*"
             ],
             "Resource": [
                 "arn:aws:lambda:*:<account_ID>:function:SidewalkUplinkLambda",
@@ -107,7 +117,9 @@
                 "dynamodb:GetItem",
                 "dynamodb:Query",
                 "dynamodb:UpdateTimeToLive",
-                "dynamodb:DescribeTimeToLive"
+                "dynamodb:DescribeTimeToLive",
+                "dynamodb:List*",
+                "dynamodb:Update*"
             ],
             "Resource": [
                 "arn:aws:dynamodb:*:<account_ID>:table/SidewalkDevices",
@@ -130,8 +142,9 @@
                 "cloudfront:DeleteCloudFrontOriginAccessIdentity",
                 "cloudfront:GetCloudFrontOriginAccessIdentity",
                 "cloudfront:UpdateCloudFrontOriginAccessIdentity",
-                "cloudfront:ListCloudFrontOriginAccessIdentities"
-
+                "cloudfront:ListCloudFrontOriginAccessIdentities",
+                "cloudfront:List*",
+                "cloudfront:Update*"
             ],
             "Resource": [
                 "arn:aws:cloudfront::<account_ID>:origin-access-identity/*"
@@ -146,7 +159,12 @@
                 "cloudfront:GetOriginRequestPolicy",
                 "cloudfront:ListDistributions",
                 "cloudfront:UpdateDistribution",
-                "cloudfront:TagResource"
+                "cloudfront:TagResource",
+                "cloudfront:CreateOriginRequestPolicy",
+                "cloudfront:DeleteOriginRequestPolicy",
+                "cloudfront:UpdateOriginRequestPolicy",
+                "cloudfront:List*",
+                "cloudfront:Update*"
             ],
             "Resource": [
                 "arn:aws:cloudfront::<account_ID>:distribution/*"
@@ -159,22 +177,13 @@
                 "cloudfront:DeleteOriginAccessControl",
                 "cloudfront:GetOriginAccessControl",
                 "cloudfront:UpdateOriginAccessControl",
-                "cloudfront:TagResource"
+                "cloudfront:TagResource",
+                "cloudfront:List*",
+                "cloudfront:Update*"
             ],
             "Resource": [
                 "arn:aws:cloudfront::<account_ID>:distribution/*",
                 "arn:aws:cloudfront::<account_ID>:origin-access-control/*"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "cloudfront:CreateOriginRequestPolicy",
-                "cloudfront:DeleteOriginRequestPolicy",
-                "cloudfront:UpdateOriginRequestPolicy"
-            ],
-            "Resource": [
-                "arn:aws:cloudfront::<account_ID>:distribution/*"
             ]
         },
         {
@@ -189,7 +198,9 @@
                 "s3:PutBucketPolicy",
                 "s3:GetBucketPolicy",
                 "s3:ListBucket",
-                "s3:PutBucketPublicAccessBlock"
+                "s3:PutBucketPublicAccessBlock",
+                "s3:List*",
+                "s3:Update*"
             ],
             "Resource": "*"
         },
@@ -205,7 +216,9 @@
                 "logs:PutRetentionPolicy",
                 "logs:PutLogEvents",
                 "logs:TagLogGroup",
-                "logs:TagResource"
+                "logs:TagResource",
+                "logs:List*",
+                "logs:Update*"
             ],
             "Resource":[
                 "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkUplinkLambda*",
