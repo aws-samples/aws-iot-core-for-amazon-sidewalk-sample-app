@@ -6,6 +6,7 @@ export const ENDPOINTS = {
   device: "/devices/:id",
   measurement: "/measurements/:id",
   led: "",
+  login: "/auth"
 };
 
 export const interpolateParams = (

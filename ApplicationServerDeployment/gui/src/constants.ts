@@ -17,3 +17,5 @@ export const LED_STATE = {
   ON: "ON",
   OFF: "OFF"
 }
+
+export const ACCESS_TOKEN = "access_token";

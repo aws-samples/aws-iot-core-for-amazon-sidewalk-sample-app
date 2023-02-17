@@ -1,0 +1,32 @@
+.form-wrapper {
+  border: 1px solid gray;
+  border-radius: 10px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-wrapper label {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0;
+}
+
+.form-wrapper input {
+  margin-left: 5px;
+}
+
+.form-wrapper button {
+  margin-top: 1.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.form-wrapper button:disabled {
+  opacity: 0.3;
+}
+
+.login-error {
+  color: red;
+  margin-top: 1rem;
+}

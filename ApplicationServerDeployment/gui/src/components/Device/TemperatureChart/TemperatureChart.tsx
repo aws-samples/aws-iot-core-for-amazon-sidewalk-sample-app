@@ -90,7 +90,7 @@ export const TemperatureChart = ({
   useEffect(() => {
     if (isFirstLoad || !isSensorOn) return;
 
-    intervalMeasurementsId.current = setInterval(
+    intervalMeasurementsId.current = window.setInterval(
       fetchMeasurements,
       APP_CONFIG.intervals.measurement
     );

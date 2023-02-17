@@ -3,13 +3,41 @@
 
 import { Header } from "./components/Header/Header";
 import { DevicesWrapper } from "./components/DevicesWrapper/DevicesWrapper";
+import { Login } from "./components/Login/Login";
+import { useEffect, useState } from "react";
+import { ACCESS_TOKEN } from "./constants";
 import "./App.css";
 
 function App() {
+  const [isUserLoggedIn, setisLogginIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleLoginSuccess = () => {
+    setisLogginIn(true);
+  };
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem(ACCESS_TOKEN);
+
+    if (accessToken) {
+      setisLogginIn(true);
+    }
+
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return <></>;
+  }
+
   return (
     <div className="App">
       <Header />
-      <DevicesWrapper />
+      {isUserLoggedIn ? (
+        <DevicesWrapper />
+      ) : (
+        <Login onLoginSuccess={handleLoginSuccess} />
+      )}
     </div>
   );
 }

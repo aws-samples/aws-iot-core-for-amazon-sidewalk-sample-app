@@ -46,7 +46,7 @@ export const DevicesWrapper = () => {
   useEffect(() => {
     if (isFirstLoad) return;
 
-    intervalDevicesFetchId.current = setInterval(
+    intervalDevicesFetchId.current = window.setInterval(
       fetchDevices,
       APP_CONFIG.intervals.devices
     );
