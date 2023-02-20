@@ -5,7 +5,7 @@
             "Effect": "Allow",
             "Action": [
                 "iam:AttachRolePolicy",
-                "iam:CreatePolicy",
+                "iam:CreatePolicy*",
                 "iam:CreateRole",
                 "iam:DeleteRole",
                 "iam:DeleteRolePolicy",
@@ -42,11 +42,11 @@
         {
             "Effect": "Allow",
             "Action": [
-                "iot:CreatePolicy",
+                "iot:CreatePolicy*",
                 "iot:CreateTopicRule",
-                "iot:DeletePolicy",
+                "iot:DeletePolicy*",
                 "iot:DeleteTopicRule",
-                "iot:GetPolicy",
+                "iot:GetPolicy*",
                 "iot:GetTopicRule",
                 "iot:ListPolicyVersions",
                 "iot:TagResource",
