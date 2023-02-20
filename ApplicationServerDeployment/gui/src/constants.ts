@@ -19,3 +19,4 @@ export const LED_STATE = {
 }
 
 export const ACCESS_TOKEN = "access_token";
+export const UNAUTHORIZE = "Unauthorize_error";

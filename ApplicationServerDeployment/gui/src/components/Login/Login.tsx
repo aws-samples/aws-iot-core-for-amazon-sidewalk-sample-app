@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import toast from "react-hot-toast";
 import { apiClient, setAuthHeader } from "../../apiClient";
 import { ENDPOINTS } from "../../endpoints";
 import "./styles.css";
@@ -10,13 +11,11 @@ interface Props {
 export const Login = ({ onLoginSuccess }: Props) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [hasError, setHasError] = useState(false);
   const [isloggingIn, setisLogginIn] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    setHasError(false);
     setisLogginIn(true);
     try {
       const response = await apiClient.post<string>(ENDPOINTS.login, {
@@ -27,7 +26,7 @@ export const Login = ({ onLoginSuccess }: Props) => {
       onLoginSuccess();
     } catch (error) {
       console.log({ error });
-      setHasError(true);
+      toast.error("User or password incorrect")
     } finally {
       setisLogginIn(false);
     }
@@ -57,7 +56,6 @@ export const Login = ({ onLoginSuccess }: Props) => {
         <button type="submit" disabled={isloggingIn}>
           Login
         </button>
-        {hasError && <div className="login-error">* Wrong credentials</div>}
       </form>
     </div>
   );

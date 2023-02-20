@@ -10,6 +10,7 @@ import { ReactComponent as ToogleOn } from "../../../assets/icons/toggle-large-o
 import { LED_STATE } from "../../../constants";
 import { ENDPOINTS, interpolateParams } from "../../../endpoints";
 import { IDevice } from "../../../types";
+import { verifyAuth } from "../../../utils";
 import { logger } from "../../../utils/logger";
 import "./styles.css";
 
@@ -65,12 +66,14 @@ export const LedButton = ({
     const nextLedState = isToogleOn ? LED_STATE.OFF : LED_STATE.ON;
 
     try {
-      await apiClient.post(ENDPOINTS.led, {
+      const response = await apiClient.post(ENDPOINTS.led, {
         command: "DEMO_APP_ACTION_REQ",
         deviceId,
         ledId,
         action: nextLedState,
       });
+
+      verifyAuth(response.status);
 
       const shouldToggleLed = await hasLedStateBeenSetInDb(
         deviceId,

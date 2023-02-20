@@ -23,6 +23,7 @@ import { mapMeasurementsToChartData } from "./utils";
 import "./styles.css";
 import { logger } from "../../../utils/logger";
 import { apiClient } from "../../../apiClient";
+import { verifyAuth } from "../../../utils";
 
 ChartJS.register(
   LinearScale,
@@ -64,6 +65,8 @@ export const TemperatureChart = ({
       const response = await apiClient.get<IMeasurement[]>(
         interpolateParams(ENDPOINTS.measurement, { id: deviceId })
       );
+
+      verifyAuth(response.status);
 
       logger.log("Measurement", deviceId, { response: response.data });
       setValues(mapMeasurementsToChartData(response.data));
