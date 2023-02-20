@@ -14,7 +14,7 @@ const gateway = () => {
     ...(accessToken
       ? {
           headers: {
-            Authorization: `Basic ${accessToken}`,
+            authorizationtoken: `Basic ${accessToken}`,
           },
         }
       : {}),
@@ -28,7 +28,7 @@ const gateway = () => {
 export const setAuthHeader = (token: string) => {
   // @ts-ignore
   instance.defaults.headers = {
-    Authorization: `Basic ${token}`,
+    authorizationtoken: `Basic ${token}`,
   };
 
   localStorage.setItem(ACCESS_TOKEN, token);
