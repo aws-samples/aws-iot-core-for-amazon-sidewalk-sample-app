@@ -6,7 +6,6 @@ import os
 import subprocess
 import sys
 from enum import Enum
-from intelhex import bin2hex
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO)
@@ -25,10 +24,8 @@ class InputType(Enum):
 
 
 class ProvisionWrapper:
-    def __init__(self, script_dir, arm_toolchain_dir=None, silabs_commander_dir=None, hardware_platform=BoardType.All):
+    def __init__(self, script_dir, silabs_commander_dir=None, hardware_platform=BoardType.All):
         self.main_path = os.path.abspath(script_dir)
-        self.provision_cfg_nordic = os.path.join('config', 'nordic', 'nrf528xx_dk', 'config.yaml')
-        self.provision_cfg_ti = os.path.join('config', 'ti', 'cc13x2_26x2', 'config.yaml')
         self.hardware_platform = hardware_platform
 
         if silabs_commander_dir:
@@ -37,13 +34,10 @@ class ProvisionWrapper:
             # In not provided, assumed that ARM tools are in PATH
             self.commander = "commander"
 
-        self.NORDIC_ADDR = '0xFD000'
-        self.TI_P1_ADDR = '0x56000'
-        self.TI_P7_ADDR = '0xAE000'
-        self.SILABS_XG21_ADDR = '0x000F2000'
-        self.SILABS_XG24_ADDR = '0x08172000'
-        self.SILABS_XG21_DEVICE = 'EFR32MG21A020F1024IM32'
-        self.SILABS_XG24_DEVICE = 'EFR32MG24A020F1536GM48'
+        self.SILABS_XG21 = 'mg21'
+        self.SILABS_XG24 = 'mg24'
+        self.SILABS_XG21_MEMORY = '1024'
+        self.SILABS_XG24_MEMORY = '1536'
 
     def generate_mfg(self, output_dir, input_type, wireless_device_path=None, device_profile_path=None,
                      certificate_json=None):
@@ -65,11 +59,18 @@ class ProvisionWrapper:
             nordic_bin = os.path.join(output_dir, "Nordic_MFG.bin")
             nordic_hex = os.path.join(output_dir, "Nordic_MFG.hex")
             if input_type == InputType.AWS_API_JSONS:
-                self.generate_bin_from_aws_jsons(wireless_device_path, device_profile_path, BoardType.Nordic,
-                                                 nordic_bin)
+                self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
+                                                         profile_json=device_profile_path,
+                                                         board=BoardType.Nordic,
+                                                         out_bin=nordic_bin,
+                                                         chip="nrf52840",
+                                                         out_hex=nordic_hex)
             else:
-                self.generate_bin_from_certificate_json(certificate_json, BoardType.Nordic, nordic_bin)
-            self.generate_hex_with_intelhex(nordic_bin, nordic_hex, self.NORDIC_ADDR)
+                self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
+                                                                board=BoardType.Nordic,
+                                                                out_bin=nordic_bin,
+                                                                chip="nrf52840",
+                                                                out_hex=nordic_hex)
 
         if board == BoardType.TI or board == BoardType.All:
             logger.info("  Generating MFG.hex for TI P1 and TI P7")
@@ -77,11 +78,29 @@ class ProvisionWrapper:
             ti_p1_hex = os.path.join(output_dir, "TI_P1_MFG.hex")
             ti_p7_hex = os.path.join(output_dir, "TI_P7_MFG.hex")
             if input_type == InputType.AWS_API_JSONS:
-                self.generate_bin_from_aws_jsons(wireless_device_path, device_profile_path, BoardType.TI, ti_bin)
+                self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
+                                                         profile_json=device_profile_path,
+                                                         board=BoardType.TI,
+                                                         out_bin=ti_bin,
+                                                         chip="P1",
+                                                         out_hex=ti_p1_hex)
+                self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
+                                                         profile_json=device_profile_path,
+                                                         board=BoardType.TI,
+                                                         out_bin=ti_bin,
+                                                         chip="P7",
+                                                         out_hex=ti_p7_hex)
             else:
-                self.generate_bin_from_certificate_json(certificate_json, BoardType.TI, ti_bin)
-            self.generate_hex_with_intelhex(ti_bin, ti_p1_hex, self.TI_P1_ADDR)
-            self.generate_hex_with_intelhex(ti_bin, ti_p7_hex, self.TI_P7_ADDR)
+                self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
+                                                                board=BoardType.TI,
+                                                                out_bin=ti_bin,
+                                                                chip="P1",
+                                                                out_hex=ti_p1_hex)
+                self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
+                                                                board=BoardType.TI,
+                                                                out_bin=ti_bin,
+                                                                chip="P7",
+                                                                out_hex=ti_p7_hex)
 
         if board == BoardType.SiLabs or board == BoardType.All:
             logger.info("  Generating MFG.S37 For SiLabs xG21 and xG24")
@@ -89,74 +108,92 @@ class ProvisionWrapper:
             sl_xg21_mfg_s37 = os.path.join(output_dir, 'Silabs_xG21.s37')
             sl_xg24_mfg_s37 = os.path.join(output_dir, 'Silabs_xG24.s37')
             if input_type == InputType.AWS_API_JSONS:
-                self.generate_nvm3_from_aws_jsons(wireless_device_path, device_profile_path, BoardType.SiLabs, sl_mfg_nvm3)
+                self.generate_nvm3_and_s37_from_aws_jsons(device_json=wireless_device_path,
+                                                          profile_json=device_profile_path,
+                                                          board=BoardType.SiLabs,
+                                                          out_nvm3=sl_mfg_nvm3,
+                                                          chip=self.SILABS_XG21,
+                                                          memory=self.SILABS_XG21_MEMORY,
+                                                          outfile_s37=sl_xg21_mfg_s37)
+                self.generate_nvm3_and_s37_from_aws_jsons(device_json=wireless_device_path,
+                                                          profile_json=device_profile_path,
+                                                          board=BoardType.SiLabs,
+                                                          out_nvm3=sl_mfg_nvm3,
+                                                          chip=self.SILABS_XG24,
+                                                          memory=self.SILABS_XG24_MEMORY,
+                                                          outfile_s37=sl_xg24_mfg_s37)
+
             else:
-                self.generate_nvm3_from_certificate_json(certificate_json, BoardType.SiLabs, sl_mfg_nvm3)
-            self.generate_s37_with_silabs_commander(sl_mfg_nvm3, self.SILABS_XG21_ADDR, self.SILABS_XG21_DEVICE,
-                                                    sl_xg21_mfg_s37)
-            self.generate_s37_with_silabs_commander(sl_mfg_nvm3, self.SILABS_XG24_ADDR, self.SILABS_XG24_DEVICE,
-                                                    sl_xg24_mfg_s37)
+                self.generate_nvm3_and_s37_from_certificate_json(certificate=certificate_json,
+                                                                 board=BoardType.SiLabs,
+                                                                 out_nvm3=sl_mfg_nvm3,
+                                                                 chip=self.SILABS_XG21,
+                                                                 memory=self.SILABS_XG21_MEMORY,
+                                                                 outfile_s37=sl_xg21_mfg_s37)
 
-    def generate_bin_from_aws_jsons(self, device_json, profile_json, board, out_bin):
+                self.generate_nvm3_and_s37_from_certificate_json(certificate=certificate_json,
+                                                                 board=BoardType.SiLabs,
+                                                                 out_nvm3=sl_mfg_nvm3,
+                                                                 chip=self.SILABS_XG24,
+                                                                 memory=self.SILABS_XG24_MEMORY,
+                                                                 outfile_s37=sl_xg24_mfg_s37)
+
+    def generate_bin_and_hex_from_aws_jsons(self, device_json, profile_json, board, out_bin, chip, out_hex):
         assert board in (BoardType.Nordic, BoardType.TI), "Operation supported only for Nordic and TI"
-        provision_cfg = self.provision_cfg_nordic
-        if board == BoardType.TI:
-            provision_cfg = self.provision_cfg_ti
 
-        result = subprocess.run(args=[sys.executable, 'provision.py', 'aws', '--wireless_device_json', device_json,
+        platform = "ti" if board == BoardType.TI else "nordic"
+
+        result = subprocess.run(args=[sys.executable, 'provision.py', platform, 'aws', '--wireless_device_json', device_json,
                                       '--device_profile_json', profile_json,
-                                      '--output_bin', out_bin, '--config', provision_cfg],
+                                      '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex],
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
-    def generate_nvm3_from_aws_jsons(self, device_json, profile_json, board, out_nvm3):
+    def generate_nvm3_and_s37_from_aws_jsons(self, device_json, profile_json, board, out_nvm3, chip, memory, outfile_s37):
         assert board == BoardType.SiLabs, "Operation supported only for SiLabs"
-        result = subprocess.run(args=[sys.executable, 'provision.py', 'aws', '--wireless_device_json', device_json,
+        result = subprocess.run(args=[sys.executable, 'provision.py', 'silabs', 'aws', '--wireless_device_json', device_json,
                                       '--device_profile_json', profile_json,
-                                      '--output_sl_nvm3', out_nvm3],
+                                      '--output_nvm3', out_nvm3,
+                                      '--chip', chip, '--memory', memory, '--output_s37', outfile_s37],
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
-    def generate_bin_from_certificate_json(self, certificate, board, out_bin):
+    def generate_bin_and_hex_from_certificate_json(self, certificate, board, out_bin, chip, out_hex):
         assert board in (BoardType.Nordic, BoardType.TI), "Operation supported only for Nordic and TI"
-        provision_cfg = self.provision_cfg_nordic
-        if board == BoardType.TI:
-            provision_cfg = self.provision_cfg_ti
 
-        result = subprocess.run(args=[sys.executable, 'provision.py', 'aws', '--certificate_json', certificate,
-                                      '--output_bin', out_bin, '--config', provision_cfg],
+        platform = "ti" if board == BoardType.TI else "nordic"
+
+        result = subprocess.run(args=[sys.executable, 'provision.py', platform, 'aws', '--certificate_json', certificate,
+                                      '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex],
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
-    def generate_nvm3_from_certificate_json(self, certificate, board, out_nvm3):
+    def generate_nvm3_and_s37_from_certificate_json(self, certificate, board, out_nvm3, chip, memory, outfile_s37):
         assert board == BoardType.SiLabs, "Operation supported only for SiLabs"
-        result = subprocess.run(args=[sys.executable, 'provision.py', 'aws', '--certificate_json', certificate,
-                                      '--output_sl_nvm3', out_nvm3],
+        result = subprocess.run(args=[sys.executable, 'provision.py', 'silabs', 'aws', '--certificate_json', certificate,
+                                      '--output_nvm3', out_nvm3, '--chip', chip, '--memory', memory, '--output_s37', outfile_s37],
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
-    def generate_hex_with_intelhex(self, bin, hex, address):
-        result = bin2hex(fin=bin, fout=hex, offset=int(address, base=16))
-        assert result == 0, f"Converting {bin} to {hex} failed"
 
     def generate_s37_with_silabs_commander(self, nvm3_file, address, device, outfile_s37):
         # S37 initfile
         temp_initfile = outfile_s37+"_initfile.s37"
-        result = subprocess.run(args=[self.commander, 'nvm3', 'initfile', 
+        result = subprocess.run(args=[self.commander, 'nvm3', 'initfile',
                                       '--address', f'{address}',
                                       '--size', '0x6000',
                                       '--device', f'{device}',
                                       '--outfile', f'{temp_initfile}'],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name=self.commander)
-        
+
         # S37 MFG
         result = subprocess.run(args=[self.commander, 'nvm3', 'set', temp_initfile,
-                                     '--nvm3file', nvm3_file, 
-                                     '--outfile', outfile_s37], 
+                                     '--nvm3file', nvm3_file,
+                                     '--outfile', outfile_s37],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name=self.commander)
-        
+
         os.remove(temp_initfile)
 
 
