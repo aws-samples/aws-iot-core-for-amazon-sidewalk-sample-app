@@ -176,27 +176,6 @@ class ProvisionWrapper:
         print_subprocess_results(result, subprocess_name="provision.py")
 
 
-    def generate_s37_with_silabs_commander(self, nvm3_file, address, device, outfile_s37):
-        # S37 initfile
-        temp_initfile = outfile_s37+"_initfile.s37"
-        result = subprocess.run(args=[self.commander, 'nvm3', 'initfile',
-                                      '--address', f'{address}',
-                                      '--size', '0x6000',
-                                      '--device', f'{device}',
-                                      '--outfile', f'{temp_initfile}'],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print_subprocess_results(result, subprocess_name=self.commander)
-
-        # S37 MFG
-        result = subprocess.run(args=[self.commander, 'nvm3', 'set', temp_initfile,
-                                     '--nvm3file', nvm3_file,
-                                     '--outfile', outfile_s37],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print_subprocess_results(result, subprocess_name=self.commander)
-
-        os.remove(temp_initfile)
-
-
 def print_subprocess_results(result, subprocess_name="", withAssert=True):
     for line in result.stdout.decode().splitlines():
         logger.debug(line)
