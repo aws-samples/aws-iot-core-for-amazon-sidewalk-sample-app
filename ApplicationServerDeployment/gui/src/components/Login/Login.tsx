@@ -3,8 +3,9 @@
 
 import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
-import {apiClient, setAuthHeader, setUsernameHeader} from "../../apiClient";
+import { apiClient, setAuthHeader, setUsernameHeader } from "../../apiClient";
 import { ENDPOINTS } from "../../endpoints";
+import { logger } from "../../utils/logger";
 import "./styles.css";
 
 interface Props {
@@ -29,8 +30,8 @@ export const Login = ({ onLoginSuccess }: Props) => {
       setAuthHeader(response.data);
       onLoginSuccess();
     } catch (error) {
-      console.log({ error });
-      toast.error("User or password incorrect")
+      logger.log("error during login", error);
+      toast.error("User or password incorrect");
     } finally {
       setisLogginIn(false);
     }

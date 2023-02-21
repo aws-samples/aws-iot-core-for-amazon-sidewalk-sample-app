@@ -73,8 +73,6 @@ export const LedButton = ({
         action: nextLedState,
       });
 
-      verifyAuth(response.status);
-
       const shouldToggleLed = await hasLedStateBeenSetInDb(
         deviceId,
         ledId,
@@ -85,6 +83,8 @@ export const LedButton = ({
         setIsToggleOn((prevValue) => !prevValue);
       }
     } catch (error) {
+      // @ts-ignore
+      verifyAuth(error.status);
       setHasNotificationFailed(true);
       logger.log("error notifying led", error);
       toast("Error notifying led, try again later");

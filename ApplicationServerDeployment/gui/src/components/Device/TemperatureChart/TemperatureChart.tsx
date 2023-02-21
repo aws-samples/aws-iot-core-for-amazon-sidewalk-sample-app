@@ -66,22 +66,21 @@ export const TemperatureChart = ({
         interpolateParams(ENDPOINTS.measurement, { id: deviceId })
       );
 
-      verifyAuth(response.status);
-
+      setHasError(false);
       logger.log("Measurement", deviceId, { response: response.data });
       setValues(mapMeasurementsToChartData(response.data));
     } catch (error) {
+      // @ts-ignore
+      verifyAuth(error.status);
       logger.log("error fetching measurements");
       setHasError(true);
     }
   };
 
   const fetchMeasurementsWithLoading = async () => {
-    setHasError(false);
     setIsLoading(true);
     await fetchMeasurements();
     setIsLoading(false);
-    setIsFirstLoad(false);
   };
 
   useEffect(() => {
@@ -102,8 +101,11 @@ export const TemperatureChart = ({
   }, [isFirstLoad, isSensorOn]);
 
   useEffect(() => {
-    if (!hasError) return;
-    clearInterval(intervalMeasurementsId.current);
+    setIsFirstLoad(hasError);
+
+    if (hasError) {
+      clearInterval(intervalMeasurementsId.current);
+    }
   }, [hasError]);
 
   const options: ChartOptions<"line"> = {

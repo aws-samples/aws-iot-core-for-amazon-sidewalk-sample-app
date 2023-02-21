@@ -22,27 +22,21 @@ export const DevicesWrapper = () => {
   const fetchDevices = async () => {
     try {
       const response = await apiClient.get<IDevice[]>(ENDPOINTS.devices);
-
-      verifyAuth(response.status);
-
+      setHasError(false);
       setDevicesData(response.data);
       logger.log("Devices", { response: response.data });
     } catch (error) {
-      try{
-        // @ts-ignore
-        verifyAuth(error.status);
-      } catch (e) { }
+      // @ts-ignore
+      verifyAuth(error.status);
       logger.log("error fetching devices:", error);
       setHasError(true);
     }
   };
 
   const fetchDevicesWithLoading = async () => {
-    setHasError(false);
     setIsLoading(true);
     await fetchDevices();
     setIsLoading(false);
-    setIsFirstLoad(false);
   };
 
   useEffect(() => {
@@ -63,8 +57,11 @@ export const DevicesWrapper = () => {
   }, [isFirstLoad]);
 
   useEffect(() => {
-    if (!hasError) return;
-    clearInterval(intervalDevicesFetchId.current);
+    setIsFirstLoad(hasError);
+
+    if (hasError) {
+      clearInterval(intervalDevicesFetchId.current);
+    }
   }, [hasError]);
 
   if (hasError) {
