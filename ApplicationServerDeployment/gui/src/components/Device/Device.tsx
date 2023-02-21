@@ -20,7 +20,9 @@ export const Device = ({ data }: Props) => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const hasTimeToLivePassed = Date.now() > data.time_to_live * 1000;
+      const TTL = 60 * 1000;
+      const diff = Date.now() - data.last_uplink * 1000;
+      const hasTimeToLivePassed = diff > TTL;
       setIsOffline(hasTimeToLivePassed);
     }, APP_CONFIG.intervals.online);
 
@@ -41,22 +43,24 @@ export const Device = ({ data }: Props) => {
       {!isOffline ? (
         <>
           <section className="led">
-            <div className="led-wrapper">
-              {data.led.map((ledId, index) => {
-                const hasOneLedOnly = data.led.length === 1;
-                const isToggleOn = data.led_on.includes(ledId);
+            {data.led.length > 0 && (
+              <div className="led-wrapper">
+                {data.led.map((ledId) => {
+                  const hasOneLedOnly = data.led.length === 1;
+                  const isToggleOn = data.led_on.includes(ledId);
 
-                return (
-                  <LedButton
-                    initialState={isToggleOn}
-                    serialNumber={hasOneLedOnly ? undefined : ledId + 1}
-                    deviceId={data.wireless_device_id}
-                    ledId={ledId}
-                    key={ledId}
-                  />
-                );
-              })}
-            </div>
+                  return (
+                    <LedButton
+                      initialState={isToggleOn}
+                      serialNumber={hasOneLedOnly ? undefined : ledId + 1}
+                      deviceId={data.wireless_device_id}
+                      ledId={ledId}
+                      key={ledId}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </section>
           <section className="chart">
             <TemperatureChart
@@ -66,23 +70,29 @@ export const Device = ({ data }: Props) => {
             />
           </section>
           <section className="ebuttons">
-            <div className="ebuttons-section-title flex-abs-center">
-              Push button on device
-            </div>
-            <div className="ebuttons-wrapper">
-              {data.button.map((buttonId) => {
-                const hasOneButtonOnly = data.button.length === 1;
-                const isButtonOn = data.button_pressed.includes(buttonId);
+            {data.button.length > 0 && (
+              <>
+                <div className="ebuttons-section-title flex-abs-center">
+                  Push button on device
+                </div>
+                <div className="ebuttons-wrapper">
+                  {data.button.map((buttonId) => {
+                    const hasOneButtonOnly = data.button.length === 1;
+                    const isButtonOn = data.button_pressed.includes(buttonId);
 
-                return (
-                  <EngageButton
-                    initialState={isButtonOn}
-                    serialNumber={hasOneButtonOnly ? undefined : buttonId + 1}
-                    key={buttonId}
-                  />
-                );
-              })}
-            </div>
+                    return (
+                      <EngageButton
+                        initialState={isButtonOn}
+                        serialNumber={
+                          hasOneButtonOnly ? undefined : buttonId + 1
+                        }
+                        key={buttonId}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </section>
         </>
       ) : (
