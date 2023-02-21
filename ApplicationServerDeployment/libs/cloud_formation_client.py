@@ -38,30 +38,51 @@ class CloudFormationClient:
         :param tag:             Tag assigned to created resources; describes application.
         """
         log_info(f'Creating {stack_name} from cloud formation template...')
+        stack_already_exists = False
+        start_time = datetime.now(timezone.utc)
+        parameters = [
+            {
+                'ParameterKey': 'SidewalkDestinationName',
+                'ParameterValue': sid_dest
+            },
+            {
+                'ParameterKey': 'SidewalkDestinationAlreadyExists',
+                'ParameterValue': "true" if dest_exists else "false"
+            }
+        ]
+        tags = [
+            {
+                'Key': 'Application',
+                'Value': tag
+            }
+        ]
+        # Create / update stack
         try:
-            response = self._client.create_stack(
-                StackName=stack_name,
-                TemplateBody=template,
-                Parameters=[
-                    {
-                        'ParameterKey': 'SidewalkDestinationName',
-                        'ParameterValue': sid_dest
-                    },
-                    {
-                        'ParameterKey': 'SidewalkDestinationAlreadyExists',
-                        'ParameterValue': "true" if dest_exists else "false"
-                    }
-                ],
-                Capabilities=['CAPABILITY_NAMED_IAM'],
-                Tags=[
-                    {
-                        'Key': 'Application',
-                        'Value': tag
-                    },
-                ],
-                TimeoutInMinutes=10,
-                OnFailure='DELETE'
-            )
+            try:
+                # Create stack
+                response = self._client.create_stack(
+                    StackName=stack_name,
+                    TemplateBody=template,
+                    Parameters=parameters,
+                    Capabilities=['CAPABILITY_NAMED_IAM'],
+                    Tags=tags,
+                    TimeoutInMinutes=10,
+                    OnFailure='DELETE'
+                )
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'AlreadyExistsException':
+                    log_info(f'{stack_name} already exists, updating stack...')
+                    stack_already_exists = True
+                    # Update stack
+                    response = self._client.update_stack(
+                        StackName=stack_name,
+                        UsePreviousTemplate=False,
+                        TemplateBody=template,
+                        Parameters=parameters,
+                        Capabilities=['CAPABILITY_NAMED_IAM'],
+                        Tags=tags,
+                        DisableRollback=False
+                    )
             stack_id = response.get('StackId', stack_name)
             stack_status = ''
             event_index = 0
@@ -72,18 +93,23 @@ class CloudFormationClient:
                 status_end = stack_status.split('_')[-1]
                 if status_end in ['COMPLETE', 'FAILED']:
                     in_progress = False
-                event_index = self._print_stack_events(stack_id=stack_id, pointer=event_index)
+                event_index = self._print_stack_events(stack_id=stack_id, pointer=event_index, start_date=start_time)
                 if in_progress: sleep(1)
             if stack_status == 'CREATE_COMPLETE':
                 log_success(f'{stack_name} created successfully.')
+            elif stack_status == 'UPDATE_COMPLETE':
+                log_success(f'{stack_name} updated successfully.')
             else:
-                terminate(
-                    f'{stack_name} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
-                    ErrCode.EXCEPTION
-                )
+                msg_create = f'{stack_name} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
+                msg_update = f'{stack_name} update failed. You can try to remove the stack first. ' \
+                             f'Status found: {stack_status}, status expected: CREATE_COMPLETE',
+                msg = msg_update if stack_already_exists else msg_create
+                terminate(msg, ErrCode.EXCEPTION)
         except ClientError as e:
-            if e.response['Error']['Code'] == 'AlreadyExistsException':
-                log_success(f'{stack_name} already exists, skipping.')
+            if e.response['Error']['Code'] == 'ValidationError' and 'No updates' in e.response['Error']['Message']:
+                log_success(f'No updates in the CloudFormation template, skipping.')
+            elif stack_already_exists:
+                terminate(f'{stack_name} update failed: {e}. You can try to remove the stack first.', ErrCode.EXCEPTION)
             else:
                 terminate(f'{stack_name} creation failed: {e}.', ErrCode.EXCEPTION)
 
