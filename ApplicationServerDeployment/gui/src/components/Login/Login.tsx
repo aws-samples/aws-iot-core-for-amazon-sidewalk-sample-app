@@ -1,6 +1,9 @@
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
-import { apiClient, setAuthHeader } from "../../apiClient";
+import {apiClient, setAuthHeader, setUsernameHeader} from "../../apiClient";
 import { ENDPOINTS } from "../../endpoints";
 import "./styles.css";
 
@@ -18,6 +21,7 @@ export const Login = ({ onLoginSuccess }: Props) => {
 
     setisLogginIn(true);
     try {
+      setUsernameHeader(username);
       const response = await apiClient.post<string>(ENDPOINTS.login, {
         username,
         password,

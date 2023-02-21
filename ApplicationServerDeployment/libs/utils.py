@@ -140,5 +140,24 @@ def zip_top_level_files(path, buf):
                 buffer_zip.write(filepath,
                                  os.path.join("", item))
 
+
+def zip_dir(path: Path, base_dir_name: str, buf):
+    """
+    Zips files where base_dir_name will be zipped root directory."
+
+    :param path:            Path to the folder to be zipped.
+    :param base_dir_name:   Name of directory which will be zipped root directory.
+    :param buf:             Buffer into which the content will be inserted.
+    """
+    with zipfile.ZipFile(buf, 'a') as buffer_zip:
+        for root, dirs, files in os.walk(path):
+            root_split = root.split(base_dir_name)
+            if len(root_split) > 1:
+                zip_file_root = root_split[1]
+            else:
+                zip_file_root = ""
+            for file in files:
+                buffer_zip.write(os.path.join(root, file),
+                                 os.path.join(zip_file_root, file))
 # Init colorama
 init()

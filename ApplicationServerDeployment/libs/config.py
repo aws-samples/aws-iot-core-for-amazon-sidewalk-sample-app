@@ -59,6 +59,12 @@ class Config:
             config = yaml.safe_load(read_file(self.CONFIG_PATH))
             self.aws_profile = config.get('Config', {}).get('AWS_PROFILE', 'default')
             self.sid_dest_name = config.get('Config', {}).get('DESTINATION_NAME', 'SidewalkDestination')
+            self.username = config.get('Config', {}).get('USERNAME')
+            self.password = config.get('Config', {}).get('PASSWORD')
+
+            if self.username is None or self.password is None or\
+                    len(str(self.username)) < 1 or len(str(self.password)) < 1:
+                terminate(f'Password and username needs to be set in config', ErrCode.EXCEPTION)
             self.region_name = 'us-east-1' # Leave this as us-east-1 unless you know what you are doing
             self.web_app_url = ''
         except yaml.YAMLError as e:

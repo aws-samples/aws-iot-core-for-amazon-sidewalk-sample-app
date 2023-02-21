@@ -69,6 +69,7 @@ python3 -m venv sample-app-env
 source sample-app-env/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
+python3 -m pip install pyjwt -t ./ApplicationServerDeployment/lambda/authLibs
 ```
 
 - Windows:
@@ -78,6 +79,7 @@ python -m venv sample-app-env
 sample-app-env\Scripts\activate.bat
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install pyjwt -t .\ApplicationServerDeployment\lambda\authLibs
 ```
 
 ### 2. Fill out configuration file

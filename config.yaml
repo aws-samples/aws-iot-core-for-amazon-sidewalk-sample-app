@@ -2,6 +2,8 @@ Config:
     AWS_PROFILE: default  # Name of your AWS profile from .aws/credentials
     DESTINATION_NAME: SensorAppDestination  # Sidewalk destination used for uplink traffic routing
     HARDWARE_PLATFORM: ALL  # Available values: NORDIC, TI, SILABS or ALL
+    USERNAME: null
+    PASSWORD: null
 Outputs:
     DEVICE_PROFILE_ID: null
     WEB_APP_URL: null

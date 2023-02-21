@@ -28,6 +28,10 @@ export const DevicesWrapper = () => {
       setDevicesData(response.data);
       logger.log("Devices", { response: response.data });
     } catch (error) {
+      try{
+        // @ts-ignore
+        verifyAuth(error.status);
+      } catch (e) { }
       logger.log("error fetching devices:", error);
       setHasError(true);
     }

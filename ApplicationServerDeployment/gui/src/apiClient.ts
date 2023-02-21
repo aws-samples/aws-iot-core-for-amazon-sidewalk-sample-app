@@ -34,4 +34,12 @@ export const setAuthHeader = (token: string) => {
   localStorage.setItem(ACCESS_TOKEN, token);
 };
 
+export const setUsernameHeader = (username: string) => {
+    // @ts-ignore
+    instance.defaults.headers = {
+        Username: `${username}`,
+    };
+};
+
+
 export const apiClient = gateway();
