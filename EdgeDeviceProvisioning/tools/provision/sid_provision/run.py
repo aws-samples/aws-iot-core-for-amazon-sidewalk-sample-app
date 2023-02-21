@@ -976,15 +976,18 @@ class SidMfgAwsJson(SidMfg):
                 return _device_type_id[-4:]
             return None
 
-        # Find apid in dak_certificate
-        _apid = None
-        _device_type_id = None
-        for _ in _aws_device_profile_json.Sidewalk.DAKCertificate:
-            _apid = _.get("ApId", None)
-            _device_type_id = _.get("DeviceTypeId", None)
-            if _apid or _device_type_id:
-                break
+        def _get_apid_and_device_type_id_from_dak(_aws_device_profile_json):
+            search_dak = _aws_device_profile_json.Sidewalk.get("DakCertificateMetadata", [])
+            search_dak += _aws_device_profile_json.Sidewalk.get("DAKCertificate", [])
+            for _ in search_dak:
+                _apid = _.get("ApId", None)
+                _device_type_id = _.get("DeviceTypeId", None)
+                if _apid or _device_type_id:
+                    return (_apid, _device_type_id)
+            return (None, None)
 
+        # Find apid in dak_certificate
+        _apid, _device_type_id = _get_apid_and_device_type_id_from_dak(_aws_device_profile_json)
         _ = _get_apid(_apid, _device_type_id)
         if _:
             return _
