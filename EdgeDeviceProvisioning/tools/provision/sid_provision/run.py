@@ -1,17 +1,7 @@
 #!/usr/bin/env python3
 #
-# Copyright 2020-2023 Amazon.com, Inc. or its affiliates. All rights reserved.
-#
-# AMAZON PROPRIETARY/CONFIDENTIAL
-#
-# You may not use this file except in compliance with the terms and conditions
-# set forth in the accompanying LICENSE.txt file. This file is a
-# Modifiable File, as defined in the accompanying LICENSE.txt file.
-#
-# THESE MATERIALS ARE PROVIDED ON AN "AS IS" BASIS. AMAZON SPECIFICALLY
-# DISCLAIMS, WITH RESPECT TO THESE MATERIALS, ALL WARRANTIES, EXPRESS,
-# IMPLIED, OR STATUTORY, INCLUDING THE IMPLIED WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+# Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 #
 
 from __future__ import annotations
@@ -1214,12 +1204,13 @@ class SidMfgOutSLS37:
             pa.error(f"{args.output_nvm3} has not be written")
 
         # Overload file name
-        file_name = f"{arg_container.platform.platform.name.lower()}_{arg_container.input.name}_{chip.name}{'_sv' if args.secure_vault else ''}.{arg_container.arg.ext}"
-        file_name = str(Path.cwd() / Path(file_name))
+        if args.output_s37 == arg_container.arg.default(arg_container.platform, arg_container.input, arg_container.arg):
+            file_name = f"{arg_container.platform.platform.name.lower()}_{arg_container.input.name}_{chip.name}{'_sv' if args.secure_vault else ''}.{arg_container.arg.ext}"
+            args.output_s37 = str(Path.cwd() / Path(file_name))
 
         return cls(
             config=AttrDict(vars(args).get("config", {})),
-            file_name=file_name,
+            file_name=args.output_s37,
             chip=chip,
             commander=args.commander_bin,
             sl_nvm3=args.output_nvm3,

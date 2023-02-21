@@ -151,10 +151,11 @@ class ProvisionWrapper:
 
     def generate_nvm3_and_s37_from_aws_jsons(self, device_json, profile_json, board, out_nvm3, chip, memory, outfile_s37):
         assert board == BoardType.SiLabs, "Operation supported only for SiLabs"
-        result = subprocess.run(args=[sys.executable, 'provision.py', 'silabs', 'aws', '--wireless_device_json', device_json,
+        args=[sys.executable, 'provision.py', 'silabs', 'aws', '--wireless_device_json', device_json,
                                       '--device_profile_json', profile_json,
                                       '--output_nvm3', out_nvm3,
-                                      '--chip', chip, '--memory', memory, '--output_s37', outfile_s37],
+                                      '--chip', chip, '--memory', memory, '--output_s37', outfile_s37]
+        result = subprocess.run(args=args,
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
@@ -170,8 +171,9 @@ class ProvisionWrapper:
 
     def generate_nvm3_and_s37_from_certificate_json(self, certificate, board, out_nvm3, chip, memory, outfile_s37):
         assert board == BoardType.SiLabs, "Operation supported only for SiLabs"
-        result = subprocess.run(args=[sys.executable, 'provision.py', 'silabs', 'aws', '--certificate_json', certificate,
-                                      '--output_nvm3', out_nvm3, '--chip', chip, '--memory', memory, '--output_s37', outfile_s37],
+        args = [sys.executable, 'provision.py', 'silabs', 'aws', '--certificate_json', certificate,
+                                      '--output_nvm3', out_nvm3, '--chip', chip, '--memory', memory, '--output_s37', outfile_s37]
+        result = subprocess.run(args=args,
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
