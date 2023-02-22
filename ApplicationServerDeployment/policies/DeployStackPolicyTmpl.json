@@ -24,7 +24,10 @@
                 "arn:aws:iam::<account_ID>:role/SidewalkRuleRole",
                 "arn:aws:iam::<account_ID>:role/SidewalkUplinkLambdaExecutionRole",
                 "arn:aws:iam::<account_ID>:role/SidewalkDownlinkLambdaExecutionRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkDbHandlerLambdaExecutionRole"
+                "arn:aws:iam::<account_ID>:role/SidewalkDbHandlerLambdaExecutionRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkTokenAuthenticatorLambdaExecutionRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkTokenGeneratorLambdaExecutionRole",
+                "arn:aws:iam::<account_ID>:role/SidewalkUserAuthenticatorLambdaExecutionRole"
             ]
         },
         {
@@ -32,6 +35,7 @@
             "Action": [
                 "cloudformation:CreateStack",
                 "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
                 "cloudformation:DescribeStacks",
                 "cloudformation:DeleteStack",
                 "cloudformation:TagResource",
@@ -101,7 +105,10 @@
             "Resource": [
                 "arn:aws:lambda:*:<account_ID>:function:SidewalkUplinkLambda",
                 "arn:aws:lambda:*:<account_ID>:function:SidewalkDownlinkLambda",
-                "arn:aws:lambda:*:<account_ID>:function:SidewalkDbHandlerLambda"
+                "arn:aws:lambda:*:<account_ID>:function:SidewalkDbHandlerLambda",
+                "arn:aws:lambda:*:<account_ID>:function:SidewalkTokenAuthenticatorLambda",
+                "arn:aws:lambda:*:<account_ID>:function:SidewalkTokenGeneratorLambda",
+                "arn:aws:lambda:*:<account_ID>:function:SidewalkUserAuthenticatorLambda"
             ]
         },
         {
@@ -148,6 +155,20 @@
             ],
             "Resource": [
                 "arn:aws:cloudfront::<account_ID>:origin-access-identity/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:CreateOriginRequestPolicy",
+                "cloudfront:DeleteOriginRequestPolicy",
+                "cloudfront:GetOriginRequestPolicy",
+                "cloudfront:UpdateOriginRequestPolicy",
+                "cloudfront:List*",
+                "cloudfront:Update*"
+            ],
+            "Resource": [
+                "arn:aws:cloudfront::<account_ID>:origin-request-policy/*"
             ]
         },
         {
@@ -224,6 +245,9 @@
                 "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkUplinkLambda*",
                 "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkDbHandlerLambda*",
                 "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkDownlinkLambda*",
+                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkTokenAuthenticatorLambda*",
+                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkTokenGeneratorLambda*",
+                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkUserAuthenticatorLambda*",
                 "arn:aws:logs:*:<account_ID>:log-group:SidewalkRuleErrors*"
             ]
         }

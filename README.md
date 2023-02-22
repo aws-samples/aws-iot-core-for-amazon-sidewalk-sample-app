@@ -48,10 +48,6 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
 Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.  
 --> Try calling *commander --version* in the terminal to make sure the Simplicity Commander is available
 
-You may want to run a helper *env_check.py* script to sanity check your environment against the most common errors.
-```
-python3 env_check.py
-```
 
 ## Getting Started
 
@@ -69,6 +65,7 @@ python3 -m venv sample-app-env
 source sample-app-env/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
+python3 -m pip install pyjwt -t ./ApplicationServerDeployment/lambda/authLibs
 ```
 
 - Windows:
@@ -78,15 +75,24 @@ python -m venv sample-app-env
 sample-app-env\Scripts\activate.bat
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install pyjwt -t .\ApplicationServerDeployment\lambda\authLibs
+```
+
+At this point you may want to run a helper *env_check.py* script to sanity check your environment against the most common errors.
+```
+python3 env_check.py
 ```
 
 ### 2. Fill out configuration file
 Fill out [config](./config.yaml) file with your details (or leave default values):
-- *AWS_PROFILE* - Profile to be used during the stack creation. If you have a custom named profile in your AWS CLI configuration files, replace 'default' with the name of your profile. Usually, you'd have just one profile named 'default'.
 
-- *DESTINATION_NAME* - The Sidewalk destination used for uplink traffic routing. Can be any string.
-
-- *HARDWARE_PLATFORM* - *NORDIC* or *TI* or *SILABS* (or *ALL* if you want to have personalization data generated for all three platforms)
+| field                 | default value                         | description
+| ---                   | ---                                   | ---
+| *AWS_PROFILE*         | *default*                             | Profile to be used during the stack creation. If you have a custom named profile in your AWS CLI configuration files, replace 'default' with the name of your profile. Usually, you'd have just one profile named 'default'.
+| *DESTINATION_NAME*    | *SensorAppDestination*                | The Sidewalk destination used for uplink traffic routing. Can be any string.
+| *HARDWARE_PLATFORM*   | *ALL*                                 | *NORDIC* or *TI* or *SILABS* (or *ALL* if you want to have personalization data generated for all three platforms)
+| *USERNAME*            | *null* **(need to be overwritten)**   | User for the WebApp
+| *PASSWORD*            | *null* **(need to be overwritten)**   | User's password
 
 ### 3. Deploy cloud infrastructure
 
@@ -173,6 +179,9 @@ After the edge device receives an acknowledgement from the application server, i
 
 You can open the terminal to the edge device to see the log flow (eg. data transfer happening periodically).
 You can open the URL to web application to see the graphical representation of your edge device in the UI.
+Use *username* and *password* defined in the [config](./config.yaml) to log in.  
+![Alt text](./ApplicationServerDeployment/doc/web_app_login.png "Web App - login screen")
+
 You can press buttons on the edge device and see the button state changes in the web UI.
 You can press LED button in the web UI and see that the LED on your edge device toggles.
 You can open the window in your room (or turn on the heating, upon preference) and observe how temperature readouts change in the web UI.
@@ -242,6 +251,20 @@ Its main components are:
 - *S3 Bucket* - hosts web application.
 
 
+- *SidewalkApiGateway* - handles requests from the WebApp to the *SidewalkDbHandler* and *SidewalkDownlink* lambdas.
+  Each request need to be authorized by the token built based on the credentials provided in the [config](./config.yaml).
+
+
+- *SidewalkUserAuthenticatorLambda*, *SidewalkTokenAuthenticatorLambda* - used by the *SidewalkApiGateway* to verify requests
+  (check if user is authorized and token is valid).
+
+
+- *SidewalkTokenGeneratorLambda* - generates valid token, which is used by the CloudFront distribution to sign requests
+
+
+|Disclaimer: Token is created based on the credentials (*username* and *password*) stored as base64 encoded string within lambdas' environment variables. We recommend using AWS Secrets Manager, but opted for this solution to save application operation costs.
+|---|
+
 ### Stack deployment
 
 In order to deploy the application, run the *ApplicationServerDeployment/deploy_stack.py* script, which:
@@ -275,26 +298,42 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkDbHandlerLambda
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkDownlinkLambda
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkUplinkLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkTokenAuthenticatorLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkTokenGeneratorLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkUserAuthenticatorLambda
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkDbHandlerLambda    | SidewalkDbHandlerLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkDownlinkLambda     | SidewalkDownlinkLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkUplinkLambdaPermissionsForNotifications
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkUplinkLambdaPermissionsForUplinks
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkTokenAuthenticatorLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkTokenGeneratorLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkUserAuthenticatorLambdaPermissionsForApiGateway
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkDbHandlerLambdaLogGroup
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkDownlinkLambdaLogGroup
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkRuleErrorsLogGroup
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkUplinkLambdaLogGroup
+| AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkTokenAuthenticatorLambdaLogGroup
+| AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkTokenGeneratorLambdaLogGroup
+| AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkUserAuthenticatorLambdaLogGroup
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkDestinationRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkRuleRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkDbHandlerLambdaExecutionRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkDownlinkLambdaExecutionRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkUplinkLambdaExecutionRole
+| AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkTokenAuthenticatorLambdaExecutionRole
+| AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkTokenGeneratorLambdaExecutionRole
+| AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkUserAuthenticatorLambdaExecutionRole
 | AWS::DynamoDB::Table                              | DynamoDB -> Tables                                | SidewalkDevices
 | AWS::DynamoDB::Table                              | DynamoDB -> Tables                                | SidewalkMeasurements
 | AWS::CloudFront::Distribution                     | CloudFront -> Distributions                       | CloudFrontDistribution
-| AWS::CloudFront::OriginAccessControl              | CloudFront -> Origin access                       | SidewalkSampleApplicationOAC
+| AWS::CloudFront::OriginAccessControl              | CloudFront -> Origin access                       | CloudFrontOAC
+| AWS::CloudFront::OriginRequestPolicy              | CloudFront -> Policies                            | CloudFrontAuthOriginRequestPolicy
+| AWS::ApiGateway::Authorizer                       | API Gateway -> APIs -> sensor-monitoring-app      | SidewalkTokenAuthorizer
 | AWS::ApiGateway::RestApi                          | API Gateway -> APIs -> sensor-monitoring-app      | SidewalkApiGateway
 | AWS::ApiGateway::Resource                         | API Gateway -> APIs -> sensor-monitoring-app      | ApiResource
+| AWS::ApiGateway::Resource                         | API Gateway -> APIs -> sensor-monitoring-app      | AuthResource
 | AWS::ApiGateway::Resource                         | API Gateway -> APIs -> sensor-monitoring-app      | ProxyResource
+| AWS::ApiGateway::Method                           | API Gateway -> APIs -> sensor-monitoring-app      | ApiAuthPostMethod
 | AWS::ApiGateway::Method                           | API Gateway -> APIs -> sensor-monitoring-app      | ApiOptionsMethod
 | AWS::ApiGateway::Method                           | API Gateway -> APIs -> sensor-monitoring-app      | ApiPostMethod
 | AWS::ApiGateway::Method                           | API Gateway -> APIs -> sensor-monitoring-app      | ProxyGetMethod
@@ -302,6 +341,12 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::ApiGateway::Deployment                       | API Gateway -> APIs -> sensor-monitoring-app      | SidewalkApiGatewayDeployment
 | AWS::S3::Bucket                                   | Amazon S3 -> Buckets                              | SidewalkWebAppBucket
 | AWS::S3::BucketPolicy                             | Amazon S3 -> Buckets                              | S3BucketPolicy
+
+### Username / password change
+In order to change *username* and *password* for the WebApp, please update values in the [config](./config.yaml) file and rerun deployment script:
+```
+python3 ApplicationServerDeployment/deploy_stack.py
+```
 
 ### Web App
 

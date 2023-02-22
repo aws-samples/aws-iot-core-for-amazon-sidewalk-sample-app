@@ -5,6 +5,6 @@ export const APP_CONFIG = {
   intervals: {
     measurement: 15 * 1000,
     devices: 5 * 1000,
-    online: 5 * 1000,
+    online: 1 * 1000,
   },
 };

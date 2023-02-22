@@ -6,6 +6,7 @@ import { apiClient } from "../../apiClient";
 import { APP_CONFIG } from "../../appConfig";
 import { ENDPOINTS } from "../../endpoints";
 import { IDevice } from "../../types";
+import { verifyAuth } from "../../utils";
 import { logger } from "../../utils/logger";
 import { Device } from "../Device/Device";
 import { Spinner } from "../Spinner/Spinner";
@@ -21,20 +22,21 @@ export const DevicesWrapper = () => {
   const fetchDevices = async () => {
     try {
       const response = await apiClient.get<IDevice[]>(ENDPOINTS.devices);
+      setHasError(false);
       setDevicesData(response.data);
       logger.log("Devices", { response: response.data });
     } catch (error) {
+      // @ts-ignore
+      verifyAuth(error.status);
       logger.log("error fetching devices:", error);
       setHasError(true);
     }
   };
 
   const fetchDevicesWithLoading = async () => {
-    setHasError(false);
     setIsLoading(true);
     await fetchDevices();
     setIsLoading(false);
-    setIsFirstLoad(false);
   };
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export const DevicesWrapper = () => {
   useEffect(() => {
     if (isFirstLoad) return;
 
-    intervalDevicesFetchId.current = setInterval(
+    intervalDevicesFetchId.current = window.setInterval(
       fetchDevices,
       APP_CONFIG.intervals.devices
     );
@@ -55,8 +57,11 @@ export const DevicesWrapper = () => {
   }, [isFirstLoad]);
 
   useEffect(() => {
-    if (!hasError) return;
-    clearInterval(intervalDevicesFetchId.current);
+    setIsFirstLoad(hasError);
+
+    if (hasError) {
+      clearInterval(intervalDevicesFetchId.current);
+    }
   }, [hasError]);
 
   if (hasError) {
@@ -88,7 +93,7 @@ export const DevicesWrapper = () => {
       <div className="full-height-with-header flex-abs-center">
         No devices detected
       </div>
-    )
+    );
   }
 
   return (

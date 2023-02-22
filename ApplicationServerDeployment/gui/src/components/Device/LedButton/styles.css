@@ -28,3 +28,7 @@
 .led-section-toggle-button:disabled {
   opacity: 0.3;
 }
+
+.led-section > button:disabled {
+  cursor: not-allowed;
+}

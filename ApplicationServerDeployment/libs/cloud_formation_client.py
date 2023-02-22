@@ -100,9 +100,9 @@ class CloudFormationClient:
             elif stack_status == 'UPDATE_COMPLETE':
                 log_success(f'{stack_name} updated successfully.')
             else:
-                msg_create = f'{stack_name} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE',
+                msg_create = f'{stack_name} creation failed. Status found: {stack_status}, status expected: CREATE_COMPLETE'
                 msg_update = f'{stack_name} update failed. You can try to remove the stack first. ' \
-                             f'Status found: {stack_status}, status expected: CREATE_COMPLETE',
+                             f'Status found: {stack_status}, status expected: CREATE_COMPLETE'
                 msg = msg_update if stack_already_exists else msg_create
                 terminate(msg, ErrCode.EXCEPTION)
         except ClientError as e:

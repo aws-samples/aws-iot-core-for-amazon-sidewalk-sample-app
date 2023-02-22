@@ -5,13 +5,8 @@ import { ReactComponent as CombinedCloudCircuitIcon } from "../../../assets/icon
 import { ReactComponent as CirculeSolidIcon } from "../../../assets/icons/circle-solid.svg";
 import { ReactComponent as EyeRegularIcon } from "../../../assets/icons/eye-regular.svg";
 import { ReactComponent as SignalIcon } from "../../../assets/icons/signal-stream-solid.svg";
-import TimeAgo from "javascript-time-ago";
-import en from "javascript-time-ago/locale/en.json";
-import ReactTimeAgo from "react-time-ago";
+import { TimeAgo } from "../TimeAgo";
 import "./styles.css";
-import { useEffect, useState } from "react";
-
-TimeAgo.addDefaultLocale(en);
 
 interface Props {
   name: string;
@@ -42,12 +37,7 @@ export const Status = ({ name, lastUplink, isOffline, linkType }: Props) => {
           <div className="flex-abs-center status-section-last-beat">
             <EyeRegularIcon width={15} height={18} />
             <span className="status-section-info-text">
-              <ReactTimeAgo
-                date={lastUplink}
-                locale="en-US"
-                timeStyle="twitter"
-              />{" "}
-              ago
+              <TimeAgo date={lastUplink} />
             </span>
           </div>
           {!isOffline && (

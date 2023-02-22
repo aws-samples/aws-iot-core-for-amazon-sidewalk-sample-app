@@ -30,6 +30,7 @@
             "Action": [
                 "cloudformation:CreateStack",
                 "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
                 "cloudformation:DescribeStacks",
                 "cloudformation:DeleteStack",
                 "cloudformation:TagResource",

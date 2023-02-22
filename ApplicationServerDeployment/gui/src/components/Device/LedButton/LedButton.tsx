@@ -10,6 +10,7 @@ import { ReactComponent as ToogleOn } from "../../../assets/icons/toggle-large-o
 import { LED_STATE } from "../../../constants";
 import { ENDPOINTS, interpolateParams } from "../../../endpoints";
 import { IDevice } from "../../../types";
+import { verifyAuth } from "../../../utils";
 import { logger } from "../../../utils/logger";
 import "./styles.css";
 
@@ -18,6 +19,7 @@ interface Props {
   ledId: number;
   deviceId: string;
   initialState: boolean;
+  isOffline: boolean;
 }
 
 export const LedButton = ({
@@ -25,10 +27,10 @@ export const LedButton = ({
   initialState,
   ledId,
   deviceId,
+  isOffline,
 }: Props) => {
   const [isToogleOn, setIsToggleOn] = useState(false);
   const [isNotifying, setIsNotifying] = useState(false);
-  const [hasNotificationFailed, setHasNotificationFailed] = useState(false);
 
   const hasLedStateBeenSetInDb = async (
     deviceId: string,
@@ -65,7 +67,7 @@ export const LedButton = ({
     const nextLedState = isToogleOn ? LED_STATE.OFF : LED_STATE.ON;
 
     try {
-      await apiClient.post(ENDPOINTS.led, {
+      const response = await apiClient.post(ENDPOINTS.led, {
         command: "DEMO_APP_ACTION_REQ",
         deviceId,
         ledId,
@@ -82,7 +84,8 @@ export const LedButton = ({
         setIsToggleOn((prevValue) => !prevValue);
       }
     } catch (error) {
-      setHasNotificationFailed(true);
+      // @ts-ignore
+      verifyAuth(error.status);
       logger.log("error notifying led", error);
       toast("Error notifying led, try again later");
     } finally {
@@ -105,16 +108,12 @@ export const LedButton = ({
       <button
         className="flex-abs-center led-section-toggle-button"
         onClick={notifyLedToogle}
-        disabled={isNotifying}
+        disabled={isOffline || isNotifying}
       >
         {isToogleOn ? (
-          <>
-            <ToogleOn fill="green" width={25} height={25} />
-          </>
+          <ToogleOn fill="green" width={25} height={25} />
         ) : (
-          <>
-            <ToogleOff width={25} height={25} />
-          </>
+          <ToogleOff width={25} height={25} />
         )}
       </button>
       <span className="mt-1 no-selection">LED {serialNumber}</span>

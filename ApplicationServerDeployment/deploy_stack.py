@@ -4,12 +4,12 @@
 """
 Script deploys SidewalkSampleApplication stack.
 """
+from time import sleep
 
 import boto3
 import webbrowser
 
 from botocore.exceptions import ClientError
-from io import BytesIO
 
 from constants.SampleApplicationConstants import *
 from libs.cloud_formation_client import CloudFormationClient
@@ -17,13 +17,12 @@ from libs.config import Config
 from libs.s3_client import S3Client
 from libs.utils import *
 from libs.iot_wireless_client import IoTWirelessClient
-
+from libs.lambda_client import LambdaClient
 
 # -----------------
 # Read config file
 # -----------------
 config = Config()
-
 
 # --------------------
 # Ask user to proceed
@@ -36,17 +35,16 @@ log_info(f'This can take several minutes to complete.')
 log_info(f'Proceed with stack creation?')
 confirm()
 
-
 # -------------------------------------------------------------
 # Create boto3 session using given profile and service clients
 # Sidewalk is only enabled in the us-east-1 region
 # -------------------------------------------------------------
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
-lambda_client = session.client(service_name='lambda')
 s3_client = S3Client(session)
 wireless_client = IoTWirelessClient(session)
-
+lambda_client = LambdaClient(session)
+api_gateway_client = session.client(service_name='apigateway')
 
 # ------------------------------------
 # Enable Sidewalk event notifications
@@ -58,13 +56,11 @@ wireless_client.enable_notifications()
 # ---------------------------------------------------
 sid_dest_already_exists = wireless_client.check_if_destination_exists(name=config.sid_dest_name)
 
-
 # -----------------------------
 # Read CloudFormation template
 # -----------------------------
 stack_path = Path(__file__).parent.joinpath('template', 'SidewalkSampleApplicationStack.yaml')
 stack = read_file(stack_path)
-
 
 # --------------------------------------
 # Trigger CloudFormation stack creation
@@ -77,6 +73,11 @@ cf_client.create_stack(
     tag=TAG
 )
 
+# ------------------------
+# Clear auth api-gw cache
+# ------------------------
+api_gateway_id = cf_client.get_output_var(STACK_NAME, 'SidewalkApiId')
+api_gateway_client.flush_stage_authorizers_cache(restApiId=api_gateway_id, stageName="dev")
 
 # ------------------------------------------------------------------------
 # Update given Sidewalk destination (only if destination already existed)
@@ -87,27 +88,22 @@ if sid_dest_already_exists:
         role_name=DESTINATION_ROLE
     )
 
-
 # --------------------
 # Update lambdas code
 # --------------------
+parent = Path(__file__).parent
 lambdas = ['SidewalkUplinkLambda', 'SidewalkDownlinkLambda', 'SidewalkDbHandlerLambda']
 dirs = ['uplink', 'downlink', 'db_handler']
-parent = Path(__file__).parent
+common_dirs = ['codec', 'database', 'utils']
+lambda_client.upload_lambda_files(parent, lambdas, dirs, common_dirs)
+auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLambda', 'SidewalkTokenGeneratorLambda']
+auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
+auth_library_dirs = ['authLibs']
+lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
 
-for idx, (lam, dir) in enumerate(zip(lambdas, dirs)):
-    buffer = BytesIO()
-    log_info(f'Uploading {lam} files...')
-    zip_top_level_files(parent.joinpath('lambda', 'codec'), buffer)
-    zip_top_level_files(parent.joinpath('lambda', 'database'), buffer)
-    zip_top_level_files(parent.joinpath('lambda', 'utils'), buffer)
-    zip_top_level_files(parent.joinpath('lambda', dir), buffer)
-    try:
-        response = lambda_client.update_function_code(FunctionName=lam, ZipFile=buffer.getvalue())
-        eval_client_response(response, f'{lam} function updated.')
-    except ClientError as e:
-        terminate(f'Unable to update lambda: {e}.', ErrCode.EXCEPTION)
-
+auth_string = config.get_username_and_password_as_base64()
+env_variables = {"CREDENTIALS": auth_string}
+lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)
 
 # ---------------------------
 # Upload WebApp assets to S3
