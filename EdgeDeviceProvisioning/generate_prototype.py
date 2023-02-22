@@ -73,7 +73,7 @@ def main():
         paths.save_device_json(wireless_device_id, response)
 
         logger.info("Generating MFG by calling provision.py")
-        p = ProvisionWrapper(script_dir=e.provision_script_directory, arm_toolchain_dir=e.arm_toolchain_dir,
+        p = ProvisionWrapper(script_dir=e.provision_script_directory,
                              silabs_commander_dir=e.commander_dir, hardware_platform=e.hardware_platform)
         p.generate_mfg(wireless_device_path=paths.get_device_json_filepath(wireless_device_id, absPath=True),
                        device_profile_path=paths.get_profile_json_filepath(absPath=True),
