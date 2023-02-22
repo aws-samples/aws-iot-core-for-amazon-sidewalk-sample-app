@@ -19,6 +19,7 @@ interface Props {
   ledId: number;
   deviceId: string;
   initialState: boolean;
+  isOffline: boolean;
 }
 
 export const LedButton = ({
@@ -26,10 +27,10 @@ export const LedButton = ({
   initialState,
   ledId,
   deviceId,
+  isOffline,
 }: Props) => {
   const [isToogleOn, setIsToggleOn] = useState(false);
   const [isNotifying, setIsNotifying] = useState(false);
-  const [hasNotificationFailed, setHasNotificationFailed] = useState(false);
 
   const hasLedStateBeenSetInDb = async (
     deviceId: string,
@@ -85,7 +86,6 @@ export const LedButton = ({
     } catch (error) {
       // @ts-ignore
       verifyAuth(error.status);
-      setHasNotificationFailed(true);
       logger.log("error notifying led", error);
       toast("Error notifying led, try again later");
     } finally {
@@ -108,16 +108,12 @@ export const LedButton = ({
       <button
         className="flex-abs-center led-section-toggle-button"
         onClick={notifyLedToogle}
-        disabled={isNotifying}
+        disabled={isOffline || isNotifying}
       >
         {isToogleOn ? (
-          <>
-            <ToogleOn fill="green" width={25} height={25} />
-          </>
+          <ToogleOn fill="green" width={25} height={25} />
         ) : (
-          <>
-            <ToogleOff width={25} height={25} />
-          </>
+          <ToogleOff width={25} height={25} />
         )}
       </button>
       <span className="mt-1 no-selection">LED {serialNumber}</span>
