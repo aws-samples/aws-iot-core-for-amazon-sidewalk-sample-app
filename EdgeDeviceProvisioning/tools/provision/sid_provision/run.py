@@ -74,7 +74,7 @@ def print_subprocess_results(result, subprocess_name="", withAssert=True):
             ), f"Something went wrong after calling subprocess {subprocess_name}"
 
     for line in result.stderr.decode().splitlines():
-        print(line)
+        print(line, file=sys.stderr)
         if withAssert:
             assert not check_error_in_line(
                 line
@@ -791,9 +791,13 @@ class SidMfgAwsJson(SidMfg):
                 is_p256r1=True,
             )
 
-            _apid = self._get_apid_from_aws_device_profile_json(_aws_device_profile_json)
+            _apid = self._get_apid_from_aws_device_profile_json(
+                _aws_device_profile_json
+            )
             if _apid is None:
-                print(f"ApId or DeviceTypeId is not found in {_aws_device_profile_json._SidewalkFileName}")
+                print(
+                    f"ApId or DeviceTypeId is not found in {_aws_device_profile_json._SidewalkFileName}"
+                )
                 sys.exit(1)
             else:
                 self._apid = _apid
@@ -823,9 +827,13 @@ class SidMfgAwsJson(SidMfg):
                 self._apid = _apid
             if self._apid is None and _deviceTypeId:
                 self._apid = _deviceTypeId[-4:]
-                print(f"deviceTypeId found in {_aws_certificate_json._SidewalkFileName}")
+                print(
+                    f"deviceTypeId found in {_aws_certificate_json._SidewalkFileName}"
+                )
             if self._apid is None:
-                print(f"apid or deviceTypeId not found in {_aws_certificate_json._SidewalkFileName}")
+                print(
+                    f"apid or deviceTypeId not found in {_aws_certificate_json._SidewalkFileName}"
+                )
                 sys.exit(1)
 
             self._smsn = unhex(_aws_certificate_json.metadata.smsn)
@@ -967,35 +975,30 @@ class SidMfgAwsJson(SidMfg):
         )
 
     def _get_apid_from_aws_device_profile_json(self, _aws_device_profile_json):
-        def _get_apid(_apid, _device_type_id):
-            if _apid:
-                print(f"ApId found in {_aws_device_profile_json._SidewalkFileName}")
-                return _apid
-            if _device_type_id:
-                print(f"DeviceTypeId found in {_aws_device_profile_json._SidewalkFileName}")
-                return _device_type_id[-4:]
-            return None
-
-        def _get_apid_and_device_type_id_from_dak(_aws_device_profile_json):
-            search_dak = _aws_device_profile_json.Sidewalk.get("DakCertificateMetadata", [])
+        def _get_device_type_id_from_dak(_aws_device_profile_json):
+            search_dak = _aws_device_profile_json.Sidewalk.get(
+                "DakCertificateMetadata", []
+            )
             search_dak += _aws_device_profile_json.Sidewalk.get("DAKCertificate", [])
             for _ in search_dak:
-                _apid = _.get("ApId", None)
                 _device_type_id = _.get("DeviceTypeId", None)
-                if _apid or _device_type_id:
-                    return (_apid, _device_type_id)
-            return (None, None)
+                if _device_type_id:
+                    return _device_type_id
+            return None
 
-        # Find apid in dak_certificate
-        _apid, _device_type_id = _get_apid_and_device_type_id_from_dak(_aws_device_profile_json)
-        _ = _get_apid(_apid, _device_type_id)
-        if _:
-            return _
+        # Find deviceTypeId in dak_certificate
+        _device_type_id = _get_device_type_id_from_dak(_aws_device_profile_json)
+        if _device_type_id:
+            print(f"DeviceTypeId found in {_aws_device_profile_json._SidewalkFileName}")
+            # Get last 4 bytes
+            return _device_type_id[-4:]
 
         # If not maybe older certificate
         _apid = _aws_device_profile_json.Sidewalk.get("ApId", None)
-        _device_type_id = _aws_device_profile_json.Sidewalk.get("DeviceTypeId", None)
-        return _get_apid(_apid, _device_type_id)
+        if _apid:
+            print(f"ApId found in {_aws_device_profile_json._SidewalkFileName}")
+            return _apid
+        return None
 
     @classmethod
     def from_args(cls, args, pa) -> SidMfgAwsJson:
@@ -1207,13 +1210,12 @@ class SidMfgOutSLS37:
             pa.error(f"{args.output_nvm3} has not be written")
 
         # Overload file name
-        if args.output_s37 == arg_container.arg.default(arg_container.platform, arg_container.input, arg_container.arg):
-            file_name = f"{arg_container.platform.platform.name.lower()}_{arg_container.input.name}_{chip.name}{'_sv' if args.secure_vault else ''}.{arg_container.arg.ext}"
-            args.output_s37 = str(Path.cwd() / Path(file_name))
+        file_name = f"{arg_container.platform.platform.name.lower()}_{arg_container.input.name}_{chip.name}{'_sv' if args.secure_vault else ''}.{arg_container.arg.ext}"
+        file_name = str(Path.cwd() / Path(file_name))
 
         return cls(
             config=AttrDict(vars(args).get("config", {})),
-            file_name=args.output_s37,
+            file_name=file_name,
             chip=chip,
             commander=args.commander_bin,
             sl_nvm3=args.output_nvm3,

@@ -10,7 +10,6 @@ from enum import Enum
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO)
 
-
 class BoardType(Enum):
     Nordic = 0,
     TI = 1,
@@ -22,6 +21,9 @@ class InputType(Enum):
     CERTIFICATE_JSON = 0,
     AWS_API_JSONS = 1
 
+
+class ProvisionWrapperException(Exception):
+    pass
 
 class ProvisionWrapper:
     def __init__(self, script_dir, silabs_commander_dir=None, hardware_platform=BoardType.All):
@@ -179,6 +181,13 @@ class ProvisionWrapper:
 
 
 def print_subprocess_results(result, subprocess_name="", withAssert=True):
+    if result.returncode != 0:
+        message = " ".join(result.args)
+        message += " \n"
+        message += " " + result.stdout.decode()
+        message += " " + result.stderr.decode()
+        raise ProvisionWrapperException(message)
+
     for line in result.stdout.decode().splitlines():
         logger.debug(line)
         if withAssert:
