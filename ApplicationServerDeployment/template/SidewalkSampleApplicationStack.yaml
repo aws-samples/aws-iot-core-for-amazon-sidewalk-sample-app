@@ -213,12 +213,12 @@ Resources:
                   - !GetAtt SidewalkDevices.Arn
                   - !GetAtt SidewalkMeasurements.Arn
 
-  # User request token signer Lambda's execution role with basic lambda permissions.
-  SidewalkUserRequestTokenSignerLambdaExecutionRole:
+  # Token generator Lambda's execution role with basic lambda permissions.
+  SidewalkTokenGeneratorLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: SidewalkUserRequestTokenSignerLambdaExecutionRole
-      Description: Allows SidewalkUserRequestTokenSignerLambda to assume cloudfront role and authenticate requests.
+      RoleName: SidewalkTokenGeneratorLambdaExecutionRole
+      Description: Allows SidewalkTokenGeneratorLambda to assume cloudfront role and authenticate requests.
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -233,12 +233,12 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
 
-  # User authentication Lambda's execution role with basic lambda permissions.
-  SidewalkUserAuthenticationLambdaExecutionRole:
+  # User authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkUserAuthenticatorLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: SidewalkUserAuthenticationLambdaExecutionRole
-      Description: Allows SidewalkUserAuthenticationLambda to assume cloudfront role and authenticate requests.
+      RoleName: SidewalkUserAuthenticatorLambdaExecutionRole
+      Description: Allows SidewalkUserAuthenticatorLambda to assume cloudfront role and authenticate requests.
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -253,12 +253,12 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
 
-  # ApiGw authentication Lambda's execution role with basic lambda permissions.
-  SidewalkApiGwAuthenticationLambdaExecutionRole:
+  # Token authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkTokenAuthenticatorLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: SidewalkApiGwAuthenticationLambdaExecutionRole
-      Description: Allows SidewalkApiGwAuthenticationLambda to assume cloudfront role and authenticate requests.
+      RoleName: SidewalkTokenAuthenticatorLambdaExecutionRole
+      Description: Allows SidewalkTokenAuthenticatorLambda to assume cloudfront role and authenticate requests.
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -340,16 +340,15 @@ Resources:
                 - !GetAtt CloudFrontDistribution.DomainName
 
 
-  # SidewalkUserRequestTokenSignerLambda function.
-  # Handles signing jwt tokens with login info
-  SidewalkUserRequestTokenSignerLambda:
+  # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
+  SidewalkTokenGeneratorLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: SidewalkUserRequestTokenSignerLambda
+      FunctionName: SidewalkTokenGeneratorLambda
       Description: Signs user requests jwt
       Handler: index.lambda_handler
       MemorySize: 128
-      Role: !GetAtt SidewalkUserAuthenticationLambdaExecutionRole.Arn
+      Role: !GetAtt SidewalkTokenGeneratorLambdaExecutionRole.Arn
       Runtime: python3.8
       Timeout: 3
       PackageType: Zip
@@ -357,16 +356,15 @@ Resources:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
 
-  # SidewalkUserAuthenticationLambda function.
-  # Handles api gw user authentication.
-  SidewalkUserAuthenticationLambda:
+  # SidewalkUserAuthenticatorLambda function. Handles api gw user authentication.
+  SidewalkUserAuthenticatorLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: SidewalkUserAuthenticationLambda
+      FunctionName: SidewalkUserAuthenticatorLambda
       Description: Authentication cloudfront users
       Handler: index.lambda_handler
       MemorySize: 128
-      Role: !GetAtt SidewalkUserAuthenticationLambdaExecutionRole.Arn
+      Role: !GetAtt SidewalkUserAuthenticatorLambdaExecutionRole.Arn
       Runtime: python3.8
       Timeout: 3
       PackageType: Zip
@@ -374,16 +372,15 @@ Resources:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
 
-  # SidewalkApiGwAuthenticationLambda function.
-  # Handles jwt authentication.
-  SidewalkApiGwAuthenticationLambda:
+  # SidewalkTokenAuthenticatorLambda function. Handles jwt authentication.
+  SidewalkTokenAuthenticatorLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: SidewalkApiGwAuthenticationLambda
+      FunctionName: SidewalkTokenAuthenticatorLambda
       Description: Authenticates user jwt token
       Handler: index.lambda_handler
       MemorySize: 128
-      Role: !GetAtt SidewalkApiGwAuthenticationLambdaExecutionRole.Arn
+      Role: !GetAtt SidewalkTokenAuthenticatorLambdaExecutionRole.Arn
       Runtime: python3.8
       Timeout: 3
       PackageType: Zip
@@ -434,32 +431,32 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
 
-  # Log group for storing SidewalkUserAuthenticationLambda logs
-  SidewalkUserAuthenticationLambdaLogGroup:
-    DependsOn: SidewalkUserAuthenticationLambda
+  # Log group for storing SidewalkUserAuthenticatorLambda logs
+  SidewalkUserAuthenticatorLambdaLogGroup:
+    DependsOn: SidewalkUserAuthenticatorLambda
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '/aws/lambda/${SidewalkUserAuthenticationLambda}'
+      LogGroupName: !Sub '/aws/lambda/${SidewalkUserAuthenticatorLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
 
-  # Log group for storing SidewalkUserRequestTokenSignerLambda logs
-  SidewalkUserRequestTokenSignerLambdaLogGroup:
-    DependsOn: SidewalkUserRequestTokenSignerLambda
+  # Log group for storing SidewalkTokenGeneratorLambdaLambda logs
+  SidewalkTokenGeneratorLambdaLogGroup:
+    DependsOn: SidewalkTokenGeneratorLambda
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '/aws/lambda/${SidewalkUserRequestTokenSignerLambda}'
+      LogGroupName: !Sub '/aws/lambda/${SidewalkTokenGeneratorLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
 
-  # Log group for storing SidewalkApiGwAuthenticationLambda logs
-  SidewalkApiGwAuthenticationLambdaLogGroup:
-    DependsOn: SidewalkApiGwAuthenticationLambda
+  # Log group for storing SidewalkTokenAuthenticatorLambda logs
+  SidewalkTokenAuthenticatorLambdaLogGroup:
+    DependsOn: SidewalkTokenAuthenticatorLambda
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '/aws/lambda/${SidewalkApiGwAuthenticationLambda}'
+      LogGroupName: !Sub '/aws/lambda/${SidewalkTokenAuthenticatorLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -518,7 +515,7 @@ Resources:
     Type: AWS::ApiGateway::Method
     DependsOn:
       - SidewalkUserAuthorizer
-      - SidewalkUserRequestTokenSignerLambda
+      - SidewalkTokenGeneratorLambda
       - AuthResource
     Properties:
       AuthorizationType: CUSTOM
@@ -531,7 +528,7 @@ Resources:
           - StatusCode: 200
         Uri: !Sub
           - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
-          - lambdaArn: !GetAtt SidewalkUserRequestTokenSignerLambda.Arn
+          - lambdaArn: !GetAtt SidewalkTokenGeneratorLambda.Arn
       MethodResponses:
         - StatusCode: 200
           ResponseModels:
@@ -639,7 +636,7 @@ Resources:
     Type: AWS::ApiGateway::Authorizer
     DependsOn:
       - SidewalkApiGateway
-      - SidewalkApiGwAuthenticationLambda
+      - SidewalkTokenAuthenticatorLambda
     Properties:
       Name: SidewalkApiGatewayAuthorizer
       RestApiId: !Ref SidewalkApiGateway
@@ -649,7 +646,7 @@ Resources:
         -  ''
         -
           - !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/
-          - !GetAtt SidewalkApiGwAuthenticationLambda.Arn
+          - !GetAtt SidewalkTokenAuthenticatorLambda.Arn
           - /invocations
       IdentitySource: method.request.header.AuthorizationToken
 
@@ -658,7 +655,7 @@ Resources:
     Type: AWS::ApiGateway::Authorizer
     DependsOn:
       - SidewalkApiGateway
-      - SidewalkUserAuthenticationLambda
+      - SidewalkUserAuthenticatorLambda
     Properties:
       Name: SidewalkUserAuthorizer
       RestApiId: !Ref SidewalkApiGateway
@@ -668,7 +665,7 @@ Resources:
         -  ''
         -
           - !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/
-          - !GetAtt SidewalkUserAuthenticationLambda.Arn
+          - !GetAtt SidewalkUserAuthenticatorLambda.Arn
           - /invocations
       IdentitySource:  method.request.header.Username
 
@@ -706,36 +703,36 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/*
 
-  # Set SidewalkUserAuthenticationLambda permissions regarding API Gateway
-  SidewalkUserAuthenticationLambdaPermissionsForApiGateway:
+  # Set SidewalkUserAuthenticatorLambda permissions regarding API Gateway
+  SidewalkUserAuthenticatorLambdaPermissionsForApiGateway:
     Type: AWS::Lambda::Permission
     DependsOn:
-      - SidewalkUserAuthenticationLambda
+      - SidewalkUserAuthenticatorLambda
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: SidewalkUserAuthenticationLambda
+      FunctionName: SidewalkUserAuthenticatorLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*
 
-  # Set SidewalkUserRequestTokenSignerLambda permissions regarding API Gateway
-  SidewalkUserRequestTokenSignerLambdaPermissionsForApiGateway:
+  # Set SidewalkTokenGeneratorLambda permissions regarding API Gateway
+  SidewalkTokenGeneratorLambdaPermissionsForApiGateway:
     Type: AWS::Lambda::Permission
     DependsOn:
-      - SidewalkUserRequestTokenSignerLambda
+      - SidewalkTokenGeneratorLambda
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: SidewalkUserRequestTokenSignerLambda
+      FunctionName: SidewalkTokenGeneratorLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/auth
 
-  # Set SidewalkApiGwAuthenticationLambda permissions regarding API Gateway
-  SidewalkApiGwAuthenticationLambdaPermissionsForApiGateway:
+  # Set SidewalkTokenAuthenticatorLambda permissions regarding API Gateway
+  SidewalkTokenAuthenticatorLambdaPermissionsForApiGateway:
     Type: AWS::Lambda::Permission
     DependsOn:
-      - SidewalkApiGwAuthenticationLambda
+      - SidewalkTokenAuthenticatorLambda
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: SidewalkApiGwAuthenticationLambda
+      FunctionName: SidewalkTokenAuthenticatorLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*
 
@@ -816,8 +813,7 @@ Resources:
                 Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:SidewalkRuleErrors:*
 
-  # AWS IoT wireless rule for uplink messages
-  # Passes incoming uplink messages to the SidewalkUplinkLambda
+  # AWS IoT wireless rule for uplink messages. Passes incoming uplink messages to the SidewalkUplinkLambda
   SidewalkUplinkRule:
     Type: AWS::IoT::TopicRule
     DependsOn:
@@ -871,8 +867,7 @@ Resources:
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/proximity/*
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/message_delivery_status/*
 
-  # AWS IoT wireless rule for notification
-  # Passes incoming notifications to the SidewalkUplinkLambda
+  # AWS IoT wireless rule for notification. Passes incoming notifications to the SidewalkUplinkLambda
   SidewalkNotificationRule:
     Type: AWS::IoT::TopicRule
     DependsOn:
@@ -973,8 +968,7 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # Cloud Front Origin Access Policy.
-  # Whitelists AuthorizationToken and Username headers.
+  # Cloud Front Origin Access Policy. Whitelists AuthorizationToken and Username headers.
   CloudFrontAuthOriginAccessPolicy:
     Type: AWS::CloudFront::OriginRequestPolicy
     Properties:
