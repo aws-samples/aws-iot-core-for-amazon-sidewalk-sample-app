@@ -482,10 +482,10 @@ Resources:
   ApiPostMethod:
     Type: AWS::ApiGateway::Method
     DependsOn:
-      - SidewalkApiGatewayAuthorizer
+      - SidewalkTokenAuthorizer
     Properties:
       AuthorizationType: CUSTOM
-      AuthorizerId: !Ref SidewalkApiGatewayAuthorizer
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
       HttpMethod: POST
       Integration:
         IntegrationHttpMethod: POST
@@ -542,10 +542,10 @@ Resources:
   ApiOptionsMethod:
     Type: AWS::ApiGateway::Method
     DependsOn:
-      - SidewalkApiGatewayAuthorizer
+      - SidewalkTokenAuthorizer
     Properties:
       AuthorizationType: CUSTOM
-      AuthorizerId: !Ref SidewalkApiGatewayAuthorizer
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
       HttpMethod: OPTIONS
       Integration:
         Type: MOCK
@@ -579,10 +579,10 @@ Resources:
   ProxyGetMethod:
     Type: AWS::ApiGateway::Method
     DependsOn:
-      - SidewalkApiGatewayAuthorizer
+      - SidewalkTokenAuthorizer
     Properties:
       AuthorizationType: CUSTOM
-      AuthorizerId: !Ref SidewalkApiGatewayAuthorizer
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
       HttpMethod: GET
       Integration:
         IntegrationHttpMethod: POST
@@ -604,10 +604,10 @@ Resources:
   ProxyOptionsMethod:
     Type: AWS::ApiGateway::Method
     DependsOn:
-      - SidewalkApiGatewayAuthorizer
+      - SidewalkTokenAuthorizer
     Properties:
       AuthorizationType: CUSTOM
-      AuthorizerId: !Ref SidewalkApiGatewayAuthorizer
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
       HttpMethod: OPTIONS
       Integration:
         Type: MOCK
@@ -632,13 +632,13 @@ Resources:
       RestApiId: !Ref SidewalkApiGateway
 
   # API Gateway jwt authorizer
-  SidewalkApiGatewayAuthorizer:
+  SidewalkTokenAuthorizer:
     Type: AWS::ApiGateway::Authorizer
     DependsOn:
       - SidewalkApiGateway
       - SidewalkTokenAuthenticatorLambda
     Properties:
-      Name: SidewalkApiGatewayAuthorizer
+      Name: SidewalkTokenAuthorizer
       RestApiId: !Ref SidewalkApiGateway
       AuthorizerResultTtlInSeconds: 3600
       Type: TOKEN

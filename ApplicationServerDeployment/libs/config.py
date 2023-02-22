@@ -83,6 +83,7 @@ class Config:
             return base64.b64encode(auth_bytes).decode('ascii')
         except yaml.YAMLError as e:
             terminate(f'Invalid structure of a config file: {e}', ErrCode.EXCEPTION)
+
     def _read_grafana_config(self):
         """
         Reads Grafana config file.
