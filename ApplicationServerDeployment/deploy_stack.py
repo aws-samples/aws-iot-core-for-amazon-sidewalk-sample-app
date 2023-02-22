@@ -4,9 +4,12 @@
 """
 Script deploys SidewalkSampleApplication stack.
 """
+from time import sleep
 
 import boto3
 import webbrowser
+
+from botocore.exceptions import ClientError
 
 from constants.SampleApplicationConstants import *
 from libs.cloud_formation_client import CloudFormationClient
@@ -16,12 +19,10 @@ from libs.utils import *
 from libs.iot_wireless_client import IoTWirelessClient
 from libs.lambda_client import LambdaClient
 
-
 # -----------------
 # Read config file
 # -----------------
 config = Config()
-
 
 # --------------------
 # Ask user to proceed
@@ -34,7 +35,6 @@ log_info(f'This can take several minutes to complete.')
 log_info(f'Proceed with stack creation?')
 confirm()
 
-
 # -------------------------------------------------------------
 # Create boto3 session using given profile and service clients
 # Sidewalk is only enabled in the us-east-1 region
@@ -46,7 +46,6 @@ wireless_client = IoTWirelessClient(session)
 lambda_client = LambdaClient(session)
 api_gateway_client = session.client(service_name='apigateway')
 
-
 # ------------------------------------
 # Enable Sidewalk event notifications
 # ------------------------------------
@@ -57,13 +56,11 @@ wireless_client.enable_notifications()
 # ---------------------------------------------------
 sid_dest_already_exists = wireless_client.check_if_destination_exists(name=config.sid_dest_name)
 
-
 # -----------------------------
 # Read CloudFormation template
 # -----------------------------
 stack_path = Path(__file__).parent.joinpath('template', 'SidewalkSampleApplicationStack.yaml')
 stack = read_file(stack_path)
-
 
 # --------------------------------------
 # Trigger CloudFormation stack creation
@@ -76,9 +73,9 @@ cf_client.create_stack(
     tag=TAG
 )
 
-# ---------------------------
+# ------------------------
 # Clear auth api-gw cache
-# ---------------------------
+# ------------------------
 api_gateway_id = cf_client.get_output_var(STACK_NAME, 'SidewalkApiId')
 api_gateway_client.flush_stage_authorizers_cache(restApiId=api_gateway_id, stageName="dev")
 
@@ -91,13 +88,31 @@ if sid_dest_already_exists:
         role_name=DESTINATION_ROLE
     )
 
-
 # --------------------
 # Update lambdas code
 # --------------------
 parent = Path(__file__).parent
-lambda_client.upload_lambda_files(parent)
-lambda_client.update_auth_lambda(config, parent)
+lambdas = ['SidewalkUplinkLambda', 'SidewalkDownlinkLambda', 'SidewalkDbHandlerLambda']
+dirs = ['uplink', 'downlink', 'db_handler']
+common_dirs = ['codec', 'database', 'utils']
+lambda_client.upload_lambda_files(parent, lambdas, dirs, common_dirs)
+auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLambda', 'SidewalkTokenGeneratorLambda']
+auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
+auth_library_dirs = ['authLibs']
+lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
+
+auth_string = config.get_username_and_password_as_base64()
+env_variables = {"CREDENTIALS": auth_string}
+i = 0
+i_max = 5
+while i < i_max:
+    i += 1
+    try:
+        lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)
+        break
+    except ClientError as e:
+        log_wait()
+        sleep(1)
 
 # ---------------------------
 # Upload WebApp assets to S3
