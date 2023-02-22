@@ -968,8 +968,8 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # Cloud Front Origin Access Policy. Whitelists AuthorizationToken and Username headers.
-  CloudFrontAuthOriginAccessPolicy:
+  # Cloud Front Origin Request Policy. Whitelists AuthorizationToken and Username headers.
+  CloudFrontAuthOriginRequestPolicy:
     Type: AWS::CloudFront::OriginRequestPolicy
     Properties:
       OriginRequestPolicyConfig:
@@ -981,7 +981,7 @@ Resources:
           Headers:
             - 'AuthorizationToken'
             - 'Username'
-        Name: SidewalkSampleApplicationAuthOriginAccessPolicy
+        Name: SidewalkSampleApplicationAuthOriginRequestPolicy
         QueryStringsConfig:
           QueryStringBehavior: none
 
@@ -1056,7 +1056,7 @@ Resources:
               - POST
               - DELETE
             PathPattern: /api/*
-            OriginRequestPolicyId: !Ref CloudFrontAuthOriginAccessPolicy
+            OriginRequestPolicyId: !Ref CloudFrontAuthOriginRequestPolicy
             TargetOriginId:
               Fn::Sub: ${AWS::StackName}-root-Api-Gw
             ViewerProtocolPolicy:
