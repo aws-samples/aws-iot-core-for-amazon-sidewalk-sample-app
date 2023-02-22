@@ -9,3 +9,4 @@ EdgeDeviceProvisioning/DeviceProfile_*/
 **/node_modules
 ApplicationServerDeployment/policies/DeployStackPolicy.json
 ApplicationServerDeployment/policies/DeployGrafanaPolicy.json
+ApplicationServerDeployment/lambda/authLibs/*
