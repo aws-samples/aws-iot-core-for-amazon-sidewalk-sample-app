@@ -5,6 +5,7 @@ from pathlib import Path
 
 import boto3
 from botocore.exceptions import ClientError
+from time import sleep
 
 from libs.utils import zip_top_level_files, log_info, eval_client_response, terminate, \
     ErrCode, zip_dir
@@ -46,15 +47,25 @@ class LambdaClient:
             except ClientError as e:
                 terminate(f'Unable to update lambda: {e}.', ErrCode.EXCEPTION)
 
-    def update_lambda_env_variables(self, lambdas: [str], env_variables: dict[str,str]):
+    def update_lambda_env_variables(self, lambdas: [str], env_variables: dict):
         """
-        Updates lambda env variables.
-        :param env_variables: dict where keys are env_variable keys and values are env_variable values
+        Updates lambda environment variables. Includes retry mechanism.
+        :param env_variables: dict[str, str] where keys are env_variable keys and values are env_variable values
         :param lambdas: list of lambda names to update
         """
         for lam in lambdas:
-            log_info(f'Updating {lam} env variables...')
-            response = self.lambda_client.update_function_configuration(FunctionName=lam, Environment={
-                    'Variables': env_variables
-            })
-            eval_client_response(response, f'{lam} function env variables updated.')
+            retries = 0
+            log_info(f'Updating {lam} environment variables...')
+            while True:
+                try:
+                    response = self.lambda_client.update_function_configuration(FunctionName=lam, Environment={
+                            'Variables': env_variables
+                    })
+                    eval_client_response(response, f'Environment variables updated.')
+                    break
+                except ClientError as e:
+                    if e.response['Error']['Code'] == 'ResourceConflictException' and retries < 5:
+                        retries += 1
+                        sleep(1)
+                    else:
+                        terminate(f'Unable to update environment variables: {e}', ErrCode.EXCEPTION)

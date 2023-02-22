@@ -103,16 +103,7 @@ lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_
 
 auth_string = config.get_username_and_password_as_base64()
 env_variables = {"CREDENTIALS": auth_string}
-i = 0
-i_max = 5
-while i < i_max:
-    i += 1
-    try:
-        lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)
-        break
-    except ClientError as e:
-        log_wait()
-        sleep(1)
+lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)
 
 # ---------------------------
 # Upload WebApp assets to S3
