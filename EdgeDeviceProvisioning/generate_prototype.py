@@ -9,7 +9,7 @@ import logging
 import os
 import random
 import string
-from libs.ProvisionWrapper import ProvisionWrapper, InputType
+from libs.ProvisionWrapper import ProvisionWrapper, InputType, ProvisionWrapperException
 from libs.EnvConfig import EnvConfig
 
 logger = logging.getLogger()
@@ -54,6 +54,7 @@ def main():
     paths.save_profile_json(response)
     logger.info(f"Saved DeviceProfile details to {paths.get_profile_json_filepath()}")
 
+    failed = False
     for instanceNr in range(0, int(args.instances)):
         logger.info(f"Creating a new WirelessDevice (instance nr {instanceNr})")
         response = aws.create_wireless_device(Type='Sidewalk',
@@ -73,13 +74,22 @@ def main():
         paths.save_device_json(wireless_device_id, response)
 
         logger.info("Generating MFG by calling provision.py")
-        p = ProvisionWrapper(script_dir=e.provision_script_directory,
+        try:
+            p = ProvisionWrapper(script_dir=e.provision_script_directory,
                              silabs_commander_dir=e.commander_dir, hardware_platform=e.hardware_platform)
-        p.generate_mfg(wireless_device_path=paths.get_device_json_filepath(wireless_device_id, absPath=True),
+            p.generate_mfg(wireless_device_path=paths.get_device_json_filepath(wireless_device_id, absPath=True),
                        device_profile_path=paths.get_profile_json_filepath(absPath=True),
                        input_type=InputType.AWS_API_JSONS,
                        output_dir=paths.get_device_dir(wireless_device_id, absPath=True))
-        logger.info("Done!")
+        except ProvisionWrapperException as pwe:
+            logger.error("Failed\n" + str(pwe))
+            failed = True
+            break
+        
+        if failed:
+            logger.error("Unsuccessful")
+        else:
+            logger.info("Done!")
 
 
 def make_dir(path):
