@@ -283,8 +283,9 @@ Resources:
       Handler: uplink_lambda_handler.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkUplinkLambdaExecutionRole.Arn
-      Runtime: python3.8
+      Runtime: python3.9
       Timeout: 3
+      ReservedConcurrentExecutions: 10
       PackageType: Zip
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
@@ -301,9 +302,10 @@ Resources:
       Handler: downlink_lambda_handler.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkDownlinkLambdaExecutionRole.Arn
-      Runtime: python3.8
+      Runtime: python3.9
       Timeout: 3
       PackageType: Zip
+      ReservedConcurrentExecutions: 10
       Code:
         ZipFile:  "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -326,9 +328,10 @@ Resources:
       Handler: db_handler_lambda_handler.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkDbHandlerLambdaExecutionRole.Arn
-      Runtime: python3.8
+      Runtime: python3.9
       Timeout: 3
       PackageType: Zip
+      ReservedConcurrentExecutions: 10
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -349,9 +352,10 @@ Resources:
       Handler: index.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkTokenGeneratorLambdaExecutionRole.Arn
-      Runtime: python3.8
+      Runtime: python3.9
       Timeout: 3
       PackageType: Zip
+      ReservedConcurrentExecutions: 1
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
@@ -365,9 +369,10 @@ Resources:
       Handler: index.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkUserAuthenticatorLambdaExecutionRole.Arn
-      Runtime: python3.8
+      Runtime: python3.9
       Timeout: 3
       PackageType: Zip
+      ReservedConcurrentExecutions: 1
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
@@ -381,9 +386,10 @@ Resources:
       Handler: index.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkTokenAuthenticatorLambdaExecutionRole.Arn
-      Runtime: python3.8
+      Runtime: python3.9
       Timeout: 3
       PackageType: Zip
+      ReservedConcurrentExecutions: 10
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
