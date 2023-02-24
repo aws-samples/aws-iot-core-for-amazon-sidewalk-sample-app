@@ -92,6 +92,7 @@ Resources:
       - SidewalkDownlinkLambda
       - SidewalkDevices
       - SidewalkMeasurements
+      - DeadLetterLambdaQueue
     Properties:
       RoleName: SidewalkUplinkLambdaExecutionRole
       Description: Allows SidewalkUplinkLambda to call AWS services on your behalf.
@@ -135,10 +136,17 @@ Resources:
                 Resource:
                     - !GetAtt SidewalkDevices.Arn
                     - !GetAtt SidewalkMeasurements.Arn
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                  - !GetAtt DeadLetterLambdaQueue.Arn
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - DeadLetterLambdaQueue
     Properties:
       RoleName: SidewalkDownlinkLambdaExecutionRole
       Description: Allows SidewalkDownlinkLambda to call AWS services on your behalf.
@@ -164,6 +172,11 @@ Resources:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkDownlinkLambda:*
               - Effect: Allow
                 Action:
+                  - sqs:SendMessage
+                Resource:
+                  - !GetAtt DeadLetterLambdaQueue.Arn
+              - Effect: Allow
+                Action:
                   - iotwireless:SendDataToWirelessDevice
                 Resource:
                   - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:WirelessDevice/*
@@ -174,6 +187,7 @@ Resources:
     DependsOn:
       - SidewalkDevices
       - SidewalkMeasurements
+      - DeadLetterLambdaQueue
     Properties:
       RoleName: SidewalkDbHandlerLambdaExecutionRole
       Description: Allows SidewalkDbHandlerLambda to call AWS services on your behalf.
@@ -199,6 +213,11 @@ Resources:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkDbHandlerLambda:*
               - Effect: Allow
                 Action:
+                  - sqs:SendMessage
+                Resource:
+                  - !GetAtt DeadLetterLambdaQueue.Arn
+              - Effect: Allow
+                Action:
                   - dynamodb:BatchGetItem
                   - dynamodb:UpdateTimeToLive
                   - dynamodb:PutItem
@@ -216,6 +235,8 @@ Resources:
   # Token generator Lambda's execution role with basic lambda permissions.
   SidewalkTokenGeneratorLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - DeadLetterLambdaQueue
     Properties:
       RoleName: SidewalkTokenGeneratorLambdaExecutionRole
       Description: Allows SidewalkTokenGeneratorLambda to assume cloudfront role and authenticate requests.
@@ -229,13 +250,29 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: SidewalkTokenGeneratorLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkTokenGeneratorLambda:*
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                  - !GetAtt DeadLetterLambdaQueue.Arn
     DeletionPolicy: Delete
 
   # User authenticator Lambda's execution role with basic lambda permissions.
   SidewalkUserAuthenticatorLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - DeadLetterLambdaQueue
     Properties:
       RoleName: SidewalkUserAuthenticatorLambdaExecutionRole
       Description: Allows SidewalkUserAuthenticatorLambda to assume cloudfront role and authenticate requests.
@@ -249,13 +286,29 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: SidewalkUserAuthenticatorLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkUserAuthenticatorLambda:*
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                  - !GetAtt DeadLetterLambdaQueue.Arn
     DeletionPolicy: Delete
 
   # Token authenticator Lambda's execution role with basic lambda permissions.
   SidewalkTokenAuthenticatorLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - DeadLetterLambdaQueue
     Properties:
       RoleName: SidewalkTokenAuthenticatorLambdaExecutionRole
       Description: Allows SidewalkTokenAuthenticatorLambda to assume cloudfront role and authenticate requests.
@@ -269,14 +322,30 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: SidewalkTokenAuthenticatorLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkTokenAuthenticatorLambda:*
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                  - !GetAtt DeadLetterLambdaQueue.Arn
     DeletionPolicy: Delete
 
   # SidewalkUplinkLambda function. Handles uplink messages
   SidewalkUplinkLambda:
     Type: AWS::Lambda::Function
-    DependsOn: SidewalkUplinkLambdaExecutionRole
+    DependsOn:
+      - SidewalkUplinkLambdaExecutionRole
+      - DeadLetterLambdaQueue
     Properties:
       FunctionName: SidewalkUplinkLambda
       Description: Receives uplink messages and logs them in the CloudWatch log group.
@@ -287,6 +356,8 @@ Resources:
       Timeout: 3
       ReservedConcurrentExecutions: 10
       PackageType: Zip
+      DeadLetterConfig:
+        TargetArn: !GetAtt DeadLetterLambdaQueue.Arn
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
 
@@ -296,6 +367,7 @@ Resources:
     DependsOn:
       - SidewalkDownlinkLambdaExecutionRole
       - CloudFrontDistribution
+      - DeadLetterLambdaQueue
     Properties:
       FunctionName: SidewalkDownlinkLambda
       Description: Sends downlink messages and logs them in the CloudWatch log group.
@@ -306,6 +378,8 @@ Resources:
       Timeout: 3
       PackageType: Zip
       ReservedConcurrentExecutions: 10
+      DeadLetterConfig:
+        TargetArn: !GetAtt DeadLetterLambdaQueue.Arn
       Code:
         ZipFile:  "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -332,6 +406,8 @@ Resources:
       Timeout: 3
       PackageType: Zip
       ReservedConcurrentExecutions: 10
+      DeadLetterConfig:
+        TargetArn: !GetAtt DeadLetterLambdaQueue.Arn
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -346,6 +422,9 @@ Resources:
   # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
   SidewalkTokenGeneratorLambda:
     Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkTokenGeneratorLambdaExecutionRole
+      - DeadLetterLambdaQueue
     Properties:
       FunctionName: SidewalkTokenGeneratorLambda
       Description: Signs user requests jwt
@@ -356,6 +435,8 @@ Resources:
       Timeout: 3
       PackageType: Zip
       ReservedConcurrentExecutions: 1
+      DeadLetterConfig:
+        TargetArn: !GetAtt DeadLetterLambdaQueue.Arn
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
@@ -363,6 +444,9 @@ Resources:
   # SidewalkUserAuthenticatorLambda function. Handles api gw user authentication.
   SidewalkUserAuthenticatorLambda:
     Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkUserAuthenticatorLambdaExecutionRole
+      - DeadLetterLambdaQueue
     Properties:
       FunctionName: SidewalkUserAuthenticatorLambda
       Description: Authentication cloudfront users
@@ -373,6 +457,8 @@ Resources:
       Timeout: 3
       PackageType: Zip
       ReservedConcurrentExecutions: 1
+      DeadLetterConfig:
+        TargetArn: !GetAtt DeadLetterLambdaQueue.Arn
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
@@ -380,6 +466,9 @@ Resources:
   # SidewalkTokenAuthenticatorLambda function. Handles jwt authentication.
   SidewalkTokenAuthenticatorLambda:
     Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkTokenAuthenticatorLambdaExecutionRole
+      - DeadLetterLambdaQueue
     Properties:
       FunctionName: SidewalkTokenAuthenticatorLambda
       Description: Authenticates user jwt token
@@ -390,9 +479,21 @@ Resources:
       Timeout: 3
       PackageType: Zip
       ReservedConcurrentExecutions: 10
+      DeadLetterConfig:
+        TargetArn: !GetAtt DeadLetterLambdaQueue.Arn
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
+
+  # --------------
+  # SQS Resources
+  #---------------
+  # DLQ for lambdas
+  DeadLetterLambdaQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      RedriveAllowPolicy:
+        redrivePermission: allowAll
 
   # -----------------------------
   # CloudWatch related resources
