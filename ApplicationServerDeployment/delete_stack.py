@@ -50,6 +50,9 @@ wireless_client = IoTWirelessClient(session)
 bucket = cf_client.get_output_var(SSA_STACK, "SidewalkWebAppBucketName")
 if bucket:
     s3_client.delete_bucket_content(bucket)
+bucket = cf_client.get_output_var(SSA_STACK, "SidewalkLoggingBucketName")
+if bucket:
+    s3_client.delete_bucket_content(bucket)
 
 
 # --------------------------------------

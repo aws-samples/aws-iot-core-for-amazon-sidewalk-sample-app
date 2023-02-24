@@ -910,9 +910,21 @@ Resources:
   # S3 related resources
   # ---------------------
 
+  # S3 bucket for s3 and cloud front logging
+  SidewalkLoggingBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      PublicAccessBlockConfiguration:
+          BlockPublicAcls: TRUE
+          BlockPublicPolicy: TRUE
+          IgnorePublicAcls: TRUE
+          RestrictPublicBuckets: TRUE
+      AccessControl: LogDeliveryWrite
+
   # S3 bucket for hosting Web Application
   SidewalkWebAppBucket:
     Type: 'AWS::S3::Bucket'
+    DependsOn: SidewalkLoggingBucket
     Properties:
       # BucketName consists of 'sensor-monitoring-app-' prefix and 32 chars-long GUID taken from the StackId
       BucketName: !Join
@@ -925,6 +937,9 @@ Resources:
         BlockPublicPolicy: TRUE
         IgnorePublicAcls: TRUE
         RestrictPublicBuckets: TRUE
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SidewalkLoggingBucket
+        LogFilePrefix: s3
     DeletionPolicy: Delete
 
   # Bucket policy to allow communication with cloudFront
@@ -998,8 +1013,12 @@ Resources:
       - SidewalkWebAppBucket
       - SidewalkApiGateway
       - CloudFrontOAC
+      - SidewalkLoggingBucket
     Properties:
       DistributionConfig:
+        Logging:
+          Bucket: !GetAtt SidewalkLoggingBucket.DomainName
+          Prefix: cf
         DefaultCacheBehavior:
           Compress: true
           DefaultTTL: 100
@@ -1075,6 +1094,10 @@ Outputs:
 
   SidewalkApiId:
     Value: !Ref SidewalkApiGateway
+
+  SidewalkLoggingBucketName:
+    Value: !Ref SidewalkLoggingBucket
+    Description: SidewalkLoggingBucketName
 
   SidewalkWebAppBucketName:
     Value: !Ref SidewalkWebAppBucket
