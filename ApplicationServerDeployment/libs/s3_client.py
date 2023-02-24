@@ -79,8 +79,8 @@ class S3Client:
                         with open(file_path, 'r') as fd:
                             # override template: replace <api_gw_invoke_url> placeholder with actual value
                             content = fd.read()
-                            data = BytesIO(bytes(content, 'utf-8'))
-                            self._client.put_object(Bucket=bucket_name, Key=key, Body=data, ContentType=suffix_map[file_path.suffix])
+                            with BytesIO(bytes(content, 'utf-8')) as data:
+                                self._client.put_object(Bucket=bucket_name, Key=key, Body=data, ContentType=suffix_map[file_path.suffix])
                     else:
                         with open(file_path, 'rb') as data:
                             self._client.put_object(Bucket=bucket_name, Key=key, Body=data, ContentType=suffix_map[file_path.suffix])

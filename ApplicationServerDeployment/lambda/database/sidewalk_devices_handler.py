@@ -53,6 +53,9 @@ class SidewalkDevicesHandler:
         try:
             response = self._table.scan()
             items.extend(response.get('Items', []))
+            while "NextToken" in response:
+                response = self._table.scan(NextToken=response["NextToken"])
+                items.extend(response.get('Items', []))
         except ClientError as err:
             logger.error(f'Error while calling get_all_devices: {err}')
             raise
