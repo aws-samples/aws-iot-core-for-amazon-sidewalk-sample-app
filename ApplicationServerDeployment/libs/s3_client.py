@@ -32,17 +32,19 @@ class S3Client:
         """
         try:
             log_info(f'Deleting objects from {bucket_name} bucket...')
-            paginator = self._client.get_paginator("list_objects_v2")
-            results = paginator.paginate(Bucket=bucket_name).build_full_result().get("Contents", None)
-            object_names = []
-            if results is not None:
-                for obj in results:
-                    obj_dict = {"Key": obj["Key"]}
-                    object_names.append(obj_dict)
-            if len(object_names) > 0:
+            paginator = self._client.get_paginator("list_object_versions")
+            results = paginator.paginate(Bucket=bucket_name)
+            objects = []
+            for obj_resp in results:
+                if "DeleteMarkers" in obj_resp:
+                    for obj in obj_resp["DeleteMarkers"]:
+                        objects.append({"Key": obj["Key"], "VersionId": obj["VersionId"]})
+                if "Versions" in obj_resp:
+                    for obj in obj_resp["Versions"]:
+                        objects.append({"Key": obj["Key"], "VersionId": obj["VersionId"]})
+            if len(objects) > 0:
                 self._client.delete_objects(Bucket=bucket_name,
-                                            Delete={"Objects": object_names})
-            log_success('Objects deleted, bucket is empty.')
+                                            Delete={"Objects": objects})
         except ClientError as e:
             if e.response['Error']['Code'] in ['ValidationError', 'NoSuchBucket']:
                 log_success(f'{bucket_name} doesn\'t exist, skipping.')
