@@ -919,6 +919,8 @@ Resources:
           BlockPublicPolicy: TRUE
           IgnorePublicAcls: TRUE
           RestrictPublicBuckets: TRUE
+      VersioningConfiguration:
+        Status: Enabled
       AccessControl: LogDeliveryWrite
 
   # S3 bucket for hosting Web Application
@@ -940,6 +942,8 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SidewalkLoggingBucket
         LogFilePrefix: s3
+      VersioningConfiguration:
+        Status: Enabled
     DeletionPolicy: Delete
 
   # Bucket policy to allow communication with cloudFront
