@@ -68,8 +68,10 @@ Its main components are:
 
 ### Stack deployment
 
-|WARNING: You will be billed for the usage of AWS resources created by this application. In particular, you will be charged for every active user of the Grafana dashboard. Keep in mind that every deployment creates an API key needed to setup the dashboard and data sources, what is counted as a single user with admin permissions. |
-|---|
+|WARNING: You will be billed for the usage of AWS resources created by this application. 
+|---
+| In particular, you will be charged for every active user of the Grafana dashboard. Keep in mind that every deployment creates an API key needed to setup the dashboard and data sources, what is counted as a single user with admin permissions.
+| Amazon Timestream bills you for the amount of data written to / read from the tables. Frequent data reads can significantly increase the cost of using this database. Please keep this in mind while setting auto-refresh interval for Grafana dashboard.
 
 1. Update the [config_grafana](./config_grafana.yaml) if needed:  
 
