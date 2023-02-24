@@ -1032,6 +1032,8 @@ Resources:
           TargetOriginId:
             Fn::Sub: ${AWS::StackName}-root
           ViewerProtocolPolicy: redirect-to-https
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
         Enabled: true
         DefaultRootObject: index.html
         IPV6Enabled: true
