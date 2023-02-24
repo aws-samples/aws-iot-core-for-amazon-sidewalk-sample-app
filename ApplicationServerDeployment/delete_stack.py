@@ -53,6 +53,7 @@ if bucket:
 bucket = cf_client.get_output_var(SSA_STACK, "SidewalkLoggingBucketName")
 if bucket:
     s3_client.delete_bucket_content(bucket)
+    s3_client.delete_bucket(bucket) # bucket needs to be deleted asap after clear due to access logs being created
 
 
 # --------------------------------------

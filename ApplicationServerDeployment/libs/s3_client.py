@@ -51,6 +51,20 @@ class S3Client:
             else:
                 terminate(f'Unable to delete objects from the bucket: {e}.', ErrCode.EXCEPTION)
 
+    def delete_bucket(self, bucket_name):
+        """
+        Deletes buckets
+        :param bucket_name: name of bucket to delete
+        """
+        try:
+            self._client.delete_bucket(Bucket=bucket_name)
+            log_success('Bucket deleted.')
+        except ClientError as e:
+            if e.response['Error']['Code'] in ['ValidationError', 'NoSuchBucket']:
+                log_success(f'{bucket_name} doesn\'t exist, skipping.')
+            else:
+                terminate(f'Unable to delete bucket: {e}.', ErrCode.EXCEPTION)
+
     def put_files(self, bucket_name, build_dir):
         """
         Puts content of web application to s3 bucket
