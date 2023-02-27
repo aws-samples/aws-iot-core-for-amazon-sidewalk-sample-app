@@ -39,6 +39,7 @@ Resources:
       KeySchema:
         - AttributeName: wireless_device_id
           KeyType: HASH
+      BillingMode: PROVISIONED
       TimeToLiveSpecification:
         AttributeName: time_to_live
         Enabled: true
@@ -60,6 +61,7 @@ Resources:
       KeySchema:
         - AttributeName: timestamp
           KeyType: HASH
+      BillingMode: PROVISIONED
       GlobalSecondaryIndexes:
         - IndexName:
             "wireless_device_id"
