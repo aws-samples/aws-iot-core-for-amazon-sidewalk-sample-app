@@ -115,7 +115,6 @@ Resources:
   # AWS IoT wireless destination
   SidewalkDestination:
     Type: AWS::IoTWireless::Destination
-    DependsOn: GrafanaDestinationRole
     Condition: ShouldCreateDestination
     Properties:
       Name:
@@ -172,8 +171,6 @@ Resources:
   # Passes incoming uplink messages to the UplinkMessages table
   GrafanaUplinkRule:
     Type: AWS::IoT::TopicRule
-    DependsOn:
-      - GrafanaRuleRole
     Properties:
       RuleName: GrafanaUplinkRule
       TopicRulePayload:
@@ -224,8 +221,6 @@ Resources:
   # Passes incoming notifications to the Notifications table
   GrafanaNotificationRule:
     Type: AWS::IoT::TopicRule
-    DependsOn:
-      - GrafanaRuleRole
     Properties:
       RuleName: GrafanaNotificationRule
       TopicRulePayload:
