@@ -795,9 +795,32 @@ Resources:
       - ApiOptionsMethod
       - ProxyGetMethod
       - ProxyOptionsMethod
+      - SidewalkpiGatewayAccessLogGroup
     Properties:
       RestApiId: !Ref SidewalkApiGateway
       StageName: dev
+      StageDescription:
+        AccessLogSetting:
+          DestinationArn: !GetAtt SidewalkpiGatewayAccessLogGroup.Arn
+
+  # ApiGw usage plan. Provides throttling
+  SidewalkApiGatewayUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - SidewalkApiGateway
+      - SidewalkApiGatewayDeployment
+    Properties:
+      ApiStages:
+        - ApiId: !Ref SidewalkApiGateway
+          Stage: dev
+      Description: Provides throttling for SidewalkSampleApplication api gw
+      Quota:
+        Limit: 86400 # limit to one request per second
+        Period: DAY
+      Throttle:
+        BurstLimit: 30 # how many requests can happen in burst
+        RateLimit: 30 # how many requests can happen in a second
+      UsagePlanName: SidewalkSampleApplication usage plan
 
   # Set SidewalkDownlinkLambda permissions regarding API Gateway
   SidewalkDownlinkLambdaPermissionsForApiGateway:
