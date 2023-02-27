@@ -1172,6 +1172,10 @@ Outputs:
     Value: !Ref SidewalkWebAppBucket
     Description: SidewalkWebAppBucketName
 
+  CloudFrontDistributionId:
+    Description: CloudFront distribution
+    Value: !Ref CloudFrontDistribution
+
   CloudFrontDistribution:
     Description: CloudFront distribution
     Value:

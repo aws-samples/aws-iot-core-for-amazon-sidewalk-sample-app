@@ -15,6 +15,7 @@ from libs.config import Config
 from libs.s3_client import S3Client
 from libs.utils import *
 from libs.iot_wireless_client import IoTWirelessClient
+from libs.cloufront_client import CloudFrontClient
 
 
 SSA_STACK = 'SidewalkSampleApplicationStack'
@@ -43,10 +44,17 @@ session = boto3.Session(profile_name=config.aws_profile, region_name=config.regi
 cf_client = CloudFormationClient(session)
 s3_client = S3Client(session)
 wireless_client = IoTWirelessClient(session)
+cloudfront_client = CloudFrontClient(session)
 
-# --------------------------------------
+# ---------------------
+# Disable distribution
+# ---------------------
+distribution_id = cf_client.get_output_var(SSA_STACK, "CloudFrontDistributionId")
+cloudfront_client.disable_distribution(distribution_id)
+
+# -----------------------
 # Delete bucket contents
-# --------------------------------------
+# -----------------------
 bucket = cf_client.get_output_var(SSA_STACK, "SidewalkWebAppBucketName")
 if bucket:
     s3_client.delete_bucket_content(bucket)
