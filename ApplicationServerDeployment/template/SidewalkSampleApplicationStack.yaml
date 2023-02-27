@@ -712,7 +712,7 @@ Resources:
       AuthorizerUri: !Join
         -  ''
         -
-          - !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/
+          - arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/
           - !GetAtt SidewalkTokenAuthenticatorLambda.Arn
           - /invocations
       IdentitySource: method.request.header.AuthorizationToken
@@ -728,7 +728,7 @@ Resources:
       AuthorizerUri: !Join
         -  ''
         -
-          - !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/
+          - arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/
           - !GetAtt SidewalkUserAuthenticatorLambda.Arn
           - /invocations
       IdentitySource:  method.request.header.Username
