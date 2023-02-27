@@ -911,7 +911,7 @@ Resources:
                 Action:
                   - iot:DescribeEndpoint
                 Resource:
-                  - '*'
+                  - '*' # this action requires wildcard. Source iam console
 
   # AWS IoT wireless destination
   SidewalkDestination:
