@@ -33,6 +33,7 @@ Resources:
   SidewalkDevices:
     Type: AWS::DynamoDB::Table
     Properties:
+      BillingMode: PROVISIONED
       AttributeDefinitions:
         - AttributeName: wireless_device_id
           AttributeType: "S"
@@ -52,6 +53,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: SidewalkMeasurements
+      BillingMode: PROVISIONED
       AttributeDefinitions:
         - AttributeName: timestamp
           AttributeType: "N"
@@ -285,7 +287,7 @@ Resources:
       Role: !GetAtt SidewalkUplinkLambdaExecutionRole.Arn
       Runtime: python3.9
       Timeout: 3
-      ReservedConcurrentExecutions: 10
+      ReservedConcurrentExecutions: 30
       PackageType: Zip
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
@@ -305,7 +307,7 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 10
+      ReservedConcurrentExecutions: 30
       Code:
         ZipFile:  "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -331,7 +333,7 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 10
+      ReservedConcurrentExecutions: 30
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -389,7 +391,7 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 10
+      ReservedConcurrentExecutions: 30
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
@@ -686,6 +688,25 @@ Resources:
     Properties:
       RestApiId: !Ref SidewalkApiGateway
       StageName: dev
+
+  # ApiGw usage plan. Provides throttling
+  SidewalkApiGatewayUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - SidewalkApiGateway
+      - SidewalkApiGatewayDeployment
+    Properties:
+      ApiStages:
+        - ApiId: !Ref SidewalkApiGateway
+          Stage: dev
+      Description: Provides throttling for SidewalkSampleApplication api gw
+      Quota:
+        Limit: 86400 # limit to one request per second
+        Period: DAY
+      Throttle:
+        BurstLimit: 30 # how many requests can happen in burst
+        RateLimit: 30 # how many requests can happen in a second
+      UsagePlanName: SidewalkSampleApplication usage plan
 
   # Set SidewalkDownlinkLambda permissions regarding API Gateway
   SidewalkDownlinkLambdaPermissionsForApiGateway:
