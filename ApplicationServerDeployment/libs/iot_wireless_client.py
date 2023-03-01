@@ -106,7 +106,7 @@ class IoTWirelessClient:
                 RoleArn=role_arn
             )
             eval_client_response(response, f'{dest_name} destination updated.')
-        except:
+        except (ClientError, KeyError):
             pass
 
     def enable_notifications(self):
