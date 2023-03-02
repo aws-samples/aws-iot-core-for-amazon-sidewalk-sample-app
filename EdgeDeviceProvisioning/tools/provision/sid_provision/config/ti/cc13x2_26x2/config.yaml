@@ -1,6 +1,5 @@
 offset_size: 1
 mfg_page_size: 1415
-mfg_page_version: 7
 mfg_offsets:
   SID_PAL_MFG_STORE_DEVID:
     start: 0
