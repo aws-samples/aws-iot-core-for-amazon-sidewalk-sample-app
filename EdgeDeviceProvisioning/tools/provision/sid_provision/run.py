@@ -168,6 +168,7 @@ class SidArgument:
     required: Any = False
     intype: Any = None
     choices: Any = None
+    additional_help: Any = None
     action: str = "store"
 
     @property
@@ -191,6 +192,17 @@ class SidChipAddr:
     full_name: str = ""
     mem: int = 0
     default: bool = False
+
+    @property
+    def help_str(self) -> str:
+        help_str = f"{self.name}"
+        if self.full_name:
+            help_str += f":{self.full_name}"
+        if self.mem:
+            help_str += f" mem:{self.mem}"
+        if self.offset_addr:
+            help_str += f" address: {hex(self.offset_addr)}"
+        return help_str
 
 
 @dataclass
@@ -1128,7 +1140,14 @@ def get_default_platform_chip(platform: SidPlatformArgs, __group__: SidInputGrou
     _ = [_ for _ in platform.chips if _.default]
     if _:
         return _[0].name
-    return platform.chips[0].name
+    return platform.chips[0].name if platform.chips else "None"
+
+
+def get_additional_addr_help(platform: SidPlatformArgs, __group__: SidInputGroup, __argument__: SidArgument) -> str:
+    test = ""
+    for _ in platform.chips:
+        test += f"[{_.help_str}]"
+    return test
 
 
 def get_platform_chip_choices(
@@ -1198,6 +1217,10 @@ def is_file_or_hex(val):
     if len(bin_data) != 32:
         raise argparse.ArgumentTypeError("32 byte bin data expected.")
     return bin_data
+
+
+def auto_int(x) -> int:
+    return int(x, 0)
 
 
 CONFIG_FILE_ARG = SidArgument(
@@ -1277,6 +1300,14 @@ PLATFORM_MEMORY_ARG = SidArgument(
     default=get_default_memory_value,
     choices=get_memory_value_choices,
     help="Memory Footprint",
+)
+
+PLATFORM_ADDRESS_ARG = SidArgument(
+    name="--addr",
+    intype=auto_int,
+    help="""Address offset at which mfg page will be stored, this value does not need to be given since 
+            it is taken from chip argument \n is useful if the default value needs to be overridden""",
+    additional_help=get_additional_addr_help,
 )
 
 COMMANDER_BIN_ARG = SidArgument(
@@ -1373,7 +1404,7 @@ ARG_GROUPS = [
             BB_INPUT_GROUP_FORMAT,
             AWS_INPUT_GROUP_FORMAT,
         ],
-        addtional_input_args=[CONFIG_FILE_ARG],
+        addtional_input_args=[CONFIG_FILE_ARG, PLATFORM_ADDRESS_ARG],
         output_args=[OUTPUT_BIN_ARG, OUTPUT_HEX_ARG],
         config_file=Path("config/nordic/nrf528xx_dk/config.yaml"),
         chips=[SidChipAddr(name="nrf52840", offset_addr=0xFD000, default=True)],
@@ -1385,12 +1416,15 @@ ARG_GROUPS = [
             BB_INPUT_GROUP_FORMAT,
             AWS_INPUT_GROUP_FORMAT,
         ],
-        addtional_input_args=[CONFIG_FILE_ARG],
-        output_args=[OUTPUT_BIN_ARG, OUTPUT_HEX_ARG],
+        addtional_input_args=[CONFIG_FILE_ARG, PLATFORM_ADDRESS_ARG],
+        output_args=[
+            OUTPUT_BIN_ARG,
+            OUTPUT_HEX_ARG,
+        ],
         config_file=Path("config/ti/cc13x2_26x2/config.yaml"),
         chips=[
-            SidChipAddr(name="P1", offset_addr=0x56000),
-            SidChipAddr(name="P7", offset_addr=0xAE000, default=True),
+            SidChipAddr(name="P1", full_name="cc1352P1", offset_addr=0x56000),
+            SidChipAddr(name="P7", full_name="cc1352P7", offset_addr=0xAE000, default=True),
         ],
     ),
     SidPlatformArgs(
@@ -1548,6 +1582,13 @@ def main() -> None:
                 else argument.choices
             )
             help = f"{argument.help} (default: {default})" if default else argument.help
+            additional_help = (
+                argument.additional_help(platform_group, input_group, argument)
+                if callable(argument.additional_help)
+                else argument.additional_help
+            )
+            if additional_help:
+                help = f"{help} {additional_help}"
 
             try:
                 if argument.action != "store":
@@ -1590,11 +1631,17 @@ def main() -> None:
     if args.dump_raw_values:
         print(sid_mfg)
 
-    for _ in platform_group.output_args:
+    # Create chip address
+    memory = getattr(args, "memory", 0)
+    chip_addr = [_ for _ in platform_group.chips if args.chip == _.name and memory == _.mem]
+    assert len(chip_addr) == 1
+    chip_addr = chip_addr[0]
+    addr = getattr(args, "addr", None)
+    if addr:
+        chip_addr.offset_addr = addr
+    print(f"Using chip config [{chip_addr.help_str}]")
 
-        chip_addr = [_ for _ in platform_group.chips if args.chip == _.name]
-        assert len(chip_addr) >= 1
-        chip_addr = chip_addr[0]
+    for _ in platform_group.output_args:
 
         arg_container = SidArgOutContainer(platform=platform_group, input=input_group, arg=_, chip=chip_addr)
 
