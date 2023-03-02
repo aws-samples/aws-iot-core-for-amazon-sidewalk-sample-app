@@ -93,6 +93,7 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 | *HARDWARE_PLATFORM*   | *ALL*                                 | *NORDIC* or *TI* or *SILABS* (or *ALL* if you want to have personalization data generated for all three platforms)
 | *USERNAME*            | *null* **(need to be overwritten)**   | User for the WebApp
 | *PASSWORD*            | *null* **(need to be overwritten)**   | User's password
+| *INTERACTIVE_MODE*    | *True*                                | Enables interactive mode (confirmation prompts).
 
 ### 3. Deploy cloud infrastructure
 

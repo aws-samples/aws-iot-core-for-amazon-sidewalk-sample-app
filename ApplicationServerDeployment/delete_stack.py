@@ -32,8 +32,9 @@ config = Config()
 log_info('Arguments to be used during the SidewalkSampleApplication deletion:')
 log_info(f'\tCONFIG_PROFILE: {config.aws_profile}')
 log_info(f'\tREGION: {config.region_name}')
-log_warn('This is a destructive action and can not be undone!')
-confirm()
+if config.interactive_mode:
+    log_warn('This is a destructive action and can not be undone!')
+    confirm()
 
 
 # -------------------------------------------------------------

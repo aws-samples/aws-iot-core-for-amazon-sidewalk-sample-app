@@ -37,18 +37,19 @@ class GrafanaClient:
     # -------
     # Deploy
     # -------
-    def create_workspace(self, workspace_name: str, workspace_role: str) -> (str, str):
+    def create_workspace(self, workspace_name: str, workspace_role: str, interactive_mode: bool = True) -> (str, str):
         """
         Creates Grafana workspace.
 
         :param workspace_name:  Name of the workspace.
         :param workspace_role:  Name of the workspace role.
+        :param interactive_mode:    Turns the interactive mode on/off.
         :return:                (workspace_id, workspace_url) Tuple with metadata of created workspace.
         """
         workspace_id = ''
         workspace_url = ''
         log_info(f'Creating {workspace_name} in Amazon Grafana...')
-        confirm()
+        if interactive_mode: confirm()
 
         try:
             for ws in self._grafana_client.list_workspaces()['workspaces']:

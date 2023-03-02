@@ -4,6 +4,7 @@ Config:
     HARDWARE_PLATFORM: ALL  # Available values: NORDIC, TI, SILABS or ALL
     USERNAME: null
     PASSWORD: null
+    INTERACTIVE_MODE: True
 Outputs:
     DEVICE_PROFILE_ID: null
     WEB_APP_URL: null
