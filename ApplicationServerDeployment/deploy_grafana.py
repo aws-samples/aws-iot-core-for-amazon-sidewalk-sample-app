@@ -43,8 +43,9 @@ elif config.identity_store_id:
     log_info(f'\tIDENTITY_CENTER_USERS: no valid entries found; no users will be created')
 else:
     pass
-log_info(f'Proceed with stack creation?')
-confirm()
+if config.interactive_mode:
+    log_info(f'Proceed with stack creation?')
+    confirm()
 
 
 # -------------------------------------------------------------
@@ -93,7 +94,8 @@ cf_client.create_stack(
 if sid_dest_already_exists:
     wireless_client.update_existing_destination(
         dest_name=config.sid_dest_name,
-        role_name=DESTINATION_ROLE
+        role_name=DESTINATION_ROLE,
+        interactive_mode=config.interactive_mode
     )
 
 
@@ -102,7 +104,7 @@ if sid_dest_already_exists:
 # ------------------------------------------------------
 
 # Create workspace
-workspace_id, workspace_url = grafana_client.create_workspace(WORKSPACE_NAME, WORKSPACE_ROLE)
+workspace_id, workspace_url = grafana_client.create_workspace(WORKSPACE_NAME, WORKSPACE_ROLE, config.interactive_mode)
 
 # Store workspace url in config.json
 config.set_workspace_url(workspace_url)
@@ -143,7 +145,7 @@ if not (config.identity_store_id and config.identity_center_users):
     log_warn("IDENTITY_STORE_ID or IDENTITY_CENTER_USERS not given. Users will not be created.")
 else:
     log_info(f'Creating users for the Grafana workspace...')
-    confirm()
+    if config.interactive_mode: confirm()
 
     # Create group in IAM Identity Center
     group_id = idstore_client.create_group(GROUP_NAME)

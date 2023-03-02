@@ -29,8 +29,9 @@ config = Config()
 log_info('Arguments to be used during the SidewalkGrafana deletion:')
 log_info(f'\tCONFIG_PROFILE: {config.aws_profile}')
 log_info(f'\tREGION: {config.region_name}')
-log_warn('This is a destructive action and can not be undone!')
-confirm()
+if config.interactive_mode:
+    log_warn('This is a destructive action and can not be undone!')
+    confirm()
 
 
 # -------------------------------------------------------------
@@ -87,9 +88,10 @@ log_success('---------------------------------------------------------------')
 # Optionally: delete users given in config file
 # ----------------------------------------------
 if config.identity_store_id and config.identity_center_users:
-    log_info('Do you want to delete following IAM Identity Center users?')
-    for idx, user in enumerate(config.identity_center_users):
-        log_info(f'\t{idx + 1}. {user.username}')
-    confirm()
+    if config.interactive_mode:
+        log_info('Do you want to delete following IAM Identity Center users?')
+        for idx, user in enumerate(config.identity_center_users):
+            log_info(f'\t{idx + 1}. {user.username}')
+        confirm()
     for user in config.identity_center_users:
         idstore_client.delete_user(user)

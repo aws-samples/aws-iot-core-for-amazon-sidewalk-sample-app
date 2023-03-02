@@ -24,6 +24,8 @@ class Config:
             ID of the identity store.
         identity_center_users: [User]
             List of identity center users.
+        interactive mode: bool
+            Flag that enables/disables interactive mode.
         workspace_url: str
             Grafan workspace URL.
     """
@@ -60,6 +62,7 @@ class Config:
             config = yaml.safe_load(read_file(self.CONFIG_PATH))
             self.aws_profile = config.get('Config', {}).get('AWS_PROFILE', 'default')
             self.sid_dest_name = config.get('Config', {}).get('DESTINATION_NAME', 'SidewalkDestination')
+            self.interactive_mode = config.get('Config', {}).get('INTERACTIVE_MODE', True)
 
             self.region_name = 'us-east-1' # Leave this as us-east-1 unless you know what you are doing
             self.web_app_url = ''

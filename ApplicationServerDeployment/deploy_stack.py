@@ -32,8 +32,9 @@ log_info(f'\tCONFIG_PROFILE: {config.aws_profile}')
 log_info(f'\tREGION: {config.region_name}')
 log_info(f'\tSIDEWALK_DESTINATION: {config.sid_dest_name}')
 log_info(f'This can take several minutes to complete.')
-log_info(f'Proceed with stack creation?')
-confirm()
+if config.interactive_mode:
+    log_info(f'Proceed with stack creation?')
+    confirm()
 
 # -------------------------------------------------------------
 # Create boto3 session using given profile and service clients
@@ -85,7 +86,8 @@ api_gateway_client.flush_stage_authorizers_cache(restApiId=api_gateway_id, stage
 if sid_dest_already_exists:
     wireless_client.update_existing_destination(
         dest_name=config.sid_dest_name,
-        role_name=DESTINATION_ROLE
+        role_name=DESTINATION_ROLE,
+        interactive_mode=config.interactive_mode
     )
 
 # --------------------
