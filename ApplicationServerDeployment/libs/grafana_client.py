@@ -41,10 +41,10 @@ class GrafanaClient:
         """
         Creates Grafana workspace.
 
-        :param workspace_name:  Name of the workspace.
-        :param workspace_role:  Name of the workspace role.
+        :param workspace_name:      Name of the workspace.
+        :param workspace_role:      Name of the workspace role.
         :param interactive_mode:    Turns the interactive mode on/off.
-        :return:                (workspace_id, workspace_url) Tuple with metadata of created workspace.
+        :return:                    (workspace_id, workspace_url) Tuple with metadata of created workspace.
         """
         workspace_id = ''
         workspace_url = ''
