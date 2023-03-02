@@ -366,6 +366,26 @@ The sample code; software libraries; command line tools; proofs of concept; temp
 
 See [CONTRIBUTING](./CONTRIBUTING.md#security-issue-notifications) for more information.
 
+## Best Practices
+
+As stated above, you should not use this AWS Content in your production accounts, or on production or other critical data. If you do decied to use this as a template for your production system it is recommended you follow engineering best practices. See the following for some good :
+
+- Never trust an input as malicious users may try to pass unexpected values. Always use server-side validation.
+- Security related parameters should be implemented via AWS Secrets Manager. Parameter Store with secure string could also be used. However, for sensitive data such as passwords, AWS Secrets Manager is a better option as it provides the ability to rotate secrets.
+- X-ray should be enabled in upstream services (where applicable) to enable tracing.
+- S3 buckets should have server access logging enabled to provide detailed records for the requests that are made to a bucket.
+- All S3 buckets should have SSE enabled for data-at-rest.
+- Static website buckets should not have a open world read bucket policy but rather be a private bucket with OAI restricted access via CloudFront URLs only.
+- You can use HTTPS (TLS) to help prevent potential attackers from eavesdropping on or manipulating network traffic using person-in-the-middle or similar attacks. You should allow only encrypted connections over HTTPS (TLS) using the `aws:SecureTransport` condition on Amazon S3 bucket policies.
+- Use advanced managed services such as Amazon Macie to assists in discovering personal data. This is an account level setting.
+- Anti-sniping controls protect against unknowingly uploading data to a bucket that belongs to another account. If the solution provides the ability to upload data to a customer-specified bucket, whether part of the solution itself or part of the deployment, it shuold use anti-sniping controls to prevent this vulnerability.
+- Determine if attribute-level encryption should be implemented client side in order to help protect sensitive data like credit card numbers or social security numbers.
+- Determine if Point-in-time Recovery (PITR) should be used to automatically take continuous backups of the DynamoDB data. Amazon DynamoDB service can back up the data with per-second granularity and restore it to any single second from the time PITR was enabled up to the prior 35 days. DynamoDB continuous backups represent an additional layer of insurance against accidental loss of data on top of on-demand backups. If continuous backups cannot be use then at least on-demand backups should be considered.
+- A solution's DAX cluster data at rest (i.e. data in cache, configuration data and log files) should be encrypted using Server-Side Encryption (SSE) in order to protect it from unauthorized access to the underlying storage.
+- A VPC endpoint enables the ability to privately connect a VPC to supported AWS services and VPC endpoint services powered by PrivateLink without requiring an internet gateway, NAT device, VPN connection, or AWS Direct Connect connection.
+- Timestream provides data-in-transit encryption. If the data is sensitive and warrants  the need to be encrypted before Amazon Timestream SDK call, client-side encryption should be considered.
+- Amazon Timestream is integrated with Cloudtrail. Cloudtrail should be enabled for auditing in case of any security incident.
+
 ## License
 
 This library is licensed under the MIT-0 License. See the [LICENSE](LICENSE) file.
