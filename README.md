@@ -164,10 +164,10 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 In this step you will program binaries onto your development kit.
 There are two main files to flash: device-specific data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
 
-Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:
- --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)
- --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)
- --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)
+Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:  
+ --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
+ --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)  
+ --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)  
 
 
 For detailed instructions on programming the boards, refer to official documentation of given hardware platform.
