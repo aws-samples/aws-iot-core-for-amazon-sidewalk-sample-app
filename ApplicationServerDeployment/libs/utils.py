@@ -12,8 +12,6 @@ from enum import Enum
 from pathlib import Path
 from colorama import init, Fore
 
-from libs.user import User
-
 
 class ErrCode(Enum):
     """Error codes"""
