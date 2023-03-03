@@ -287,7 +287,6 @@ Resources:
       Role: !GetAtt SidewalkUplinkLambdaExecutionRole.Arn
       Runtime: python3.9
       Timeout: 3
-      ReservedConcurrentExecutions: 30
       PackageType: Zip
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
@@ -307,7 +306,6 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 30
       Code:
         ZipFile:  "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -333,7 +331,6 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 30
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
       Environment:
@@ -357,7 +354,6 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 1
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
@@ -374,7 +370,6 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 1
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
@@ -391,7 +386,6 @@ Resources:
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
-      ReservedConcurrentExecutions: 30
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete

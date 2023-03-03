@@ -97,7 +97,6 @@
                 "lambda:DeleteFunction",
                 "lambda:GetFunction",
                 "lambda:RemovePermission",
-                "lambda:PutFunctionConcurrency",
                 "lambda:TagResource",
                 "lambda:UpdateFunctionCode",
                 "lambda:List*",
