@@ -20,7 +20,7 @@ def convert_gps_to_utc(gps_time: int):
     :return:            UTC datetime.
     """
     utc_time = gps_time + GPS_UTC_DIFF_SECONDS - LEAP_SECONDS
-    return datetime.utcfromtimestamp(utc_time).astimezone(timezone.utc)
+    return datetime.fromtimestamp(utc_time, tz=timezone.utc)
 
 
 def get_gps_time():

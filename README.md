@@ -93,6 +93,7 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 | *HARDWARE_PLATFORM*   | *ALL*                                 | *NORDIC* or *TI* or *SILABS* (or *ALL* if you want to have personalization data generated for all three platforms)
 | *USERNAME*            | *null* **(need to be overwritten)**   | User for the WebApp
 | *PASSWORD*            | *null* **(need to be overwritten)**   | User's password
+| *INTERACTIVE_MODE*    | *True*                                | Enables interactive mode (confirmation prompts).
 
 ### 3. Deploy cloud infrastructure
 
@@ -253,6 +254,7 @@ Its main components are:
 
 - *SidewalkApiGateway* - handles requests from the WebApp to the *SidewalkDbHandler* and *SidewalkDownlink* lambdas.
   Each request need to be authorized by the token built based on the credentials provided in the [config](./config.yaml).
+  Allows for up to 30 requests per second and 86400 requests per day.
 
 
 - *SidewalkUserAuthenticatorLambda*, *SidewalkTokenAuthenticatorLambda* - used by the *SidewalkApiGateway* to verify requests
@@ -339,6 +341,7 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::ApiGateway::Method                           | API Gateway -> APIs -> sensor-monitoring-app      | ProxyGetMethod
 | AWS::ApiGateway::Method                           | API Gateway -> APIs -> sensor-monitoring-app      | ProxyOptionsMethod
 | AWS::ApiGateway::Deployment                       | API Gateway -> APIs -> sensor-monitoring-app      | SidewalkApiGatewayDeployment
+| AWS::ApiGateway::UsagePlan                        | API Gateway -> APIs -> sensor-monitoring-app      | SidewalkApiGatewayDeployment
 | AWS::S3::Bucket                                   | Amazon S3 -> Buckets                              | SidewalkWebAppBucket
 | AWS::S3::BucketPolicy                             | Amazon S3 -> Buckets                              | S3BucketPolicy
 

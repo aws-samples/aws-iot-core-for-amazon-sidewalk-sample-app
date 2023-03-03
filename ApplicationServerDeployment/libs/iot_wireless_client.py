@@ -49,15 +49,19 @@ class IoTWirelessClient:
             else:
                 terminate(f'Unable to get {name} destination: {e}.', ErrCode.EXCEPTION)
 
-    def update_existing_destination(self, dest_name: str, role_name: str):
+    def update_existing_destination(self, dest_name: str, role_name: str, interactive_mode: bool = True):
         """
         Updates existing destination for uplink messages from Sidewalk devices.
 
-        :param dest_name:   Destination name.
-        :param role_name:   Name of the role to be assigned to the destination.
+        :param dest_name:           Destination name.
+        :param role_name:           Name of the role to be assigned to the destination.
+        :param interactive_mode:    Turns the interactive mode on/off.
         """
-        log_info(f'{dest_name} already exists and will be modified. Proceed?')
-        confirm()
+        if interactive_mode:
+            log_info(f'{dest_name} already exists and will be modified. Proceed?')
+            confirm()
+        else:
+            log_info(f'{dest_name} already exists and will be modified.')
         try:
             log_info(f'Getting {role_name} role ARN...')
             response = self._iam_client.get_role(RoleName=f'{role_name}')
@@ -106,7 +110,7 @@ class IoTWirelessClient:
                 RoleArn=role_arn
             )
             eval_client_response(response, f'{dest_name} destination updated.')
-        except:
+        except (ClientError, KeyError):
             pass
 
     def enable_notifications(self):

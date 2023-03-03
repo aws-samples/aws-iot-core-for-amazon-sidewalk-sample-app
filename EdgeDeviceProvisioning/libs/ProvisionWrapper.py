@@ -40,6 +40,7 @@ class ProvisionWrapper:
         self.SILABS_XG24 = 'mg24'
         self.SILABS_XG21_MEMORY = '1024'
         self.SILABS_XG24_MEMORY = '1536'
+        self.NORDIC_NCS_ADDR = '0xFF000'
 
     def generate_mfg(self, output_dir, input_type, wireless_device_path=None, device_profile_path=None,
                      certificate_json=None):
@@ -57,9 +58,11 @@ class ProvisionWrapper:
         board = self.hardware_platform
 
         if board == BoardType.Nordic or board == BoardType.All:
-            logger.info("  Generating MFG.hex for Nordic")
+            logger.info("  Generating MFG.hex for Nordic nRF5 and Nordic NCS")
             nordic_bin = os.path.join(output_dir, "Nordic_MFG.bin")
             nordic_hex = os.path.join(output_dir, "Nordic_MFG.hex")
+            nordic_ncs_bin = os.path.join(output_dir, "Nordic_NCS_MFG.bin")
+            nordic_ncs_hex = os.path.join(output_dir, "Nordic_NCS_MFG.hex")
             if input_type == InputType.AWS_API_JSONS:
                 self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
                                                          profile_json=device_profile_path,
@@ -67,12 +70,25 @@ class ProvisionWrapper:
                                                          out_bin=nordic_bin,
                                                          chip="nrf52840",
                                                          out_hex=nordic_hex)
+                self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
+                                                         profile_json=device_profile_path,
+                                                         board=BoardType.Nordic,
+                                                         out_bin=nordic_ncs_bin,
+                                                         chip="nrf52840",
+                                                         out_hex=nordic_ncs_hex,
+                                                         addr=self.NORDIC_NCS_ADDR)
             else:
                 self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
                                                                 board=BoardType.Nordic,
                                                                 out_bin=nordic_bin,
                                                                 chip="nrf52840",
                                                                 out_hex=nordic_hex)
+                self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
+                                                                board=BoardType.Nordic,
+                                                                out_bin=nordic_ncs_bin,
+                                                                chip="nrf52840",
+                                                                out_hex=nordic_ncs_hex,
+                                                                addr=self.NORDIC_NCS_ADDR)
 
         if board == BoardType.TI or board == BoardType.All:
             logger.info("  Generating MFG.hex for TI P1 and TI P7")
@@ -140,14 +156,16 @@ class ProvisionWrapper:
                                                                  memory=self.SILABS_XG24_MEMORY,
                                                                  outfile_s37=sl_xg24_mfg_s37)
 
-    def generate_bin_and_hex_from_aws_jsons(self, device_json, profile_json, board, out_bin, chip, out_hex):
+    def generate_bin_and_hex_from_aws_jsons(self, device_json, profile_json, board, out_bin, chip, out_hex, addr=None):
         assert board in (BoardType.Nordic, BoardType.TI), "Operation supported only for Nordic and TI"
 
         platform = "ti" if board == BoardType.TI else "nordic"
-
-        result = subprocess.run(args=[sys.executable, 'provision.py', platform, 'aws', '--wireless_device_json', device_json,
+        args = [sys.executable, 'provision.py', platform, 'aws', '--wireless_device_json', device_json,
                                       '--device_profile_json', profile_json,
-                                      '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex],
+                                      '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex]
+        if addr:
+            args.extend(["--addr", addr])
+        result = subprocess.run(args=args,
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
@@ -161,13 +179,16 @@ class ProvisionWrapper:
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 
-    def generate_bin_and_hex_from_certificate_json(self, certificate, board, out_bin, chip, out_hex):
+    def generate_bin_and_hex_from_certificate_json(self, certificate, board, out_bin, chip, out_hex, addr=None):
         assert board in (BoardType.Nordic, BoardType.TI), "Operation supported only for Nordic and TI"
 
         platform = "ti" if board == BoardType.TI else "nordic"
+        args = [sys.executable, 'provision.py', platform, 'aws', '--certificate_json', certificate,
+                                      '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex]
+        if addr:
+            args.extend(['--addr', addr])
 
-        result = subprocess.run(args=[sys.executable, 'provision.py', platform, 'aws', '--certificate_json', certificate,
-                                      '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex],
+        result = subprocess.run(args=args,
                                 cwd=self.main_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print_subprocess_results(result, subprocess_name="provision.py")
 

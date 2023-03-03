@@ -69,7 +69,7 @@ def calculate_seq_from_current_time():
     seq_n = time_now.strftime("%S%f")[:-4]
     while seq_n[0] == "0" and len(seq_n) > 1:
         seq_n = seq_n[1:]
-    return eval(seq_n)
+    return int(seq_n)
 
 
 def format_command_id_as_json(command: str, response):

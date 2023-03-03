@@ -1,6 +1,5 @@
 offset_size: 4
 mfg_page_size: 355
-mfg_page_version: 7
 mfg_offsets:
   SID_PAL_MFG_STORE_MAGIC:
     start: 0
