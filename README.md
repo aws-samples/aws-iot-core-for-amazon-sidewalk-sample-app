@@ -46,7 +46,7 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
 
 
 Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.  
---> Try calling *commander --version* in the terminal to make sure the Simplicity Commander is available
+--> Try calling `commander --version` in the terminal to make sure the Simplicity Commander is available
 
 
 ## Getting Started
@@ -56,7 +56,7 @@ Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH en
 1. Open command line terminal and navigate to project's top level directory.
 
 2. Install virtualenv and required packages. Just copy/paste commands to the terminal.
-   You may need to use *python* instead of *python3* alias, depending on your configuration.
+   You may need to use either `python` or `python3` alias, depending on your configuration.
 
 - Linux / MacOS:
 ```
@@ -84,7 +84,10 @@ python3 env_check.py
 ```
 
 ### 2. Fill out configuration file
-Fill out [config](./config.yaml) file with your details (or leave default values):
+Fill out [config](./config.yaml) file with your details (or leave default values). 
+
+|You need to provide your username and password for the WebApp.|
+|---|
 
 | field                 | default value                         | description
 | ---                   | ---                                   | ---
@@ -107,20 +110,18 @@ For the sample application to work, you need to deploy necessary resources to yo
 |WARNING: You will be billed for the usage of AWS resources created by this application. |
 |---|
 
-1. Edit following fields in the [config](./config.yaml) file (or leave default values):
-
-
-2.  Run deployment script:
+1.  Run deployment script:
     ```
     python3 ApplicationServerDeployment/deploy_stack.py
     ```
     Type `y` when asked to proceed.
     Wait for the deployment to complete (it usually takes ~5 minutes).
 
-3. Go to the URL printed in the console. It is also stored in the [config](./config.yaml) under *WEB_APP_URL*.
+2. Go to the URL printed in the console. It is also stored in the [config](./config.yaml) under *WEB_APP_URL*.  
+   Log in to the WebApp with *USERNAME* and *PASSWORD* from the config file.  
    Your device will appear in the web app, once embedded app sends a first uplink message.
 
-   |WARNING: The web app is publicly available. Anyone who has the right URL can interact with your device. |
+   |WARNING: The web app is publicly available. Anyone who has the right URL and credentials can interact with your device. |
    |---|
 
 ### 4. Provision edge device
@@ -154,7 +155,7 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
    You should be able to flash it onto development kit using the flashing tools specific for your selected platform.
 
 
-3. You can generate multiple devices by calling *generate_prototype.py* again or by using *--instances* parameter
+3. You can generate multiple devices by calling `generate_prototype.py` again or by using `--instances` parameter
     ```
     python3 EdgeDeviceProvisioning/generate_prototype.py --instances 5
     ```
@@ -162,7 +163,7 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 ### 5. Flash edge device
 
 In this step you will program binaries onto your development kit.
-There are two main files to flash: device-specific data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries (this programs application logic)
+There are two main files to flash: device-specific data from *EdgeDeviceProvisioning* (this programs serial number and authorization keys) and application binary from *EdgeDeviceBinaries* (this programs application logic)
 
 Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:  
  --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
@@ -254,7 +255,7 @@ Its main components are:
 
 - *SidewalkApiGateway* - handles requests from the WebApp to the *SidewalkDbHandler* and *SidewalkDownlink* lambdas.
   Each request need to be authorized by the token built based on the credentials provided in the [config](./config.yaml).
-  Allows for up to 30 requests per second and 86400 requests per day.
+  Throttling is enabled and allows for up to 30 requests per second and 86400 requests per day.
 
 
 - *SidewalkUserAuthenticatorLambda*, *SidewalkTokenAuthenticatorLambda* - used by the *SidewalkApiGateway* to verify requests
@@ -355,7 +356,7 @@ python3 ApplicationServerDeployment/deploy_stack.py
 
 After the deployment, web application is available under the link stored in [config -> WEB_APP_URL](./config.yaml).
 
-|WARNING: The web app is publicly available. Anyone who has the right URL can interact with your device. |
+   |WARNING: The web app is publicly available. Anyone who has the right URL and credentials can interact with your device. |
 |---|
 
 Device will appear in the web app, once embedded app sends a first uplink message.
