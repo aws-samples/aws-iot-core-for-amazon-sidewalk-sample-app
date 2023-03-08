@@ -131,7 +131,7 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
 
 1. Run device provisioning script:
     ```
-    python3 EdgeDeviceProvisioning/generate_prototype.py
+    python3 EdgeDeviceProvisioning/provision_sidewalk_end_device.py
     ```
 
 2. In *EdgeDeviceProvisioning* directory, you should now see a *DeviceProfile* catalog with *WirelessDevice* subcatalog(s).
@@ -155,9 +155,9 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
    You should be able to flash it onto development kit using the flashing tools specific for your selected platform.
 
 
-3. You can generate multiple devices by calling `generate_prototype.py` again or by using `--instances` parameter
+3. You can generate multiple devices by calling `provision_sidewalk_end_device.py` again or by using `--instances` parameter
     ```
-    python3 EdgeDeviceProvisioning/generate_prototype.py --instances 5
+    python3 EdgeDeviceProvisioning/provision_sidewalk_end_device.py --instances 5
     ```
 
 ### 5. Flash edge device
