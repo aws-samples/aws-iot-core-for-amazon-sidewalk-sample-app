@@ -40,7 +40,6 @@ class ProvisionWrapper:
         self.SILABS_XG24 = 'mg24'
         self.SILABS_XG21_MEMORY = '1024'
         self.SILABS_XG24_MEMORY = '1536'
-        self.NORDIC_NCS_ADDR = '0xFF000'
 
     def generate_mfg(self, output_dir, input_type, wireless_device_path=None, device_profile_path=None,
                      certificate_json=None):
@@ -58,11 +57,9 @@ class ProvisionWrapper:
         board = self.hardware_platform
 
         if board == BoardType.Nordic or board == BoardType.All:
-            logger.info("  Generating MFG.hex for Nordic nRF5 and Nordic NCS")
+            logger.info("  Generating MFG.hex for Nordic")
             nordic_bin = os.path.join(output_dir, "Nordic_MFG.bin")
             nordic_hex = os.path.join(output_dir, "Nordic_MFG.hex")
-            nordic_ncs_bin = os.path.join(output_dir, "Nordic_NCS_MFG.bin")
-            nordic_ncs_hex = os.path.join(output_dir, "Nordic_NCS_MFG.hex")
             if input_type == InputType.AWS_API_JSONS:
                 self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
                                                          profile_json=device_profile_path,
@@ -70,25 +67,12 @@ class ProvisionWrapper:
                                                          out_bin=nordic_bin,
                                                          chip="nrf52840",
                                                          out_hex=nordic_hex)
-                self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
-                                                         profile_json=device_profile_path,
-                                                         board=BoardType.Nordic,
-                                                         out_bin=nordic_ncs_bin,
-                                                         chip="nrf52840",
-                                                         out_hex=nordic_ncs_hex,
-                                                         addr=self.NORDIC_NCS_ADDR)
             else:
                 self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
                                                                 board=BoardType.Nordic,
                                                                 out_bin=nordic_bin,
                                                                 chip="nrf52840",
                                                                 out_hex=nordic_hex)
-                self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
-                                                                board=BoardType.Nordic,
-                                                                out_bin=nordic_ncs_bin,
-                                                                chip="nrf52840",
-                                                                out_hex=nordic_ncs_hex,
-                                                                addr=self.NORDIC_NCS_ADDR)
 
         if board == BoardType.TI or board == BoardType.All:
             logger.info("  Generating MFG.hex for TI P1 and TI P7")

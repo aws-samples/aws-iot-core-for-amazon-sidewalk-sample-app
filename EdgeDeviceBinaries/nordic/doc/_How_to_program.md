@@ -10,8 +10,7 @@
 
 3) Add files that you wish to program:  
    1) Nordic_MFG (from EdgeDeviceProvisioning)
-   2) soft_device.hex (from EdgeDeviceBinaries)
-   3) application.hex (from EdgeDeviceBinaries)
+   2) application.hex (from EdgeDeviceBinaries)
 ![text]( ./03_all_files_to_program.PNG )
 
 4) Erase & Write the binaries.

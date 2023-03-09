@@ -1407,7 +1407,7 @@ ARG_GROUPS = [
         addtional_input_args=[CONFIG_FILE_ARG, PLATFORM_ADDRESS_ARG],
         output_args=[OUTPUT_BIN_ARG, OUTPUT_HEX_ARG],
         config_file=Path("config/nordic/nrf528xx_dk/config.yaml"),
-        chips=[SidChipAddr(name="nrf52840", offset_addr=0xFD000, default=True)],
+        chips=[SidChipAddr(name="nrf52840", offset_addr=0xFF000, default=True)],
     ),
     SidPlatformArgs(
         platform=SidSupportedPlatform.TI,
