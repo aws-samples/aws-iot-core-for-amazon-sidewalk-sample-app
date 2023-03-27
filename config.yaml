@@ -1,7 +1,7 @@
 Config:
     AWS_PROFILE: default  # Name of your AWS profile from .aws/credentials
-    DESTINATION_NAME: SensorAppDestination  # Sidewalk destination used for uplink traffic routing
-    HARDWARE_PLATFORM: ALL  # Available values: NORDIC, TI, SILABS or ALL
+    DESTINATION_NAME: CFSDestination  # Sidewalk destination used for uplink traffic routing
+    HARDWARE_PLATFORM: SILABS  # Available values: NORDIC, TI, SILABS or ALL
     USERNAME: null
     PASSWORD: null
     INTERACTIVE_MODE: True
@@ -10,4 +10,4 @@ Outputs:
     WEB_APP_URL: null
 _Paths:
     PROVISION_SCRIPT_DIR: tools/provision
-    SILABS_COMMANDER_TOOLS_DIR: null  # Not needed if Silabs Commander is already in system Path. Only needed for SILABS.
+    SILABS_COMMANDER_TOOLS_DIR: I:\Sidewalk\ssv5\developer\adapter_packs\commander  # Not needed if Silabs Commander is already in system Path. Only needed for SILABS.
