@@ -78,11 +78,6 @@ python -m pip install -r requirements.txt
 python -m pip install pyjwt -t .\ApplicationServerDeployment\lambda\authLibs
 ```
 
-At this point you may want to run a helper *env_check.py* script to sanity check your environment against the most common errors.
-```
-python3 env_check.py
-```
-
 ### 2. Fill out configuration file
 Fill out [config](./config.yaml) file with your details (or leave default values). 
 
@@ -97,6 +92,12 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 | *USERNAME*            | *null* **(need to be overwritten)**   | User for the WebApp
 | *PASSWORD*            | *null* **(need to be overwritten)**   | User's password
 | *INTERACTIVE_MODE*    | *True*                                | Enables interactive mode (confirmation prompts).
+
+
+At this point you may want to run a helper *env_check.py* script to sanity check your environment against the most common errors.
+```
+python3 env_check.py
+```
 
 ### 3. Deploy cloud infrastructure
 
