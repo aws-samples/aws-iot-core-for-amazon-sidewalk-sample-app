@@ -83,6 +83,8 @@ class CloudFormationClient:
                         Tags=tags,
                         DisableRollback=False
                     )
+                else:
+                    raise e
             stack_id = response.get('StackId', stack_name)
             stack_status = ''
             event_index = 0
