@@ -93,6 +93,42 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 | *PASSWORD*            | *null* **(need to be overwritten)**   | User's password
 | *INTERACTIVE_MODE*    | *True*                                | Enables interactive mode (confirmation prompts).
 
+---
+### Alexa skill configuration (*Optional*)
+
+You can configure an Alexa skill to control the Sidewalk device via voice commands. This is however optional and you can skip this step if you don't want to use Alexa with this sample app. 
+
+Install the required libraries for Alexa skill.
+
+- Linux / MacOS:
+```
+python3 -m pip install requests  -t .\ApplicationServerDeployment\lambda\alexaLibs
+python3 -m pip install 'urllib3<2'  -t .\ApplicationServerDeployment\lambda\alexaLibs --upgrade
+```
+
+- Windows:
+```
+python -m pip install requests  -t .\ApplicationServerDeployment\lambda\alexaLibs
+python -m pip install 'urllib3<2'  -t .\ApplicationServerDeployment\lambda\alexaLibs --upgrade
+```
+
+| Follow the guide below to create an Alexa skill (*Optional) |
+|-------------------------------------------------------------|
+Note: 
+- You can skip the step to create a lambda function as the script will create one for you.
+
+https://developer.amazon.com/en-US/docs/alexa/smarthome/steps-to-build-a-smart-home-skill.html
+
+
+Fetch the skillID from the Alexa developer console for the below configuration.
+
+Add the below to [config](./config.yaml) file. 
+
+| field                 | value                 | description
+| ---                   |-----------------------| ---| 
+| *ALEXA_SKILL_ID*    | amzn1.ask.skill.xxxxx | Use the Alexa skill Id obtained from the prior steps.
+
+----
 
 At this point you may want to run a helper *env_check.py* script to sanity check your environment against the most common errors.
 ```
@@ -305,6 +341,8 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkTokenAuthenticatorLambda
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkTokenGeneratorLambda
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkUserAuthenticatorLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | AlexaSkillLambda
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkDbHandlerLambda    | AlexaSkillLambdaPermissionsForAlexaSkillKit
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkDbHandlerLambda    | SidewalkDbHandlerLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkDownlinkLambda     | SidewalkDownlinkLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkUplinkLambdaPermissionsForNotifications
@@ -319,6 +357,7 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkTokenAuthenticatorLambdaLogGroup
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkTokenGeneratorLambdaLogGroup
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkUserAuthenticatorLambdaLogGroup
+| AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | AlexaSkillLambdaLogGroup
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkDestinationRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkRuleRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkDbHandlerLambdaExecutionRole
@@ -327,6 +366,7 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkTokenAuthenticatorLambdaExecutionRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkTokenGeneratorLambdaExecutionRole
 | AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkUserAuthenticatorLambdaExecutionRole
+| AWS::IAM::Role                                    | IAM -> Roles                                      | SidewalkAlexaBackendLambdaExecutionRole
 | AWS::DynamoDB::Table                              | DynamoDB -> Tables                                | SidewalkDevices
 | AWS::DynamoDB::Table                              | DynamoDB -> Tables                                | SidewalkMeasurements
 | AWS::CloudFront::Distribution                     | CloudFront -> Distributions                       | CloudFrontDistribution

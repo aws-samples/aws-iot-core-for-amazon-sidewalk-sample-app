@@ -5,7 +5,6 @@ Description:
   **WARNING** You will be billed for the AWS resources used if you create a stack from this template'
 
 Parameters:
-
   SidewalkDestinationName:
     Type: String
     Default: SidewalkDestination
@@ -169,6 +168,33 @@ Resources:
                   - iotwireless:SendDataToWirelessDevice
                 Resource:
                   - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:WirelessDevice/*
+
+  #Alexa Backend Lambda execution role with CloudWatch write access
+  SidewalkAlexaBackendLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkAlexaBackendLambdaExecutionRole
+      Description: Allows SidewalkAlexaBackendLambda to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkAlexaBackendLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/AlexaSkillLambda:*
 
   # Db handler Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDbHandlerLambdaExecutionRole:
@@ -341,7 +367,6 @@ Resources:
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
 
-
   # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
   SidewalkTokenGeneratorLambda:
     Type: AWS::Lambda::Function
@@ -389,6 +414,30 @@ Resources:
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
     DeletionPolicy: Delete
+
+  # AlexaSkillLambda function. Handles alexa messages
+  AlexaSkillLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkAlexaBackendLambdaExecutionRole
+    Properties:
+      FunctionName: AlexaSkillLambda
+      Description: Sends directives to sidewalk API and logs them in the CloudWatch log group.
+      Handler: alexa_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkAlexaBackendLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile: "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          CDN_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
 
   # -----------------------------
   # CloudWatch related resources
@@ -459,6 +508,16 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/aws/lambda/${SidewalkTokenAuthenticatorLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkAlexaBackendLambda logs
+  AlexaSkillLambdaLogGroup:
+    DependsOn: AlexaSkillLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AlexaSkillLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -539,7 +598,6 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: false
       ResourceId: !Ref AuthResource
       RestApiId: !Ref SidewalkApiGateway
-
 
   ApiOptionsMethod:
     Type: AWS::ApiGateway::Method
@@ -756,7 +814,6 @@ Resources:
       FunctionName: SidewalkTokenAuthenticatorLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*
-
 
   # -------------------------------------------
   # IoT related resources for uplink reception
@@ -1101,3 +1158,8 @@ Outputs:
       Fn::GetAtt:
         - CloudFrontDistribution
         - DomainName
+  AlexaLambdaARN:
+    Description: AlexaLambdaARN
+    Value: !GetAtt AlexaSkillLambda.Arn
+    Export:
+      Name: AlexaLambdaARN
