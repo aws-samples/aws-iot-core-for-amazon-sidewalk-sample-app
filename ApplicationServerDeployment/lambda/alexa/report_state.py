@@ -1,20 +1,25 @@
-import os
-import boto3
-import requests
+# Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 from response import AlexaResponse
 import logging
 import config
 import utils
+from sidewalk_api import SidewalkApi
+
 logger = logging.getLogger(__name__)
-import logging
-logger = logging.getLogger(__name__)
-import time
 
 
 class ReportState(object):
-	def get_state_report(self,event):
+	"""
+	Handles ReportState directive requests
+	"""
 
-		is_device_online, device_id,current_states= utils.get_device_info()
+	def get_state_report(self, event):
+		"""
+		Handles ReportState directive requests
+		"""
+		sidewalk_app_api = SidewalkApi()
+		is_device_online, device_id, current_states = sidewalk_app_api.get_device_info()
 		global r_final_value, r_name, r_namespace
 		oauth_token, endpoint_id, correlation_token, cookie, payload = utils.transform_json_input(event)
 
@@ -31,16 +36,17 @@ class ReportState(object):
 													   uncertaintyInMilliseconds=200)
 
 			oem_model = cookie['oemModel']
-			properties=[]
+			properties = []
 			if oem_model in config.LIGHT_MODELS:
-				leds_on=current_states['led_on']
+				leds_on = current_states['led_on']
 				if int(endpoint_id) in leds_on:
 					is_power_on = 1
 				else:
-					is_power_on= 0
-				properties.append({"power":is_power_on})
-			if  oem_model in config.SENSOR_MODELS:
-				properties.append({"temp": utils.get_device_temp(device_id)})
+					is_power_on = 0
+				properties.append({"power": is_power_on})
+			# Alexa does not support temperature sensor without ThermostatController interface so we are not adding temperature sensor for now
+			# if oem_model in config.SENSOR_MODELS:
+			# 	properties.append({"temp": sidewalk_app_api.get_device_temp(device_id)})
 
 			for prop_name in properties:
 				for key, value in prop_name.items():
@@ -54,20 +60,21 @@ class ReportState(object):
 			return utils.get_bridge_offline_response(oauth_token, endpoint_id)
 
 	def create_report_entry(self, current_latest_value, prop_name, report_state_resp):
-		logger.info('current_latest_value')
-		logger.info(current_latest_value)
-
+		"""
+		Creates report entry for the given property as defined in the payload for ReportState directive
+		"""
+		additonal_info = None
 		if current_latest_value is None:
 			return report_state_resp
 
-		global r_final_value, r_name, instance_name
-		if  prop_name=="power":
+		global r_final_value, r_name, r_namespace, instance_name
+		if prop_name == "power":
 			r_namespace = 'Alexa.PowerController'
 			r_name = 'powerState'
 			r_final_value = 'ON' if current_latest_value else 'OFF'
 			additonal_info = False
 
-		elif prop_name=="temp":
+		elif prop_name == "temp":
 			r_namespace = 'Alexa.TemperatureSensor'
 			r_final_value = current_latest_value
 			r_name = 'temperature'

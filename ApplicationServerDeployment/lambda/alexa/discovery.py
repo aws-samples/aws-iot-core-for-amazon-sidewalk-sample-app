@@ -1,41 +1,39 @@
-import os
-
-import boto3
-import requests
-
+# Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 from response import AlexaResponse
 import logging
 import config
 import utils
+from sidewalk_api import SidewalkApi
+
 logger = logging.getLogger(__name__)
 
 
 class DiscoveryControl(object):
+	"""
+	Handles Discovery requests from Alexa Smart Home Skill.
+	"""
 
-	def __init__(self, event=None, namespace=None):
-		if event is not None:
-			self._auth_token = event['directive']['payload']['scope']['token']
-			self._event = event
-			self._namespace = namespace
-
-	def get_discovery_response(self):
-
+	def get_discovery_response(self, event, namespace):
+		"""
+		Evaluates and executes Discovery directive request and returns a response as per https://developer.amazon.com/docs/device-apis/alexa-discovery.html#response-format
+		"""
 		discover_response = AlexaResponse(
-			namespace=self._namespace, name='Discover.Response')
+			namespace=namespace, name='Discover.Response')
 		device_oem_model = ""
-
-		user_devices= utils.get_user_devices()
+		sidewalk_app_api = SidewalkApi()
+		user_devices = sidewalk_app_api.get_user_devices()
 		if len(user_devices) == 0:
 			logger.error("No devices found for user")
 			return discover_response.get()
 		for device_wrapper in user_devices:
 			for device in device_wrapper["led"]:
 				if 'led' in device_wrapper and 'sensor' in device_wrapper:
-					device_oem_model=config.DEVKIT_MODEL
-				dsn=int(device)
-				friendly_name="Light "+" "+str(dsn)
-				display_categories, capabilities = self.get_device_category_and__capabilities(discover_response,
-																							  device_oem_model)
+					device_oem_model = config.DEVKIT_MODEL
+				dsn = int(device)
+				friendly_name = "Light " + " " + str(dsn)
+				display_categories, capabilities = self.get_device_category_and_capabilities(discover_response,
+																							 device_oem_model)
 				discover_response.add_payload_endpoint(
 					endpoint_id=dsn,
 					manufacturer_name=config.DEVICE_MANUFACTURER,
@@ -57,7 +55,12 @@ class DiscoveryControl(object):
 
 		return discover_response.get()
 
-	def get_device_category_and__capabilities(self, registration_response, oem_model):
+	def get_device_category_and_capabilities(self, registration_response, oem_model):
+		"""
+		Generate the display categories and capabilities for a device as defined by Alexa Skills Kit API.
+		"""
+		display_categories = None
+		capabilities = None
 		capability_alexa = registration_response.create_payload_endpoint_capability()
 		capability_alexa_endpoint_health = registration_response.create_payload_endpoint_capability(
 			interface='Alexa.EndpointHealth',
@@ -74,7 +77,6 @@ class DiscoveryControl(object):
 			supported=[{'name': 'temperature'}]
 		)
 
-
 		if oem_model in config.LIGHT_MODELS:
 			display_categories = ['LIGHT']
 			capabilities = [capability_alexa,
@@ -83,4 +85,3 @@ class DiscoveryControl(object):
 							capability_alexa_endpoint_health]
 
 		return display_categories, capabilities
-

@@ -87,6 +87,7 @@ class Config:
             return config.get('Config', {}).get('ALEXA_SKILL_ID')
         except yaml.YAMLError as e:
             terminate(f'Invalid structure of a config file: {e}', ErrCode.EXCEPTION)
+
     def get_username_and_password_as_base64(self):
         """
         Reads username and password from config file. Returns them as base64 encoded value of username:password
