@@ -8,11 +8,11 @@ import { ENDPOINTS } from "../../endpoints";
 import { IDevice } from "../../types";
 import { verifyAuth } from "../../utils";
 import { logger } from "../../utils/logger";
-import { Device } from "../Device/Device";
-import { Spinner } from "../Spinner/Spinner";
+import { Device } from "../../components/Device/Device";
+import { Spinner } from "../../components/Spinner/Spinner";
 import "./styles.css";
 
-export const DevicesWrapper = () => {
+export const SensorMonitoring = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [devicesData, setDevicesData] = useState([] as IDevice[]);

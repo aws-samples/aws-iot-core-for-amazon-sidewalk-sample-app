@@ -16,8 +16,26 @@ header {
   width: 185px;
 }
 
+.menu {
+  display: flex;
+  gap: 15px;
+  margin: 0 10px;
+}
+
+.menu > a {
+  font-size: 16px;
+  text-decoration: none;
+  color: black;
+}
+
+.container-menu {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
 @media screen and (min-width: 320px) and (max-width: 900px) {
   .header-img {
     width: 160px;
-  } 
+  }
 }

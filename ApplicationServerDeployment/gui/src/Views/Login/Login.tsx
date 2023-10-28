@@ -2,39 +2,17 @@
 // SPDX-License-Identifier: MIT-0
 
 import { FormEvent, useState } from "react";
-import toast from "react-hot-toast";
-import { apiClient, setAuthHeader, setUsernameHeader } from "../../apiClient";
-import { ENDPOINTS } from "../../endpoints";
-import { logger } from "../../utils/logger";
 import "./styles.css";
+import { useAuth } from "../../hooks/useAuth";
 
-interface Props {
-  onLoginSuccess: () => void;
-}
-
-export const Login = ({ onLoginSuccess }: Props) => {
+export const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isloggingIn, setisLogginIn] = useState(false);
+  const { login, isLogginIn } = useAuth();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    setisLogginIn(true);
-    try {
-      setUsernameHeader(username);
-      const response = await apiClient.post<string>(ENDPOINTS.login, {
-        username,
-        password,
-      });
-      setAuthHeader(response.data);
-      onLoginSuccess();
-    } catch (error) {
-      logger.log("error during login", error);
-      toast.error("User or password incorrect");
-    } finally {
-      setisLogginIn(false);
-    }
+    login(username, password);
   };
 
   return (
@@ -58,7 +36,7 @@ export const Login = ({ onLoginSuccess }: Props) => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        <button type="submit" disabled={isloggingIn}>
+        <button type="submit" disabled={isLogginIn}>
           Login
         </button>
       </form>

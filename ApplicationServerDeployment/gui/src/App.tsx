@@ -2,53 +2,32 @@
 // SPDX-License-Identifier: MIT-0
 
 import { Header } from "./components/Header/Header";
-import { DevicesWrapper } from "./components/DevicesWrapper/DevicesWrapper";
-import { Login } from "./components/Login/Login";
-import { useEffect, useState } from "react";
-import { ACCESS_TOKEN, UNAUTHORIZE } from "./constants";
+import { Suspense, useEffect } from "react";
 import "./App.css";
-import { toast } from "react-hot-toast";
+import { Spinner } from "./components/Spinner/Spinner";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
+import { Routes } from "./routes";
 
 function App() {
-  const [isUserLoggedIn, setisLogginIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleLoginSuccess = () => {
-    setisLogginIn(true);
-  };
+  const { isAuthorized } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const accessToken = localStorage.getItem(ACCESS_TOKEN);
-
-    if (accessToken) {
-      setisLogginIn(true);
+    if (isAuthorized) {
+      navigate(Routes.sensorMonitoring);
+    } else {
+      navigate(Routes.auth);
     }
 
-    setIsLoading(false);
-  }, []);
-
-  // check for auth error var to show a message in case user gets logged out
-  useEffect(() => {
-    if (localStorage.getItem(UNAUTHORIZE)) {
-      setTimeout(() => {
-        toast.error("Unauthorize error");
-        localStorage.removeItem(UNAUTHORIZE);
-      }, 0);
-    }
-  }, []);
-
-  if (isLoading) {
-    return <></>;
-  }
+  }, [isAuthorized]);
 
   return (
     <div className="App">
       <Header />
-      {isUserLoggedIn ? (
-        <DevicesWrapper />
-      ) : (
-        <Login onLoginSuccess={handleLoginSuccess} />
-      )}
+      <Suspense fallback={<Spinner />}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }
