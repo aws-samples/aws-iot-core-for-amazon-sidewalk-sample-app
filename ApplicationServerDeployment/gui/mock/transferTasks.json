@@ -1,0 +1,104 @@
+{
+  "transferTasks": [
+    {
+      "taskId": "6540591d5c338c75499f1e3b",
+      "taskStatus": "Transferring",
+      "creationTimeUTC": 1698715950201,
+      "taskEndTimeUTC": 1698715930201,
+      "fileName": "ipsum.png",
+      "fileSizeKB": 679,
+      "origination": "Device",
+      "deviceIds": [
+        "6540591d44f7c592d0f697ed",
+        "6540591de10f40a464c39b12",
+        "6540591d5e1772be177b9656",
+        "6540591df06df91909b8b24c",
+        "6540591d92a2cde478ea4238"
+      ]
+    },
+    {
+      "taskId": "6540591d078219abee59a489",
+      "taskStatus": "Complete",
+      "creationTimeUTC": 1698715950201,
+      "taskEndTimeUTC": 1698715930201,
+      "fileName": "sunt.png",
+      "fileSizeKB": 646,
+      "origination": "Device",
+      "deviceIds": [
+        "6540591d7948a47b50bf8fba",
+        "6540591d8e9390a0ec7fc8c7",
+        "6540591d8d997100074d23df",
+        "6540591da52803e959d3e956",
+        "6540591dd9abeef9db62334e",
+        "6540591d60ea7acf2cf7ef77",
+        "6540591dff108fdaee1ffa79"
+      ]
+    },
+    {
+      "taskId": "6540591dc6512c1a576a5056",
+      "taskStatus": "Failed",
+      "creationTimeUTC": 1698715950201,
+      "taskEndTimeUTC": 1698715930201,
+      "fileName": "duis.png",
+      "fileSizeKB": 542,
+      "origination": "Cloud",
+      "deviceIds": [
+        "6540591d79e28fbc2ffaae98",
+        "6540591dd9ffae892041badf",
+        "6540591d9b59ddafb5757157",
+        "6540591d31e6f9fb49b432c5",
+        "6540591d79b139b14d226547",
+        "6540591d0eddf9587f7a762a"
+      ]
+    },
+    {
+      "taskId": "6540591dcbd0b5cf9e4baed5",
+      "taskStatus": "Cancelled",
+      "creationTimeUTC": 1698715950201,
+      "taskEndTimeUTC": 1698715930201,
+      "fileName": "occaecat.png",
+      "fileSizeKB": 419,
+      "origination": "Device",
+      "deviceIds": [
+        "6540591dac01c1346efb1d97",
+        "6540591d27496e8895f96807",
+        "6540591d4d4b173b96397c6f",
+        "6540591d55b4c18c33eabb6d",
+        "6540591de1affa7a9b835ebd",
+        "6540591d74e611c55c793a14"
+      ]
+    },
+    {
+      "taskId": "6540591d2272e32bcf65a57b",
+      "taskStatus": "Transferring",
+      "creationTimeUTC": 1698715950201,
+      "taskEndTimeUTC": 1698715930201,
+      "fileName": "qui.png",
+      "fileSizeKB": 368,
+      "origination": "Device",
+      "deviceIds": [
+        "6540591def326b9ae519c65f",
+        "6540591d2e886c76e285b478",
+        "6540591dc48a4d9497684265",
+        "6540591d43d259854bd245e5",
+        "6540591dc2a489ee5536fa00"
+      ]
+    },
+    {
+      "taskId": "6540591dc2f5c56f9cf341d6",
+      "taskStatus": "Cancelled",
+      "creationTimeUTC": 1698715950201,
+      "taskEndTimeUTC": 1698715930201,
+      "fileName": "adipisicing.png",
+      "fileSizeKB": 393,
+      "origination": "Cloud",
+      "deviceIds": [
+        "6540591d942b0695e94e00f7",
+        "6540591dc3e1ab2d4dc29f12",
+        "6540591db99a284997633573",
+        "6540591d61cf282b110d1369",
+        "6540591db5ba060404fb2b2d"
+      ]
+    }
+  ]
+}

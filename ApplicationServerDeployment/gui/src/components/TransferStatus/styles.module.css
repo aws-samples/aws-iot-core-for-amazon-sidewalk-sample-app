@@ -1,0 +1,29 @@
+.status-cancelled {
+  color: orange;
+}
+
+.status-failed {
+  color: red;
+}
+
+.status-complete, .status-completed {
+  color: green;
+}
+
+.status-pending {
+  color: gray;
+}
+
+.status-transferring {
+  color: black;
+}
+
+.status-none {
+  color: black;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}

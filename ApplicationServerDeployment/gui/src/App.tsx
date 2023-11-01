@@ -8,6 +8,9 @@ import { Spinner } from "./components/Spinner/Spinner";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { Routes } from "./routes";
+import { QueryClient, QueryClientProvider } from "react-query";
+
+const queryClient = new QueryClient();
 
 function App() {
   const { isAuthorized } = useAuth();
@@ -19,14 +22,15 @@ function App() {
     } else {
       navigate(Routes.auth);
     }
-
   }, [isAuthorized]);
 
   return (
     <div className="App">
       <Header />
       <Suspense fallback={<Spinner />}>
-        <Outlet />
+        <QueryClientProvider client={queryClient}>
+          <Outlet />
+        </QueryClientProvider>
       </Suspense>
     </div>
   );

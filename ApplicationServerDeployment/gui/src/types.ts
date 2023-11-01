@@ -19,3 +19,42 @@ export interface IMeasurement {
   wireless_device_id: string;
   value: number;
 }
+
+export interface IWirelessDevices {
+  wirelesDevices: Array<IWirelessDevice>;
+}
+
+export type TransferStatusType =
+  | "Pending"
+  | "Transferring"
+  | "Cancelled"
+  | "Failed"
+  | "Complete"
+  | "Completed"
+  | "None";
+
+export interface IWirelessDevice {
+  deviceId: string;
+  transferStatus: TransferStatusType;
+  statusUpdatedTimeUTC: number;
+  transferEndTimeUTC: number;
+  fileName: string;
+  fileSizeKB: number;
+  firmwareUpgradeStatus: "Pending" | "Completed" | "Failed" | "None";
+  firmwareVersion: string;
+}
+
+export interface ITransferTasks {
+  transferTasks: [
+    {
+      taskId: string;
+      taskStatus: TransferStatusType;
+      creationTimeUTC: number;
+      taskEndTimeUTC: number;
+      fileName: string;
+      fileSizeKB: number;
+      origination: string;
+      deviceIds: ["String"];
+    }
+  ];
+}

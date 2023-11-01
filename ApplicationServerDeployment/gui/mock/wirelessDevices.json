@@ -1,0 +1,54 @@
+{
+  "wirelesDevices": [
+    {
+      "deviceId": "6540562b20d2ed23212f08ad",
+      "transferStatus": "Failed",
+      "statusUpdatedTimeUTC": 1698715357655,
+      "transferEndTimeUTC": 1698715355655,
+      "fileName": "sunt.png",
+      "fileSizeKB": 651,
+      "firmwareUpgradeStatus": "Failed",
+      "firmwareVersion": "tempor"
+    },
+    {
+      "deviceId": "6540562b9a43699094046e4c",
+      "transferStatus": "Cancelled",
+      "statusUpdatedTimeUTC": 1698715357655,
+      "transferEndTimeUTC": 1698715355655,
+      "fileName": "eu.png",
+      "fileSizeKB": 182,
+      "firmwareUpgradeStatus": "Failed",
+      "firmwareVersion": "occaecat"
+    },
+    {
+      "deviceId": "6540562b0a810cf3a1abcefd",
+      "transferStatus": "Pending",
+      "statusUpdatedTimeUTC": 1698715357655,
+      "transferEndTimeUTC": 1698715355655,
+      "fileName": "laboris.png",
+      "fileSizeKB": 683,
+      "firmwareUpgradeStatus": "None",
+      "firmwareVersion": "proident"
+    },
+    {
+      "deviceId": "6540562bd15c1e6d1bf10979",
+      "transferStatus": "Transferring",
+      "statusUpdatedTimeUTC": 1698715357655,
+      "transferEndTimeUTC": 1698715355655,
+      "fileName": "labore.png",
+      "fileSizeKB": 656,
+      "firmwareUpgradeStatus": "Completed",
+      "firmwareVersion": "exercitation"
+    },
+    {
+      "deviceId": "6540562b61ea0399b45ae9d0",
+      "transferStatus": "None",
+      "statusUpdatedTimeUTC": 1698715357655,
+      "transferEndTimeUTC": 1698715355655,
+      "fileName": "cupidatat.png",
+      "fileSizeKB": 577,
+      "firmwareUpgradeStatus": "None",
+      "firmwareVersion": "labore"
+    }
+  ]
+}

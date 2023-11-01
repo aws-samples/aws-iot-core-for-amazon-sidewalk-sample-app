@@ -1,16 +1,24 @@
 // Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, ConfigEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
+import { viteMockServe } from "vite-plugin-mock";
 
 // https://vitejs.dev/config/
-export default ({ mode }) => {
+export default ({ mode }: ConfigEnv) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
   return defineConfig({
-    plugins: [svgr(), react()],
+    plugins: [
+      svgr(),
+      react(),
+      viteMockServe({
+        mockPath: "mock",
+        enable: mode === "development",
+      }),
+    ],
     css: {
       modules: {
         localsConvention: "camelCase",

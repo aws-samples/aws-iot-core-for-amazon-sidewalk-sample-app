@@ -6,7 +6,9 @@ export const ENDPOINTS = {
   device: "/devices/:id",
   measurement: "/measurements/:id",
   led: "",
-  login: "/auth"
+  login: "/auth",
+  mockDevices: "/wireless-devices",
+  mockTask: "/transfer-tasks"
 };
 
 export const interpolateParams = (
