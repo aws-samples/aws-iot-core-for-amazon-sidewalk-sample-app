@@ -51,6 +51,10 @@ body {
   height: 100vh;
 }
 
+.color-black {
+  color: black;
+}
+
 .m-1 {
   margin: 0.5rem;
 }
