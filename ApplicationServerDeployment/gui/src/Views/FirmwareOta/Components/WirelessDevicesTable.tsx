@@ -48,16 +48,19 @@ export const WirelessDevicesTable = () => {
   ];
 
   return (
-    <Table
-      rowSelection={{
-        type: 'checkbox',
-        onChange: (selectedRowKeys: React.Key[], selectedRows: IWirelessDevice[]) => {
-          console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-        }
-      }}
-      columns={columns}
-      dataSource={data?.wirelesDevices}
-      loading={isLoading}
-    />
+    <>
+      <h2>Devices</h2>
+      <Table
+        rowSelection={{
+          type: 'checkbox',
+          onChange: (selectedRowKeys: React.Key[], selectedRows: IWirelessDevice[]) => {
+            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+          }
+        }}
+        columns={columns}
+        dataSource={data?.wirelesDevices}
+        loading={isLoading}
+      />
+    </>
   );
 };

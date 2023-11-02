@@ -4,7 +4,7 @@ import { ENDPOINTS } from "../endpoints";
 import { logger } from "../utils/logger";
 import toast from "react-hot-toast";
 import { ACCESS_TOKEN, UNAUTHORIZE } from "../constants";
-import { useNavigate, useRoutes } from "react-router";
+import { useNavigate } from "react-router";
 import { Routes } from "../routes";
 
 export const useAuth = () => {
