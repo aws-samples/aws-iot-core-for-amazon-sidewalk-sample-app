@@ -34,8 +34,13 @@ header {
   align-items: center;
 }
 
+.active-link {
+  font-weight: 700;
+}
+
 @media screen and (min-width: 320px) and (max-width: 900px) {
   .header-img {
     width: 160px;
   }
 }
+

@@ -1,26 +1,33 @@
 // Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { Link } from "react-router-dom";
-import amazonLogo from "../../assets/images/amazon-sidewalk-logo.png";
-import { useAuth } from "../../hooks/useAuth";
-import "./styles.css";
-import { Routes } from "../../routes";
+import { NavLink } from 'react-router-dom';
+import amazonLogo from '../../assets/images/amazon-sidewalk-logo.png';
+import { useAuth } from '../../hooks/useAuth';
+import styles from './styles.module.css';
+import { Routes } from '../../routes';
 
 export const Header = () => {
   const { isAuthorized } = useAuth();
+
+  const setActiveLink = ({ isActive }: { isActive: boolean }) => (isActive ? styles.activeLink : undefined);
+
   return (
     <header>
-      <h2>Sensor Monitoring App</h2>
-      <div className="container-menu">
+      <h2>Sidewalk Sample App</h2>
+      <div className={styles.containerMenu}>
         {isAuthorized && (
-          <div className="menu">
-            <Link to={Routes.sensorMonitoring}>Sensor Monitoring</Link>
+          <div className={styles.menu}>
+            <NavLink className={setActiveLink} to={Routes.sensorMonitoring}>
+              Sensor Monitoring
+            </NavLink>
             <span> | </span>
-            <Link to={Routes.firmwareOTA}>Firmware OTA</Link>
+            <NavLink className={setActiveLink} to={Routes.firmwareOTA}>
+              Firmware OTA
+            </NavLink>
           </div>
         )}
-        <img src={amazonLogo} className="header-img" />
+        <img src={amazonLogo} className={styles.headerImage} />
       </div>
     </header>
   );

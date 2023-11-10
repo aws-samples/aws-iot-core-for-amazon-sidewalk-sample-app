@@ -37,6 +37,7 @@ export interface IWirelessDevice {
   deviceId: string;
   transferStatus: TransferStatusType;
   statusUpdatedTimeUTC: number;
+  transferStartTimeUTC: number;
   transferEndTimeUTC: number;
   fileName: string;
   fileSizeKB: number;
@@ -44,17 +45,17 @@ export interface IWirelessDevice {
   firmwareVersion: string;
 }
 
+export interface ITransferTask {
+  taskId: string;
+  taskStatus: TransferStatusType;
+  creationTimeUTC: number;
+  taskEndTimeUTC: number;
+  fileName: string;
+  fileSizeKB: number;
+  origination: string;
+  deviceIds: ["String"];
+}
+
 export interface ITransferTasks {
-  transferTasks: [
-    {
-      taskId: string;
-      taskStatus: TransferStatusType;
-      creationTimeUTC: number;
-      taskEndTimeUTC: number;
-      fileName: string;
-      fileSizeKB: number;
-      origination: string;
-      deviceIds: ["String"];
-    }
-  ];
+  transferTasks: Array<ITransferTask>;
 }
