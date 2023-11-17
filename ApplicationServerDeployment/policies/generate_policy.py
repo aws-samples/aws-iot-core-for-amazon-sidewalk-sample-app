@@ -55,4 +55,4 @@ for tmpl in templates:
     # create policy document
     with open(policies_path.joinpath(policy), 'w') as f:
         f.write(policy_tmpl_content.replace('<account_ID>', account_id))
-    log_success(f'{policy} policy created.')
+    log_success(f'{policy} policy created.') 
