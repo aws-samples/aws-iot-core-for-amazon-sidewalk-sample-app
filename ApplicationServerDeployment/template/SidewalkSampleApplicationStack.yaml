@@ -351,11 +351,11 @@ Resources:
     DeletionPolicy: Delete
 
   # Token authenticator Lambda's execution role with basic lambda permissions.
-  SidewalkOTAGetS3FilesLambdaExecutionRole:
+  SidewalkOTAUploadFileLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: SidewalkOTAGetS3FilesLambdaExecutionRole
-      Description: Allows SidewalkOTAGetS3FilesLambdaExecutionRole to call AWS services
+      RoleName: SidewalkOTAUploadFileLambdaExecutionRole
+      Description: Allows SidewalkOTAUploadFileLambdaExecutionRole to call AWS services
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -371,11 +371,11 @@ Resources:
     DeletionPolicy: Delete
 
   # Token authenticator Lambda's execution role with basic lambda permissions.
-  SidewalkOTAUploadFileLambdaExecutionRole:
+  SidewalkOTAGetS3FilesLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: SidewalkOTAUploadFileLambdaExecutionRole
-      Description: Allows SidewalkOTAUploadFileLambdaExecutionRole to call AWS services
+      RoleName: SidewalkOTAGetS3FilesLambdaExecutionRole
+      Description: Allows SidewalkOTAGetS3FilesLambdaExecutionRole to call AWS services
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -456,6 +456,31 @@ Resources:
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
 
+  # SidewalkOTAUploadFileLambda function.
+  SidewalkOTAUploadFileLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTAUploadFileLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTAUploadFileLambda
+      Description: Process OTA actions
+      Handler: ota_upload_file_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTAUploadFileLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile:  "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
   # SidewalkOTACancelTransferLambda function.
   SidewalkOTACancelTransferLambda:
     Type: AWS::Lambda::Function
@@ -493,31 +518,6 @@ Resources:
       Handler: ota_get_s3_filenames_lambda_handler.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkOTAGetS3FilesLambdaExecutionRole.Arn
-      Runtime: python3.9
-      Timeout: 3
-      PackageType: Zip
-      Code:
-        ZipFile:  "Please run deploy_stack.py script to upload the code."
-      Environment:
-        Variables:
-          GUI_BUCKET_URL:
-            Fn::Join:
-              - ''
-              - - https://
-                - !GetAtt CloudFrontDistribution.DomainName
-
-  # SidewalkOTAUploadFileLambda function. Handles downlink messages
-  SidewalkOTAUploadFileLambda:
-    Type: AWS::Lambda::Function
-    DependsOn:
-      - SidewalkOTAUploadFileLambdaExecutionRole
-      - CloudFrontDistribution
-    Properties:
-      FunctionName: SidewalkOTAUploadFileLambda
-      Description: Process OTA actions
-      Handler: ota_upload_file_lambda_handler.lambda_handler
-      MemorySize: 128
-      Role: !GetAtt SidewalkOTAUploadFileLambdaExecutionRole.Arn
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
@@ -981,7 +981,7 @@ Resources:
           ResponseParameters:
             method.response.header.Access-Control-Allow-Origin: false
       ResourceId: !Ref OtaUploadResource
-      RestApiId: !Ref SidewalkApiGateway
+      RestApiId: !Ref SidewalkApiGateway      
 
   OtaGetS3FilesResource:
     Type: AWS::ApiGateway::Resource
@@ -1103,6 +1103,18 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: SidewalkOTACancelTransferLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api
+
+
+  # Set SidewalkOTAUploadFileLambda permissions regarding API Gateway
+  SidewalkOTAUploadFileLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTAUploadFileLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTAUploadFileLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api
 
