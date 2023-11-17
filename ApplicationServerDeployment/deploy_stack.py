@@ -43,14 +43,14 @@ if config.interactive_mode:
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 s3_client = S3Client(session)
-wireless_client = IoTWirelessClient(session)
+#wireless_client = IoTWirelessClient(session)
 lambda_client = LambdaClient(session)
 api_gateway_client = session.client(service_name='apigateway')
 
 # ------------------------------------
 # Enable Sidewalk event notifications
 # ------------------------------------
-wireless_client.enable_notifications()
+#wireless_client.enable_notifications()
 
 # ---------------------------------------------------
 # Check if given Sidewalk destination already exists
@@ -102,7 +102,7 @@ auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLa
 auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
 auth_library_dirs = ['authLibs']
 lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
-
+ota_lambdas = ['SidewalkOTADbHandlerLambda',]
 auth_string = config.get_username_and_password_as_base64()
 env_variables = {"CREDENTIALS": auth_string}
 lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)
