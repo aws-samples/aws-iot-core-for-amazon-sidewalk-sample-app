@@ -10,3 +10,4 @@ EdgeDeviceProvisioning/DeviceProfile_*/
 ApplicationServerDeployment/policies/DeployStackPolicy.json
 ApplicationServerDeployment/policies/DeployGrafanaPolicy.json
 ApplicationServerDeployment/lambda/authLibs/*
+ApplicationServerDeployment/gui/build

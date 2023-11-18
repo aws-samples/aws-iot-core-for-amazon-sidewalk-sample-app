@@ -28,7 +28,7 @@ export default ({ mode }: ConfigEnv) => {
       outDir: "./build",
     },
     define: {
-      global: {},
+      global: 'globalThis',
     },
     resolve: {
       alias: {

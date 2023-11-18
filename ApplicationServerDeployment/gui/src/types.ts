@@ -3,14 +3,14 @@
 
 export interface IDevice {
   button: number[];
-  link_type: "FSK" | "BLE" | "LoRa" | "UNKNOWN";
+  link_type: 'FSK' | 'BLE' | 'LoRa' | 'UNKNOWN';
   button_pressed: number[];
   time_to_live: number;
   last_uplink: number;
   led: number[];
   led_on: number[];
   sensor: boolean;
-  sensor_unit: "CELSIUS" | "FAHRENHEIT" | "UNKNOWN";
+  sensor_unit: 'CELSIUS' | 'FAHRENHEIT' | 'UNKNOWN';
   wireless_device_id: string;
 }
 
@@ -24,14 +24,7 @@ export interface IWirelessDevices {
   wirelesDevices: Array<IWirelessDevice>;
 }
 
-export type TransferStatusType =
-  | "Pending"
-  | "Transferring"
-  | "Cancelled"
-  | "Failed"
-  | "Complete"
-  | "Completed"
-  | "None";
+export type TransferStatusType = 'Pending' | 'Transferring' | 'Cancelled' | 'Failed' | 'Complete' | 'Completed' | 'None';
 
 export interface IWirelessDevice {
   deviceId: string;
@@ -41,7 +34,7 @@ export interface IWirelessDevice {
   transferEndTimeUTC: number;
   fileName: string;
   fileSizeKB: number;
-  firmwareUpgradeStatus: "Pending" | "Completed" | "Failed" | "None";
+  firmwareUpgradeStatus: 'Pending' | 'Completed' | 'Failed' | 'None';
   firmwareVersion: string;
 }
 
@@ -53,9 +46,19 @@ export interface ITransferTask {
   fileName: string;
   fileSizeKB: number;
   origination: string;
-  deviceIds: ["String"];
+  deviceIds: ['String'];
 }
 
 export interface ITransferTasks {
   transferTasks: Array<ITransferTask>;
+}
+
+export interface IFilenames {
+  fileNames: Array<string>;
+}
+
+export interface IStartTransferTask {
+  fileName: string;
+  startTimeUTC?: number;
+  deviceIds: Array<string>;
 }

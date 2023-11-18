@@ -1,14 +1,32 @@
-import { DatePicker, DatePickerProps, MenuProps, Space, Table, Upload } from 'antd';
-import { IWirelessDevice, TransferStatusType } from '../../../types';
+import { DatePicker, DatePickerProps, Select, Table, Upload } from 'antd';
+import { IStartTransferTask, IWirelessDevice, TransferStatusType } from '../../../types';
 import { ColumnsType } from 'antd/es/table';
-import { useGetWirelessDevices } from '../../../hooks/api/api';
+import { useGetFileNames, useGetWirelessDevices, useS3Upload, useStartTransferTask } from '../../../hooks/api/api';
 import { UploadOutlined } from '@ant-design/icons';
 import { TransferStatus } from '../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
-import { Button, Dropdown, Flex } from 'antd';
+import { Button, Flex } from 'antd';
+import { UploadChangeParam, UploadFile } from 'antd/es/upload';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export const WirelessDevicesTable = () => {
-  const { data, isLoading } = useGetWirelessDevices();
+  const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
+    fileName: '',
+    startTimeUTC: undefined,
+    deviceIds: []
+  });
+
+  const { data: devicesList, isLoading: isLoadingDevices } = useGetWirelessDevices();
+  const { mutate: upload, isLoading: isUploading } = useS3Upload();
+  const { data: s3List, isLoading: isLoadingFilenames, refetch: refetchFilenames } = useGetFileNames();
+  const { mutate: startTransferTask, isLoading: isTransfering } = useStartTransferTask({
+    onSuccess: () => {
+      toast.success('Task transferred');
+      setStartTransferTaskPayload((prevState) => ({ ...prevState, deviceIds: [] }));
+    }
+  });
 
   const columns: ColumnsType<IWirelessDevice> = [
     {
@@ -49,40 +67,49 @@ export const WirelessDevicesTable = () => {
     }
   ];
 
-  const handleMenuClick: MenuProps['onClick'] = (e) => {
-    console.log('click', e);
+  const handleDatePickerChange = (value: DatePickerProps['value']) => {
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, startTimeUTC: value?.valueOf() }));
   };
 
-  const ddItems: MenuProps['items'] = [
-    {
-      label: '1st menu item',
-      key: '1'
-    },
-    {
-      label: '2nd menu item',
-      key: '2'
-    },
-    {
-      label: '3rd menu item',
-      key: '3',
-      danger: true
-    },
-    {
-      label: '4rd menu item',
-      key: '4',
-      danger: true,
-      disabled: true
+  const range = (start: number, end: number) => {
+    const result = [];
+    for (let i = start; i < end; i++) {
+      result.push(i);
     }
-  ];
-
-  const menuProps = {
-    items: ddItems,
-    onClick: handleMenuClick
+    return result;
   };
 
-  const onDatePickerChange = (value: DatePickerProps['value'], dateString: [string, string] | string) => {
-    console.log('Selected Time: ', value);
-    console.log('Formatted Selected Time: ', dateString);
+  const disabledDateTime = () => ({
+    disabledHours: () => range(0, 24).splice(0, dayjs().hour()),
+    disabledMinutes: () => range(0, 60).splice(0, dayjs().minute()),
+    disabledSeconds: () => range(0, 60).splice(0, dayjs().second())
+  });
+
+  const disabledDate = (current: dayjs.Dayjs) => {
+    // Can not select days before today and now
+    return current && current < dayjs().startOf('day');
+  };
+
+  const filterOption = (input: string, option?: { label: string; value: string }) =>
+    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+
+  const handleUpload = async (param: UploadChangeParam<UploadFile<any>>) => {
+    await upload(param.file);
+    refetchFilenames();
+  };
+
+  const handleFilenameSelected = (fileName: string) => {
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, fileName }));
+  };
+
+  const handleDeviceSelected = (selectedRowKeys: React.Key[]) => {
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, deviceIds: selectedRowKeys as Array<string> }));
+  };
+
+  const canStartTrasnferTask = startTransferTaskPayload.fileName.length > 0 && startTransferTaskPayload.deviceIds.length > 0;
+
+  const handleStarTransferTask = () => {
+    startTransferTask(startTransferTaskPayload);
   };
 
   return (
@@ -90,29 +117,54 @@ export const WirelessDevicesTable = () => {
       <Flex gap="small" wrap="wrap" justify="space-between">
         <h2>Devices</h2>
         <Flex gap="small" align="center">
-          <Upload>
-            <Button icon={<UploadOutlined />}>Upload file</Button>
+          <Upload onChange={handleUpload} showUploadList={false} disabled={isUploading}>
+            <Button loading={isUploading} icon={<UploadOutlined />}>
+              {isUploading ? 'Uploading' : 'Upload file'}
+            </Button>
           </Upload>
-          <Space wrap>
-            <Dropdown.Button menu={menuProps}>File selected</Dropdown.Button>
-          </Space>
-          <DatePicker showTime onChange={onDatePickerChange} />
-          <Button type="primary" size="middle">
+          <Select
+            showSearch
+            placeholder="Select a file"
+            optionFilterProp="children"
+            onChange={handleFilenameSelected}
+            style={{ minWidth: '200px' }}
+            loading={isLoadingFilenames}
+            disabled={isLoadingFilenames}
+            filterOption={filterOption}
+            options={s3List?.fileNames?.map((filename) => ({ label: filename, value: filename }))}
+          />
+          <DatePicker
+            showTime
+            placeholder="Now"
+            onChange={handleDatePickerChange}
+            format="YYYY-MM-DD HH:mm:ss"
+            disabledDate={disabledDate}
+            disabledTime={disabledDateTime}
+          />
+          <Button
+            type="primary"
+            size="middle"
+            disabled={!canStartTrasnferTask}
+            onClick={handleStarTransferTask}
+            loading={isTransfering}
+          >
             Update Firmware
           </Button>
         </Flex>
       </Flex>
       <Table
+        locale={{
+          emptyText: <div className="m-3 black">No Wireless devices detected</div>
+        }}
         rowSelection={{
           type: 'checkbox',
-          onChange: (selectedRowKeys: React.Key[], selectedRows: IWirelessDevice[]) => {
-            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-          }
+          onChange: handleDeviceSelected,
+          selectedRowKeys: startTransferTaskPayload.deviceIds
         }}
         columns={columns}
-        dataSource={data?.wirelesDevices}
-        rowKey={item => item.deviceId}
-        loading={isLoading}
+        dataSource={devicesList?.wirelesDevices}
+        rowKey={(item) => item.deviceId}
+        loading={isLoadingDevices}
       />
     </>
   );

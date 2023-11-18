@@ -1,7 +1,7 @@
 // Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import axios from "redaxios";
+import axios from "axios";
 import { ACCESS_TOKEN, API_URL } from "./constants";
 
 // @ts-ignore

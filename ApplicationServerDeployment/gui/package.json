@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "antd": "^5.10.2",
+    "axios": "^1.6.2",
     "chart.js": "^4.1.1",
     "classnames": "^2.3.2",
     "date-fns": "^2.30.0",
+    "dayjs": "^1.11.10",
     "javascript-time-ago": "^2.5.9",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
@@ -23,7 +25,6 @@
     "react-router": "^6.17.0",
     "react-router-dom": "^6.17.0",
     "react-time-ago": "^7.2.1",
-    "redaxios": "^0.5.1",
     "vite-plugin-svgr": "^2.4.0"
   },
   "devDependencies": {

@@ -83,14 +83,14 @@ export const TranserTasksTable = () => {
       <Flex gap="small" wrap="wrap" justify="space-between">
         <h2>Tasks</h2>
         <Flex gap="small" align="center">
-          <Button type="primary" size="middle">
+          <Button type="primary" size="middle" disabled={data?.transferTasks.length === 0}>
             Cancel Task
           </Button>
         </Flex>
       </Flex>
       <Table
         locale={{
-          emptyText: 'No Tasks Created - Start a Firmware Update!'
+          emptyText: (<div className='m-3 black'>No Tasks Created - Start a Firmware Update!</div>)
         }}
         rowSelection={{
           type: 'checkbox',

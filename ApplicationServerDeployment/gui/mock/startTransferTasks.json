@@ -1,0 +1,16 @@
+{
+  "taskId": "as3242nm",
+  "taskStatus": "Transferring",
+  "creationTimeUTC": 1698715950201,
+  "taskEndTimeUTC": 1698715930201,
+  "fileName": "ipsum.png",
+  "fileSizeKB": 679,
+  "origination": "Device",
+  "deviceIds": [
+    "6540591d44f7c592d0f697ed",
+    "6540591de10f40a464c39b12",
+    "6540591d5e1772be177b9656",
+    "6540591df06df91909b8b24c",
+    "6540591d92a2cde478ea4238"
+  ]
+}
