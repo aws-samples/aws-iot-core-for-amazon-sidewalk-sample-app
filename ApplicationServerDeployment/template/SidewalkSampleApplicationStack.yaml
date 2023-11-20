@@ -1106,18 +1106,6 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaCancel
 
-
-  # Set SidewalkOTAUploadFileLambda permissions regarding API Gateway
-  SidewalkOTAUploadFileLambdaPermissionsForApiGateway:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - SidewalkOTAUploadFileLambda
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: SidewalkOTAUploadFileLambda
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api
-
   # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
   SidewalkOTAGetS3FilesLambdaPermissionsForApiGateway:
     Type: AWS::Lambda::Permission
