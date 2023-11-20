@@ -5,17 +5,10 @@
 Handles uplinks coming from the Sidewalk Sensor Monitoring Demo Application.
 """
 
-import base64
-import boto3
 import json
 import traceback
-from datetime import datetime, timezone
 from typing import Final
 
-import time_utils
-from command import Command
-from device import Device
-from measurement import Measurement
 
 SOME_CONSTANT: Final = "SOME_CONSTANT"
 
