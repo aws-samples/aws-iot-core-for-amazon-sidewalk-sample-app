@@ -105,7 +105,7 @@ auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLa
 auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
 auth_library_dirs = ['authLibs']
 lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
-ota_lambdas = ['SidewalkOTAStartTransferLambda', 'SidewalkOTACancelTransferLambda', 
+ota_lambdas = ['SidewalkOTADbHandlerLambda', 'SidewalkOTAStartTransferLambda', 'SidewalkOTACancelTransferLambda',
                'SidewalkOTAGetS3FilesLambda', 'SidewalkOTAUploadFileLambda']
 ota_dirs = ['ota', 'db_handler']
 ota_lib_dirs = ['codec', 'database', 'utils']

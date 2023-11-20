@@ -250,6 +250,51 @@ Resources:
                   - !GetAtt SidewalkDevices.Arn
                   - !GetAtt SidewalkMeasurements.Arn
 
+  # OTA Db handler Lambda's execution role with CloudWatch write access and iot device access
+  SidewalkOTADbHandlerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    DependsOn:
+      - DeviceTransfers
+      - TransferTasks
+    Properties:
+      RoleName: SidewalkOTADbHandlerLambdaExecutionRole
+      Description: Allows SidewalkOTADbHandlerLambda to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTADbHandlerLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkOTADbHandlerLambda:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
+                Resource:
+                  - !GetAtt DeviceTransfers.Arn
+                  - !GetAtt TransferTasks.Arn
+
   # Token generator Lambda's execution role with basic lambda permissions.
   SidewalkTokenGeneratorLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -556,6 +601,31 @@ Resources:
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
 
+  # SidewalkOTADbHandlerLambda function. Handles read requests to databases
+  SidewalkOTADbHandlerLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTADbHandlerLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTADbHandlerLambda
+      Description: Handles communication with db.
+      Handler: ota_db_handler_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTADbHandlerLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile: "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
   # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
   SidewalkTokenGeneratorLambda:
     Type: AWS::Lambda::Function
@@ -643,6 +713,16 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/aws/lambda/${SidewalkDbHandlerLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTADbHandlerLambda logs
+  SidewalkOTADbHandlerLambdaLogGroup:
+    DependsOn: SidewalkOTADbHandlerLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTADbHandlerLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -885,6 +965,45 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: false
             method.response.header.Access-Control-Allow-Origin: false
       ResourceId: !Ref ProxyResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  OTAResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: ota
+
+  OTADbResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt OTAResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: '{proxy+}'
+
+  OTADbGetMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTADbHandlerLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OTADbResource
       RestApiId: !Ref SidewalkApiGateway
 
   OtaStartResource:
@@ -1149,6 +1268,17 @@ Resources:
       FunctionName: SidewalkDbHandlerLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/*
+
+  # Set SidewalkOTADbHandlerLambda permissions regarding API Gateway
+  SidewalkOTADbHandlerLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTADbHandlerLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTADbHandlerLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/ota/*
 
   # Set SidewalkUserAuthenticatorLambda permissions regarding API Gateway
   SidewalkUserAuthenticatorLambdaPermissionsForApiGateway:

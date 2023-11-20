@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class DeviceTransfersHandler:
     """
-    A class that provides read and write methods for the Measurements table.
+    A class that provides read and write methods for the DeviceTransfer table.
     """
 
     TABLE_NAME = 'DeviceTransfers'
@@ -27,12 +27,35 @@ class DeviceTransfersHandler:
     # Read operations
     # ----------------
 
-    def get_device_transfer_details(self, device_id: str) -> [DeviceTransfer]:
+    def get_all_device_transfers(self) -> [DeviceTransfer]:
+        """
+        Gets all available records from the DeviceTransfers table.
+
+        :return:    List of DeviceTransfer objects.
+        """
+        items = []
+        try:
+            response = self._table.scan()
+            items.extend(response.get('Items', []))
+            while "NextToken" in response:
+                response = self._table.scan(NextToken=response["NextToken"])
+                items.extend(response.get('Items', []))
+        except ClientError as err:
+            logger.error(f'Error while calling get_all_devices: {err}')
+            raise
+        else:
+            device_transfers = []
+            for item in items:
+                device_transfer = DeviceTransfer(**item)
+                device_transfers.append(device_transfer)
+            return device_transfers
+
+    def get_device_transfer_details(self, device_id: str) -> DeviceTransfer:
         """
         Queries Measurements table for the records coming from given device withing a given time span.
 
         :param wireless_device_id:  Id of the wireless device.
-        :return:                    List of Measurement objects.
+        :return:                    List of DeviceTransfer objects.
         """
         items = []
         try:
@@ -48,11 +71,7 @@ class DeviceTransfersHandler:
             logger.error(f'Error while calling get_device_transfer: {err}')
             raise
         else:
-            deviceTransfers = []
-            for item in items:
-                deviceTransfer = DeviceTransfer(**item)
-                deviceTransfers.append(deviceTransfer)
-            return deviceTransfers
+            return DeviceTransfer(**items[0])
 
     # -----------------
     # Write operations

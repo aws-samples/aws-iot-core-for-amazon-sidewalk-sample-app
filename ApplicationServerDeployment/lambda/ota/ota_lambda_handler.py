@@ -36,7 +36,7 @@ def lambda_handler(event, context):
         # Read its metadata.
         # Decode payload data.
         # ---------------------------------------------------------------
-        print(f'Received event: {event}')
+        print(f'Received test event: {event}')
 
         return {
             'statusCode': 200,

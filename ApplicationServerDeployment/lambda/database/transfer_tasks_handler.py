@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class TransferTasksHandler:
     """
-    A class that provides read and write methods for the Measurements table.
+    A class that provides read and write methods for the TransferTasks table.
     """
 
     TABLE_NAME = 'TransferTasks'
@@ -27,12 +27,35 @@ class TransferTasksHandler:
     # Read operations
     # ----------------
 
-    def get_transfer_task_details(self, task_id: str) -> [TransferTask]:
+    def get_all_transfer_tasks(self) -> [TransferTask]:
+        """
+        Gets all available records from the TransferTasks table.
+
+        :return:    List of TransferTasks objects.
+        """
+        items = []
+        try:
+            response = self._table.scan()
+            items.extend(response.get('Items', []))
+            while "NextToken" in response:
+                response = self._table.scan(NextToken=response["NextToken"])
+                items.extend(response.get('Items', []))
+        except ClientError as err:
+            logger.error(f'Error while calling get_all_transfer_tasks: {err}')
+            raise
+        else:
+            transferTasks = []
+            for item in items:
+                transferTask = TransferTask(**item)
+                transferTasks.append(transferTask)
+            return transferTasks
+
+    def get_transfer_task_details(self, task_id: str) -> TransferTask:
         """
         Queries Measurements table for the records coming from given device withing a given time span.
 
-        :param wireless_device_id:  Id of the wireless device.
-        :return:                    List of Measurement objects.
+        :param wireless_device_id:  taskId
+        :return:                    task Detail
         """
         items = []
         try:
@@ -48,11 +71,8 @@ class TransferTasksHandler:
             logger.error(f'Error while calling get_device_transfer: {err}')
             raise
         else:
-            transferTasks = []
-            for item in items:
-                transferTask = TransferTask(**item)
-                transferTasks.append(transferTask)
-            return transferTasks
+            return TransferTask(**items[0])
+
 
     # -----------------
     # Write operations
