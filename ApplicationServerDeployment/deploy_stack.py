@@ -43,14 +43,14 @@ if config.interactive_mode:
 session = boto3.Session(profile_name=config.aws_profile, region_name=config.region_name)
 cf_client = CloudFormationClient(session)
 s3_client = S3Client(session)
-#wireless_client = IoTWirelessClient(session)
+wireless_client = IoTWirelessClient(session)
 lambda_client = LambdaClient(session)
 api_gateway_client = session.client(service_name='apigateway')
 
 # ------------------------------------
 # Enable Sidewalk event notifications
 # ------------------------------------
-#wireless_client.enable_notifications()
+wireless_client.enable_notifications()
 
 # ---------------------------------------------------
 # Check if given Sidewalk destination already exists
@@ -60,14 +60,17 @@ sid_dest_already_exists = wireless_client.check_if_destination_exists(name=confi
 # -----------------------------
 # Read CloudFormation template
 # -----------------------------
+s3_cfn_bucket_name = 'sidewalk-sample-app-stack'
+s3_cfn_template_key = 'SidewalkSampleApplicationStack.yaml'
 stack_path = Path(__file__).parent.joinpath('template', 'SidewalkSampleApplicationStack.yaml')
+s3_client.upload_template_to_s3(stack_path, s3_cfn_bucket_name, s3_cfn_template_key)
 stack = read_file(stack_path)
-
+templateUrl = 'https://' + s3_cfn_bucket_name + '.s3.amazonaws.com/' + s3_cfn_template_key
 # --------------------------------------
 # Trigger CloudFormation stack creation
 # --------------------------------------
 cf_client.create_stack(
-    template=stack,
+    templateUrl=templateUrl,
     stack_name=STACK_NAME,
     sid_dest=config.sid_dest_name,
     dest_exists=sid_dest_already_exists,
@@ -102,7 +105,11 @@ auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLa
 auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
 auth_library_dirs = ['authLibs']
 lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
-ota_lambdas = ['SidewalkOTADbHandlerLambda',]
+ota_lambdas = ['SidewalkOTAStartTransferLambda', 'SidewalkOTACancelTransferLambda', 
+               'SidewalkOTAGetS3FilesLambda', 'SidewalkOTAUploadFileLambda']
+ota_dirs = ['ota', 'db_handler']
+ota_lib_dirs = ['codec', 'database', 'utils']
+lambda_client.upload_lambda_files(parent, ota_lambdas, ota_dirs, ota_lib_dirs)
 auth_string = config.get_username_and_password_as_base64()
 env_variables = {"CREDENTIALS": auth_string}
 lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)
