@@ -1093,7 +1093,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: SidewalkOTAStartTransferLambda
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaStart
 
   # Set SidewalkOTACancelTransferLambda permissions regarding API Gateway
   SidewalkOTACancelTransferLambdaPermissionsForApiGateway:
@@ -1104,7 +1104,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: SidewalkOTACancelTransferLambda
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaCancel
 
 
   # Set SidewalkOTAUploadFileLambda permissions regarding API Gateway
@@ -1127,7 +1127,18 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: SidewalkOTAGetS3FilesLambda
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaGetS3
+
+  # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
+  SidewalkOTAUploadFileLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTAUploadFileLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTAUploadFileLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaUpload
 
   # Set SidewalkDownlinkLambda permissions regarding API Gateway
   SidewalkDownlinkLambdaPermissionsForApiGateway:
