@@ -26,18 +26,18 @@ class CloudFormationClient:
     # -------
     # Deploy
     # -------
-    def create_stack(self, template: str, stack_name: str, sid_dest: str, dest_exists: bool, tag: str):
+    def create_stack(self, templateUrl: str, stack_name: str, sid_dest: str, dest_exists: bool, tag: str):
         """
         Creates CloudFormation stack.
 
-        :param template:        Cloud formation template.
+        :param templateUrl:     Cloud formation template url.
         :param stack_name:      Stack name.
         :param sid_dest:        Sidewalk destination to be used.
         :param dest_exists:     If True, Sidewalk destination will be created as a part of the stack.
                                 If False, it is assumed that destination already exists.
         :param tag:             Tag assigned to created resources; describes application.
         """
-        log_info(f'Creating {stack_name} from cloud formation template...')
+        log_info(f'Creating {stack_name} from url {templateUrl} of cloud formation template...')
         stack_already_exists = False
         start_time = datetime.now(timezone.utc)
         parameters = [
@@ -62,7 +62,7 @@ class CloudFormationClient:
                 # Create stack
                 response = self._client.create_stack(
                     StackName=stack_name,
-                    TemplateBody=template,
+                    TemplateURL=templateUrl,
                     Parameters=parameters,
                     Capabilities=['CAPABILITY_NAMED_IAM'],
                     Tags=tags,

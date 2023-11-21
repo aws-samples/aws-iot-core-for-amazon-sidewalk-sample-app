@@ -82,6 +82,41 @@ Resources:
         ReadCapacityUnits: 2
         WriteCapacityUnits: 2
 
+  # Table for storing Sidewalk devices for OTA
+  DeviceTransfers:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PROVISIONED
+      AttributeDefinitions:
+        - AttributeName: deviceId
+          AttributeType: "S"
+        - AttributeName: taskId
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: deviceId
+          KeyType: HASH
+        - AttributeName: taskId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      TableName: DeviceTransfers
+
+  # Table for storing transfer status for OTA devices
+  TransferTasks:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PROVISIONED
+      AttributeDefinitions:
+        - AttributeName: taskId
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: taskId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      TableName: TransferTasks
 
   # -------------------------
   # Lambda related resources
@@ -135,8 +170,8 @@ Resources:
                   - dynamodb:UpdateItem
                   - dynamodb:DescribeTimeToLive
                 Resource:
-                    - !GetAtt SidewalkDevices.Arn
-                    - !GetAtt SidewalkMeasurements.Arn
+                  - !GetAtt SidewalkDevices.Arn
+                  - !GetAtt SidewalkMeasurements.Arn
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
@@ -215,6 +250,51 @@ Resources:
                   - !GetAtt SidewalkDevices.Arn
                   - !GetAtt SidewalkMeasurements.Arn
 
+  # OTA Db handler Lambda's execution role with CloudWatch write access and iot device access
+  SidewalkOTADbHandlerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    DependsOn:
+      - DeviceTransfers
+      - TransferTasks
+    Properties:
+      RoleName: SidewalkOTADbHandlerLambdaExecutionRole
+      Description: Allows SidewalkOTADbHandlerLambda to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTADbHandlerLambdaInlinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SidewalkOTADbHandlerLambda:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
+                Resource:
+                  - !GetAtt DeviceTransfers.Arn
+                  - !GetAtt TransferTasks.Arn
+
   # Token generator Lambda's execution role with basic lambda permissions.
   SidewalkTokenGeneratorLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -275,6 +355,86 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
 
+  # Token authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkOTAStartTransferLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkOTAStartTransferLambdaExecutionRole
+      Description: Allows SidewalkOTAStartTransferLambdaExecutionRole to call AWS services
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    DeletionPolicy: Delete
+
+  # Token authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkOTACancelTransferLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkOTACancelTransferLambdaExecutionRole
+      Description: Allows SidewalkOTACancelTransferLambdaExecutionRole to call AWS services
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    DeletionPolicy: Delete
+
+  # Token authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkOTAUploadFileLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkOTAUploadFileLambdaExecutionRole
+      Description: Allows SidewalkOTAUploadFileLambdaExecutionRole to call AWS services
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    DeletionPolicy: Delete
+
+  # Token authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkOTAGetS3FilesLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkOTAGetS3FilesLambdaExecutionRole
+      Description: Allows SidewalkOTAGetS3FilesLambdaExecutionRole to call AWS services
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    DeletionPolicy: Delete
+
   # SidewalkUplinkLambda function. Handles uplink messages
   SidewalkUplinkLambda:
     Type: AWS::Lambda::Function
@@ -316,6 +476,106 @@ Resources:
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
 
+  # SidewalkOTAStartTransferLambda function.
+  SidewalkOTAStartTransferLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTAStartTransferLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTAStartTransferLambda
+      Description: Process OTA actions
+      Handler: ota_start_transfer_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTAStartTransferLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile:  "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
+  # SidewalkOTAUploadFileLambda function.
+  SidewalkOTAUploadFileLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTAUploadFileLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTAUploadFileLambda
+      Description: Process OTA actions
+      Handler: ota_upload_file_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTAUploadFileLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile:  "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
+  # SidewalkOTACancelTransferLambda function.
+  SidewalkOTACancelTransferLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTACancelTransferLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTACancelTransferLambda
+      Description: Process OTA actions
+      Handler: ota_cancel_transfer_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTACancelTransferLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile:  "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
+  # SidewalkOTAGetS3FilesLambda function. Handles downlink messages
+  SidewalkOTAGetS3FilesLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTAGetS3FilesLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTAGetS3FilesLambda
+      Description: Process OTA actions
+      Handler: ota_get_s3_filenames_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTAGetS3FilesLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile:  "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
   # SidewalkDbHandlerLambda function. Handles read requests to databases
   SidewalkDbHandlerLambda:
     Type: AWS::Lambda::Function
@@ -341,6 +601,30 @@ Resources:
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
 
+  # SidewalkOTADbHandlerLambda function. Handles read requests to databases
+  SidewalkOTADbHandlerLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTADbHandlerLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTADbHandlerLambda
+      Description: Handles communication with db.
+      Handler: ota_db_handler_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTADbHandlerLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile: "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
 
   # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
   SidewalkTokenGeneratorLambda:
@@ -429,6 +713,56 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/aws/lambda/${SidewalkDbHandlerLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTADbHandlerLambda logs
+  SidewalkOTADbHandlerLambdaLogGroup:
+    DependsOn: SidewalkOTADbHandlerLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTADbHandlerLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTAStartTransferLambda logs
+  SidewalkOTAStartTransferLambdaLogGroup:
+    DependsOn: SidewalkOTAStartTransferLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTAStartTransferLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTACancelTransferLambda logs
+  SidewalkOTACancelTransferLambdaLogGroup:
+    DependsOn: SidewalkOTACancelTransferLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTACancelTransferLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTAGetS3FilesLambda logs
+  SidewalkOTAGetS3FilesLambdaLogGroup:
+    DependsOn: SidewalkOTAGetS3FilesLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTAGetS3FilesLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTAGetS3FilesLambda logs
+  SidewalkOTAUploadFileLambdaLogGroup:
+    DependsOn: SidewalkOTAUploadFileLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTAUploadFileLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -633,6 +967,173 @@ Resources:
       ResourceId: !Ref ProxyResource
       RestApiId: !Ref SidewalkApiGateway
 
+  OTAResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: ota
+
+  OTADbResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt OTAResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: '{proxy+}'
+
+  OTADbGetMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTADbHandlerLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OTADbResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  OtaStartResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: otaStart
+
+  OtaStartTransferMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTAStartTransferLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OtaStartResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  OtaCancelResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: otaCancel
+
+  OtaCancelTransferMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTACancelTransferLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OtaCancelResource
+      RestApiId: !Ref SidewalkApiGateway
+
+  OtaUploadResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: otaUpload
+
+  OtaUploadFileMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTAUploadFileLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OtaUploadResource
+      RestApiId: !Ref SidewalkApiGateway      
+
+  OtaGetS3FilesResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: otaGetS3
+
+  OtaGetS3FilesMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: POST
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTAGetS3FilesLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OtaGetS3FilesResource
+      RestApiId: !Ref SidewalkApiGateway
+
   # API Gateway jwt authorizer
   SidewalkTokenAuthorizer:
     Type: AWS::ApiGateway::Authorizer
@@ -702,6 +1203,50 @@ Resources:
         RateLimit: 30 # how many requests can happen in a second
       UsagePlanName: SidewalkSampleApplication usage plan
 
+  # Set SidewalkOTAStartTransferLambda permissions regarding API Gateway
+  SidewalkOTAStartTransferLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTAStartTransferLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTAStartTransferLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaStart
+
+  # Set SidewalkOTACancelTransferLambda permissions regarding API Gateway
+  SidewalkOTACancelTransferLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTACancelTransferLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTACancelTransferLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaCancel
+
+  # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
+  SidewalkOTAGetS3FilesLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTAGetS3FilesLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTAGetS3FilesLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaGetS3
+
+  # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
+  SidewalkOTAUploadFileLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTAUploadFileLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTAUploadFileLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaUpload
+
   # Set SidewalkDownlinkLambda permissions regarding API Gateway
   SidewalkDownlinkLambdaPermissionsForApiGateway:
     Type: AWS::Lambda::Permission
@@ -723,6 +1268,17 @@ Resources:
       FunctionName: SidewalkDbHandlerLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/*
+
+  # Set SidewalkOTADbHandlerLambda permissions regarding API Gateway
+  SidewalkOTADbHandlerLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTADbHandlerLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTADbHandlerLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/ota/*
 
   # Set SidewalkUserAuthenticatorLambda permissions regarding API Gateway
   SidewalkUserAuthenticatorLambdaPermissionsForApiGateway:
