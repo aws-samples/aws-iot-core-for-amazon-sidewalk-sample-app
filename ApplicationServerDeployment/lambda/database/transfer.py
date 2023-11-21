@@ -10,10 +10,10 @@ class DeviceTransfer(object):
     A class that represents the DeviceTransfer table record.
     """
 
-    def __init__(self, device_id, transfer_status: str = None, status_updated_time_UTC: int = None, transfer_start_time_UTC: int = None,
+    def __init__(self, deviceId, transfer_status: str = None, status_updated_time_UTC: int = None, transfer_start_time_UTC: int = None,
                  transfer_end_time_UTC: int = None, file_name: str = None, file_size_kb: int = None, firmware_upgrade_status: str = None,
-                 firmware_version: str = None, task_id: str = None):
-        self._device_id = device_id
+                 firmware_version: str = None, taskId: str = None):
+        self._device_id = deviceId
         self._transfer_status = transfer_status
         self._status_updated_time_UTC = status_updated_time_UTC
         self._transfer_start_time_UTC = transfer_start_time_UTC
@@ -22,7 +22,7 @@ class DeviceTransfer(object):
         self._file_size_kb = file_size_kb
         self._firmware_upgrade_status = firmware_upgrade_status
         self._firmware_version = firmware_version
-        self._task_id = task_id
+        self._task_id = taskId
 
     def get_device_id(self) -> str:
         return self._device_id

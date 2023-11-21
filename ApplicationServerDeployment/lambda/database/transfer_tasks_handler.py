@@ -9,6 +9,7 @@ import time
 from botocore.exceptions import ClientError
 from decimal import Decimal
 from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Key
 
 from task import TransferTask
 
@@ -53,25 +54,19 @@ class TransferTasksHandler:
             logger.error(f'Error while calling get_all_transfer_tasks: {err}', exc_info=True)
             raise
 
-    def get_transfer_task_details(self, task_id: str) -> TransferTask:
+    def get_transfer_task_details(self, taskId: str) -> TransferTask:
         """
         Queries Measurements table for the records coming from given device withing a given time span.
 
-        :param wireless_device_id:  taskId
+        :param task id:  taskId
         :return:                    task Detail
         """
         items = []
         try:
-            filter_expression = Attr('task_id').eq(task_id)
-            response = self._table.scan(IndexName='task_id', FilterExpression=filter_expression)
-            items.extend(response.get('Items', []))
-            while "NextToken" in response:
-                response = self._table.scan(IndexName='task_id',
-                                            FilterExpression=filter_expression,
-                                            NextToken=response["NextToken"])
-                items.extend(response.get('Items', []))
+            response = self._table.query(KeyConditionExpression=Key('taskId').eq(taskId))
+            items = response.get('Items', [])
         except ClientError as err:
-            logger.error(f'Error while calling get_device_transfer: {err}')
+            logger.error(f'Error while calling get_transfer_task_details: {err}')
             raise
         else:
             return TransferTask(**items[0])

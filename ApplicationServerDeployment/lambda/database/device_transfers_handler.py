@@ -1,7 +1,5 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
-from typing import List
-
 import boto3
 import logging
 import time
@@ -9,6 +7,7 @@ import time
 from botocore.exceptions import ClientError
 from decimal import Decimal
 from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Key
 
 from transfer import DeviceTransfer
 
@@ -29,12 +28,13 @@ class DeviceTransfersHandler:
     # Read operations
     # ----------------
 
-    def get_all_device_transfers(self) -> List[DeviceTransfer]:
+    def get_all_device_transfers(self) -> [DeviceTransfer]:
         """
         Gets all available records from the DeviceTransfers table.
 
         :return:    List of DeviceTransfer objects.
         """
+        items = []
         try:
             response = self._table.scan()
             items = response.get('Items', [])
@@ -53,7 +53,7 @@ class DeviceTransfersHandler:
             logger.error(f'Error while calling get_all_device_transfers: {err}', exc_info=True)
             raise
 
-    def get_device_transfer_details(self, device_id: str) -> DeviceTransfer:
+    def get_device_transfer_details(self, deviceId: str) -> DeviceTransfer:
         """
         Queries Measurements table for the records coming from given device withing a given time span.
 
@@ -62,16 +62,10 @@ class DeviceTransfersHandler:
         """
         items = []
         try:
-            filter_expression = Attr('device_id').eq(device_id)
-            response = self._table.scan(IndexName='device_id', FilterExpression=filter_expression)
-            items.extend(response.get('Items', []))
-            while "NextToken" in response:
-                response = self._table.scan(IndexName='device_id',
-                                            FilterExpression=filter_expression,
-                                            NextToken=response["NextToken"])
-                items.extend(response.get('Items', []))
+            response = self._table.query(KeyConditionExpression=Key('deviceId').eq(deviceId))
+            items = response.get('Items', [])
         except ClientError as err:
-            logger.error(f'Error while calling get_device_transfer: {err}')
+            logger.error(f'Error while calling get_device_transfer_details: {err}')
             raise
         else:
             return DeviceTransfer(**items[0])

@@ -10,9 +10,9 @@ class TransferTask(object):
     A class that represents the TransferTask table record.
     """
 
-    def __init__(self, task_id, task_status: str = None, creation_time_UTC: int = None, task_start_time_UTC: int = None, task_end_time_UTC: int = None,
+    def __init__(self, taskId, task_status: str = None, creation_time_UTC: int = None, task_start_time_UTC: int = None, task_end_time_UTC: int = None,
                  file_name: str = None, file_size_kb: int = None, origination: str = None, deviceIds: List[str] = None):
-        self._task_id = task_id
+        self._task_id = taskId
         self._task_status = task_status
         self._creation_time_UTC = creation_time_UTC
         self._task_start_time_UTC = task_start_time_UTC
@@ -57,7 +57,6 @@ class TransferTask(object):
         :return:    Dict representation of the TransferTask.
         """
         return {
-            'device_id': self._device_id,
             'task_id': self._task_id,
             'task_status': self._task_status,
             'creation_time_UTC': self._creation_time_UTC,
