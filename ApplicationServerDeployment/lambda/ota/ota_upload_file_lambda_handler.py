@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from typing import Final
 
 import time_utils
-from command import Command
 from device import Device
 from measurement import Measurement
 

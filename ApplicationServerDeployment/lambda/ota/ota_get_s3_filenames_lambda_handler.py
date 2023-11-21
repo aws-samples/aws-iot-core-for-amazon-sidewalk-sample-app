@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from typing import Final
 
 import time_utils
-from command import Command
 from device import Device
 from measurement import Measurement
 
@@ -51,7 +50,7 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
-            'body': json.dumps('Hello from SAMPLE OTA APP!')
+            'body': json.dumps(filenames)
         }
 
     except Exception:

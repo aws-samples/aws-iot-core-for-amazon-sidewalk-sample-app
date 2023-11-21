@@ -60,7 +60,7 @@ sid_dest_already_exists = wireless_client.check_if_destination_exists(name=confi
 # -----------------------------
 # Read CloudFormation template
 # -----------------------------
-s3_cfn_bucket_name = 'sidewalk-sample-app-stack'
+s3_cfn_bucket_name = 'sidewalk-sample-app-stack1'
 s3_cfn_template_key = 'SidewalkSampleApplicationStack.yaml'
 stack_path = Path(__file__).parent.joinpath('template', 'SidewalkSampleApplicationStack.yaml')
 s3_client.upload_template_to_s3(stack_path, s3_cfn_bucket_name, s3_cfn_template_key)

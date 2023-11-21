@@ -13,12 +13,9 @@ import boto3
 import json
 import traceback
 
-from command import Command
 from device import Device
-from command import Command
 from device import Device
 
-import time_utils
 from device_transfers_handler import DeviceTransfersHandler
 from transfer_tasks_handler import TransferTasksHandler
 
@@ -27,31 +24,14 @@ transfer_tasks_handler: Final = TransferTasksHandler()
 
 
 def create_task(file_name, start_time_utc, device_ids):
-    if start_time_utc < int(time.time()):
-        return {
-            'statusCode': 400,
-            'body': json.dumps('The startTime is invalid'),
-        }
 
-    if any(device_id not in ['DeviceId1', 'DeviceId2'] for device_id in device_ids):
-        return {
-            'statusCode': 404,
-            'body': json.dumps('One or more deviceIds do not exist'),
-        }
-
-    if any(device_id in ['PendingDeviceId', 'InProgressDeviceId'] for device_id in device_ids):
-        return {
-            'statusCode': 409,
-            'body': json.dumps('One or more deviceIds is already Pending or Transferring'),
-        }
-
-        # Mocked output values
-        task_id = 'TaskId'
-        task_status = 'COMPLETED'
-        creation_time_utc = int(time.time())
-        task_end_time_utc = None
-        file_size_kb = random.randint(1, 1024)
-        origination = 'App'
+    # Mocked output values
+    task_id = 'TaskId'
+    task_status = 'COMPLETED'
+    creation_time_utc = start_time_utc
+    task_end_time_utc = None
+    file_size_kb = 1024
+    origination = 'App'
 
     return {
         'taskId': task_id,
@@ -79,7 +59,7 @@ def lambda_handler(event, context):
 
         # Extract input values from the API Gateway request
         file_name = event.get('body', {}).get('fileName', 'DefaultFileName')
-        start_time_utc = event.get('body', {}).get('startTimeUTC', int(time.time()))
+        start_time_utc = event.get('body', {}).get('startTimeUTC', 123456789)
         device_ids = event.get('body', {}).get('deviceIds', ['DefaultDeviceId'])
 
         try:
@@ -88,10 +68,10 @@ def lambda_handler(event, context):
                 'statusCode': 200,
                 'body': json.dumps(output)
             }
-        except Exception:
+        except Exception as e:
             return {
                 'statusCode': 500,
-                'body': json.dumps('Unexpected error {}.'),
+                'body': json.dumps(f'Unexpected error: {str(e)}'),
             }
     except Exception:
         print(f'Unexpected error occurred: {traceback.format_exc()}')

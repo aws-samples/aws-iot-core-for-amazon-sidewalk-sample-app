@@ -89,15 +89,15 @@ class S3Client:
             terminate(f'Unable to upload files: {e}.', ErrCode.EXCEPTION)
 
     def upload_template_to_s3(self, template_path, s3_bucket_name, s3_key):
-        # Create S3 bucket if it does not exists
-        try:
-            self._client.head_bucket(Bucket=s3_bucket_name)
-        except self._client.exceptions.NoSuchBucket:
-            print(f"S3 bucket '{s3_bucket_name}' does not exist. Creating...")
-            self._client.create_bucket(Bucket=s3_bucket_name)
-            print(f"S3 bucket '{s3_bucket_name}' created.")
-        else:
-            print(f"S3 bucket '{s3_bucket_name}' already exists.")
+        # # Create S3 bucket if it does not exists
+        # try:
+        #     self._client.head_bucket(Bucket=s3_bucket_name)
+        # except self._client.exceptions.NoSuchBucket:
+        print(f"S3 bucket '{s3_bucket_name}' does not exist. Creating...")
+        self._client.create_bucket(Bucket=s3_bucket_name)
+        print(f"S3 bucket '{s3_bucket_name}' created.")
+        # else:
+        #     print(f"S3 bucket '{s3_bucket_name}' already exists.")
 
         # Upload CloudFormation template to S3
         with open(template_path, 'rb') as template_file:
