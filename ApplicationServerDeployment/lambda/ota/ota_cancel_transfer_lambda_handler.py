@@ -36,13 +36,12 @@ def lambda_handler(event, context):
         print(f'Received event: {event}')
 
         # Extract input values from the API Gateway request
-        task_ids = event.get('body', {}).get('taskIds', [])
-
+        body = convert_to_dictionary(event.get('body', {}))
+        task_ids = body.get("taskIds", [])
         cancel_tasks(task_ids)
 
         return {
             'statusCode': 200,
-            'body': json.dumps('Tasks canceled successfully')
         }
 
     except Exception:
@@ -51,3 +50,9 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': json.dumps('Unexpected error occurred: ' + traceback.format_exc())
         }
+    
+def convert_to_dictionary(body):
+    try:
+        return json.loads(body)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
