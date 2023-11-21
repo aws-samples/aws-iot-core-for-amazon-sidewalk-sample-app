@@ -39,11 +39,28 @@ def lambda_handler(event, context):
         # Read its metadata.
         # Decode payload data.
         # ---------------------------------------------------------------
+        if type(event) == dict:
+            event = json.dumps(event)
+
+        event = json.loads(event)
         print(f'Received event: {event}')
+        body = event.get('body', {})
+        print(f'Received request body: {body}')
+
+
+        if body is None:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Body field is missing')
+            }
+        if type(body) == dict:
+            json_body = body
+        else:
+            json_body = json.loads(body)
 
         # Assuming the file is sent as a base64-encoded string in the 'file' field of the request
-        file_content = event['body'].get('file', None)
-        file_name_with_ext = event['body'].get('filename')
+        file_content = json_body.get("file")
+        file_name_with_ext = json_body.get("filename")
 
         if file_content:
             # Decode base64 content to get the original file content

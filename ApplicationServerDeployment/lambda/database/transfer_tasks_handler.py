@@ -1,5 +1,7 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
+from typing import List
+
 import boto3
 import logging
 import time
@@ -27,28 +29,29 @@ class TransferTasksHandler:
     # Read operations
     # ----------------
 
-    def get_all_transfer_tasks(self) -> [TransferTask]:
+    def get_all_transfer_tasks(self) -> List[TransferTask]:
         """
         Gets all available records from the TransferTasks table.
 
         :return:    List of TransferTasks objects.
         """
-        items = []
         try:
             response = self._table.scan()
-            items.extend(response.get('Items', []))
-            while "NextToken" in response:
-                response = self._table.scan(NextToken=response["NextToken"])
-                items.extend(response.get('Items', []))
-        except ClientError as err:
-            logger.error(f'Error while calling get_all_transfer_tasks: {err}')
-            raise
-        else:
-            transferTasks = []
+            items = response.get('Items', [])
+
             for item in items:
-                transferTask = TransferTask(**item)
-                transferTasks.append(transferTask)
-            return transferTasks
+                yield TransferTask(**item)
+
+            while "LastEvaluatedKey" in response:
+                response = self._table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+                items = response.get('Items', [])
+
+                for item in items:
+                    yield TransferTask(**item)
+
+        except ClientError as err:
+            logger.error(f'Error while calling get_all_transfer_tasks: {err}', exc_info=True)
+            raise
 
     def get_transfer_task_details(self, task_id: str) -> TransferTask:
         """

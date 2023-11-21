@@ -1,5 +1,7 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
+from typing import List
+
 import boto3
 import logging
 import time
@@ -27,28 +29,29 @@ class DeviceTransfersHandler:
     # Read operations
     # ----------------
 
-    def get_all_device_transfers(self) -> [DeviceTransfer]:
+    def get_all_device_transfers(self) -> List[DeviceTransfer]:
         """
         Gets all available records from the DeviceTransfers table.
 
         :return:    List of DeviceTransfer objects.
         """
-        items = []
         try:
             response = self._table.scan()
-            items.extend(response.get('Items', []))
-            while "NextToken" in response:
-                response = self._table.scan(NextToken=response["NextToken"])
-                items.extend(response.get('Items', []))
-        except ClientError as err:
-            logger.error(f'Error while calling get_all_devices: {err}')
-            raise
-        else:
-            device_transfers = []
+            items = response.get('Items', [])
+
             for item in items:
-                device_transfer = DeviceTransfer(**item)
-                device_transfers.append(device_transfer)
-            return device_transfers
+                yield DeviceTransfer(**item)
+
+            while "LastEvaluatedKey" in response:
+                response = self._table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+                items = response.get('Items', [])
+
+                for item in items:
+                    yield DeviceTransfer(**item)
+
+        except ClientError as err:
+            logger.error(f'Error while calling get_all_device_transfers: {err}', exc_info=True)
+            raise
 
     def get_device_transfer_details(self, device_id: str) -> DeviceTransfer:
         """

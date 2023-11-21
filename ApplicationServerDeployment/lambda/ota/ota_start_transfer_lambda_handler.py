@@ -27,7 +27,7 @@ def create_task(file_name, start_time_utc, device_ids):
 
     # Mocked output values
     task_id = 'TaskId'
-    task_status = 'COMPLETED'
+    task_status = 'PENDING'
     creation_time_utc = start_time_utc
     task_end_time_utc = None
     file_size_kb = 1024
@@ -55,12 +55,29 @@ def lambda_handler(event, context):
         # Read its metadata.
         # Decode payload data.
         # ---------------------------------------------------------------
+        if type(event) == dict:
+            event = json.dumps(event)
+
+        event = json.loads(event)
         print(f'Received event: {event}')
+        body = event.get('body', {})
+        print(f'Received request body: {body}')
+
+
+        if body is None:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Body field is missing')
+            }
+        if type(body) == dict:
+            json_body = body
+        else:
+            json_body = json.loads(body)
 
         # Extract input values from the API Gateway request
-        file_name = event.get('body', {}).get('fileName', 'DefaultFileName')
-        start_time_utc = event.get('body', {}).get('startTimeUTC', 123456789)
-        device_ids = event.get('body', {}).get('deviceIds', ['DefaultDeviceId'])
+        file_name = json_body.get("body", {}).get("fileName", "DefaultFileName")
+        start_time_utc = json_body.get("body", {}).get("startTimeUTC", 123456789)
+        device_ids = json_body.get("body", {}).get("deviceIds", ["DefaultDeviceId"])
 
         try:
             output = create_task(file_name, start_time_utc, device_ids)
