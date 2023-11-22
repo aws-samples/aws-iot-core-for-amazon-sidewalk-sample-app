@@ -396,6 +396,26 @@ Resources:
     DeletionPolicy: Delete
 
   # Token authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole
+      Description: Allows SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole to call AWS services
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    DeletionPolicy: Delete
+    
+  # Token authenticator Lambda's execution role with basic lambda permissions.
   SidewalkOTAUploadFileLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -538,6 +558,31 @@ Resources:
       Handler: ota_cancel_transfer_lambda_handler.lambda_handler
       MemorySize: 128
       Role: !GetAtt SidewalkOTACancelTransferLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile:  "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
+  # SidewalkOTAGetDevicesByTaskIdLambda function.
+  SidewalkOTAGetDevicesByTaskIdLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTAGetDevicesByTaskIdLambda
+      Description: Process OTA actions
+      Handler: ota_get_devices_by_task_id_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole.Arn
       Runtime: python3.9
       Timeout: 3
       PackageType: Zip
@@ -743,6 +788,16 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/aws/lambda/${SidewalkOTACancelTransferLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTAGetDevicesByTaskIdLambda logs
+  SidewalkOTAGetDevicesByTaskIdLambdaLogGroup:
+    DependsOn: SidewalkOTAGetDevicesByTaskIdLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTAGetDevicesByTaskIdLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -1070,6 +1125,38 @@ Resources:
       ResourceId: !Ref OtaCancelResource
       RestApiId: !Ref SidewalkApiGateway
 
+  OtaGetDevicesByTaskIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: otaDevices
+
+  OtaGetDevicesByTaskIdResourceMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTAGetDevicesByTaskIdLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OtaGetDevicesByTaskIdResource
+      RestApiId: !Ref SidewalkApiGateway
+
   OtaUploadResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -1224,6 +1311,17 @@ Resources:
       FunctionName: SidewalkOTACancelTransferLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaCancel
+
+  # Set SidewalkOTAGetDevicesByTaskIdLambda permissions regarding API Gateway
+  SidewalkOTAGetDevicesByTaskIdLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTAGetDevicesByTaskIdLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTAGetDevicesByTaskIdLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/otaDevices
 
   # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
   SidewalkOTAGetS3FilesLambdaPermissionsForApiGateway:

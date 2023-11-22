@@ -105,9 +105,9 @@ auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLa
 auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
 auth_library_dirs = ['authLibs']
 lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
-ota_lambdas = ['SidewalkOTAStartTransferLambda', 'SidewalkOTACancelTransferLambda', 'SidewalkOTAGetS3FilesLambda', 'SidewalkOTAUploadFileLambda', 'SidewalkOTADbHandlerLambda']
-ota_dirs = ['ota', 'ota', 'ota', 'ota', 'db_handler']
-ota_lib_dirs = ['utils', 'database', 'utils', 'utils','database']
+ota_lambdas = ['SidewalkOTAStartTransferLambda', 'SidewalkOTACancelTransferLambda', 'SidewalkOTAGetS3FilesLambda', 'SidewalkOTAUploadFileLambda', 'SidewalkOTADbHandlerLambda', 'SidewalkOTAGetDevicesByTaskIdLambda']
+ota_dirs = ['ota', 'ota', 'ota', 'ota', 'db_handler', 'ota']
+ota_lib_dirs = ['utils', 'database', 'utils', 'utils','database', 'utils']
 lambda_client.upload_lambda_files(parent, ota_lambdas, ota_dirs, ota_lib_dirs)
 auth_string = config.get_username_and_password_as_base64()
 env_variables = {"CREDENTIALS": auth_string}
