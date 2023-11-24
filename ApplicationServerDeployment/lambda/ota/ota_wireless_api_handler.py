@@ -21,14 +21,14 @@ class IOTWirelessAPIHandler:
             Id=fuota_task_id
         )
 
-    def list_wireless_devices(self, fuota_task_id: str, max_results: int, next_token: str):
+    def list_wireless_devices(self, fuota_task_id='', max_results=20, next_token=''):
         return self._wireless_client.list_wireless_devices(
             FuotaTaskId=fuota_task_id,
             MaxResults=max_results,
             NextToken=next_token
         )
     
-    def list_fuota_tasks(self, max_results: int, next_token: str):
+    def list_fuota_tasks(self, max_results=20, next_token=''):
         return self._wireless_client.list_fuota_tasks(
             MaxResults=max_results,
             NextToken=next_token
