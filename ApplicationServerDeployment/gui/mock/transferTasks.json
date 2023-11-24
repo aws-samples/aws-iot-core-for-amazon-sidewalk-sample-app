@@ -2,7 +2,7 @@
   "transferTasks": [
     {
       "taskId": "6540591d5c338c75499f1e3b",
-      "taskStatus": "Transferring",
+      "taskStatus": "TRANSFERRING",
       "creationTimeUTC": 1698715950201,
       "taskEndTimeUTC": 1698715930201,
       "fileName": "ipsum.png",
@@ -18,7 +18,7 @@
     },
     {
       "taskId": "6540591d078219abee59a489",
-      "taskStatus": "Complete",
+      "taskStatus": "COMPLETE",
       "creationTimeUTC": 1698715950201,
       "taskEndTimeUTC": 1698715930201,
       "fileName": "sunt.png",
@@ -36,7 +36,7 @@
     },
     {
       "taskId": "6540591dc6512c1a576a5056",
-      "taskStatus": "Failed",
+      "taskStatus": "FAILED",
       "creationTimeUTC": 1698715950201,
       "taskEndTimeUTC": 1698715930201,
       "fileName": "duis.png",
@@ -53,7 +53,7 @@
     },
     {
       "taskId": "6540591dcbd0b5cf9e4baed5",
-      "taskStatus": "Cancelled",
+      "taskStatus": "CANCELLED",
       "creationTimeUTC": 1698715950201,
       "taskEndTimeUTC": 1698715930201,
       "fileName": "occaecat.png",
@@ -70,7 +70,7 @@
     },
     {
       "taskId": "6540591d2272e32bcf65a57b",
-      "taskStatus": "Transferring",
+      "taskStatus": "TRANSFERRING",
       "creationTimeUTC": 1698715950201,
       "taskEndTimeUTC": 1698715930201,
       "fileName": "qui.png",
@@ -86,7 +86,7 @@
     },
     {
       "taskId": "6540591dc2f5c56f9cf341d6",
-      "taskStatus": "Cancelled",
+      "taskStatus": "CANCELLED",
       "creationTimeUTC": 1698715950201,
       "taskEndTimeUTC": 1698715930201,
       "fileName": "adipisicing.png",

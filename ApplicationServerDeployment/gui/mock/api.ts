@@ -5,33 +5,34 @@ import s3FileNames from './s3Filenames.json';
 
 export default [
   {
-    url: '/api/wireless-devices',
+    url: '/api/ota/deviceTransfers',
     method: 'get',
     response: ({ query }) => wirelessDevicesData
   },
   {
-    url: '/api/transfer-tasks',
+    url: '/api/ota/transferTasks',
     method: 'get',
     response: ({ query }) => transferTasks
   },
   {
-    url: '/api/start-transfer-tasks',
+    url: '/api/otaStart',
     method: 'post',
     response: () => startTransferTasks,
     timeout: 3000
   },
   {
-    url: '/api/cancel-transfer-tasks',
+    url: '/api/otaCancel',
     method: 'delete',
     response: () => undefined
   },
   {
-    url: '/api/filenames',
-    method: 'get',
-    response: () => s3FileNames
+    url: '/api/otaGetS3',
+    method: 'post',
+    response: () => s3FileNames,
+    statusCode: 200
   },
   {
-    url: '/api/upload',
+    url: '/api/otaUpload',
     method: 'post',
     response: () => undefined,
     statusCode: 200

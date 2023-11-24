@@ -1,7 +1,1 @@
-{
-  "fileNames": [
-    "abc.bin",
-    "cdf.bin",
-    "hjg.bin"
-  ]
-}
+["abc.bin", "cdf.bin", "hjg.bin"]

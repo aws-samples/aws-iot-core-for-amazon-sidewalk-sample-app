@@ -7,12 +7,13 @@ export const ENDPOINTS = {
   measurement: '/measurements/:id',
   led: '',
   login: '/auth',
-  otaDevices: '/wireless-devices',
-  tasks: '/transfer-tasks',
-  startTransferTasks: '/start-transfer-tasks',
-  cancelTransferTasks: '/cancel-transfer-tasks',
-  s3Filenames: '/filenames',
-  upload: '/upload'
+  otaDevices: '/ota/deviceTransfers',
+  otaTasks: '/ota/transferTasks',
+  startTransferTasks: '/otaStart',
+  cancelTransferTasks: '/otaCancel',
+  s3Filenames: '/otaGetS3',
+  upload: '/otaUpload',
+  getDevicesByTaskId: '/otaDevices' // ?fuotaTaskId=val
 };
 
 export const interpolateParams = (route: string, params: { [k: string]: string }) => {

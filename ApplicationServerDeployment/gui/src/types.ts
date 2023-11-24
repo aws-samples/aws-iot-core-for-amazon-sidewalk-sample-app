@@ -21,10 +21,10 @@ export interface IMeasurement {
 }
 
 export interface IWirelessDevices {
-  wirelesDevices: Array<IWirelessDevice>;
+  wirelessDevices: Array<IWirelessDevice>;
 }
 
-export type TransferStatusType = 'Pending' | 'Transferring' | 'Cancelled' | 'Failed' | 'Complete' | 'Completed' | 'None';
+export type TransferStatusType = 'PENDING' | 'TRANSFERRING' | 'CANCELLED' | 'FAILED' | 'COMPLETE' | 'COMPLETED' | 'NONE';
 
 export interface IWirelessDevice {
   deviceId: string;

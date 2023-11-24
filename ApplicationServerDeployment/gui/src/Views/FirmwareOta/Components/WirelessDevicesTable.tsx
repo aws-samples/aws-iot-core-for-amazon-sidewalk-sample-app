@@ -6,9 +6,9 @@ import { UploadOutlined } from '@ant-design/icons';
 import { TransferStatus } from '../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
 import { Button, Flex } from 'antd';
-import { UploadChangeParam, UploadFile } from 'antd/es/upload';
+import { RcFile } from 'antd/es/upload';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export const WirelessDevicesTable = () => {
@@ -18,15 +18,26 @@ export const WirelessDevicesTable = () => {
     deviceIds: []
   });
 
-  const { data: devicesList, isLoading: isLoadingDevices } = useGetWirelessDevices();
-  const { mutate: upload, isLoading: isUploading } = useS3Upload();
+  const { data: devicesList, isLoading: isLoadingDevices, refetch: refetchWirelessDevices } = useGetWirelessDevices();
+  const { mutate: upload, isLoading: isUploading } = useS3Upload({
+    onSuccess: (_, file: {}) => {
+      toast.success('File Uploaded');
+      lastItemUploaded.current = (file as RcFile).name;
+      // s3List?.push((file as RcFile).name);
+
+      refetchFilenames();
+    }
+  });
   const { data: s3List, isLoading: isLoadingFilenames, refetch: refetchFilenames } = useGetFileNames();
   const { mutate: startTransferTask, isLoading: isTransfering } = useStartTransferTask({
     onSuccess: () => {
       toast.success('Task transferred');
-      setStartTransferTaskPayload((prevState) => ({ ...prevState, deviceIds: [] }));
+      setStartTransferTaskPayload({ deviceIds: [], fileName: '', startTimeUTC: undefined });
+      refetchWirelessDevices();
     }
   });
+
+  const lastItemUploaded = useRef('');
 
   const columns: ColumnsType<IWirelessDevice> = [
     {
@@ -93,9 +104,12 @@ export const WirelessDevicesTable = () => {
   const filterOption = (input: string, option?: { label: string; value: string }) =>
     (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
 
-  const handleUpload = async (param: UploadChangeParam<UploadFile<any>>) => {
-    await upload(param.file);
-    refetchFilenames();
+  const handleUpload = (file: RcFile) => {
+    const isGreaterThan1M = file.size / 1024 / 1024 > 1;
+    if (isGreaterThan1M) {
+      return toast.error("File's size should be less than 1MB");
+    }
+    upload(file);
   };
 
   const handleFilenameSelected = (fileName: string) => {
@@ -112,12 +126,20 @@ export const WirelessDevicesTable = () => {
     startTransferTask(startTransferTaskPayload);
   };
 
+  useEffect(() => {
+    const newItemUploaded = s3List?.find((filename) => filename === lastItemUploaded.current);
+
+    if (newItemUploaded) {
+      handleFilenameSelected(newItemUploaded);
+    }
+  }, [s3List?.length]);
+
   return (
     <>
       <Flex gap="small" wrap="wrap" justify="space-between">
         <h2>Devices</h2>
         <Flex gap="small" align="center">
-          <Upload onChange={handleUpload} showUploadList={false} disabled={isUploading}>
+          <Upload beforeUpload={handleUpload} showUploadList={false} disabled={isUploading} accept=".bin,.hex,.nvm3,.s37">
             <Button loading={isUploading} icon={<UploadOutlined />}>
               {isUploading ? 'Uploading' : 'Upload file'}
             </Button>
@@ -131,7 +153,8 @@ export const WirelessDevicesTable = () => {
             loading={isLoadingFilenames}
             disabled={isLoadingFilenames}
             filterOption={filterOption}
-            options={s3List?.fileNames?.map((filename) => ({ label: filename, value: filename }))}
+            options={s3List?.map((filename) => ({ label: filename, value: filename }))}
+            value={startTransferTaskPayload.fileName}
           />
           <DatePicker
             showTime
@@ -140,6 +163,7 @@ export const WirelessDevicesTable = () => {
             format="YYYY-MM-DD HH:mm:ss"
             disabledDate={disabledDate}
             disabledTime={disabledDateTime}
+            value={startTransferTaskPayload.startTimeUTC ? dayjs(startTransferTaskPayload.startTimeUTC) : undefined}
           />
           <Button
             type="primary"
@@ -162,9 +186,10 @@ export const WirelessDevicesTable = () => {
           selectedRowKeys: startTransferTaskPayload.deviceIds
         }}
         columns={columns}
-        dataSource={devicesList?.wirelesDevices}
+        dataSource={devicesList?.wirelessDevices}
         rowKey={(item) => item.deviceId}
         loading={isLoadingDevices}
+        pagination={{ pageSize: 10 }}
       />
     </>
   );

@@ -12,18 +12,18 @@ interface Props {
 }
 
 const statusMap: { [K in TransferStatusType]: React.ReactNode } = {
-  Cancelled: <GiCancel />,
-  Failed: <BiSolidError />,
-  Complete: <AiOutlineCheckCircle />,
-  Completed: <AiOutlineCheckCircle />,
-  Pending: <PiClock />,
-  Transferring: <BiTransfer />,
-  None: <AiOutlineDash />
+  CANCELLED: <GiCancel />,
+  FAILED: <BiSolidError />,
+  COMPLETE: <AiOutlineCheckCircle />,
+  COMPLETED: <AiOutlineCheckCircle />,
+  PENDING: <PiClock />,
+  TRANSFERRING: <BiTransfer />,
+  NONE: <AiOutlineDash />
 };
 
 export const TransferStatus = ({ type }: Props) => {
   const Icon = statusMap[type] || <></>;
-  const colorClass = styles[`status${type}`];
+  const colorClass = styles[`status-${type.toLowerCase()}`];
 
   return (
     <span className={classNames(styles.container, colorClass)}>

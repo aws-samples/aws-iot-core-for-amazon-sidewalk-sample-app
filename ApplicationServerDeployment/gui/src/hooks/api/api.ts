@@ -1,11 +1,13 @@
 import { useMutation, useQuery, UseMutationOptions } from 'react-query';
 import { apiClient } from '../../apiClient';
 import { ENDPOINTS } from '../../endpoints';
-import { IFilenames, IStartTransferTask, ITransferTasks, IWirelessDevices } from '../../types';
-import { UploadFile } from 'antd/es/upload/interface';
+import { IStartTransferTask, ITransferTasks, IWirelessDevices } from '../../types';
+import { RcFile } from 'antd/es/upload/interface';
 import toast from 'react-hot-toast';
-import { verifyAuth } from '../../utils';
+import { convertToBase64, verifyAuth } from '../../utils';
 import { AxiosError } from 'axios';
+
+type ConfigMutation = Omit<UseMutationOptions<{}, AxiosError, {}, {}>, 'mutationKey' | 'mutationFn'>;
 
 export const useGetWirelessDevices = () =>
   useQuery<IWirelessDevices, AxiosError>(
@@ -22,38 +24,58 @@ export const useGetWirelessDevices = () =>
   );
 
 export const useGetTransferTasks = () =>
-  useQuery<ITransferTasks, AxiosError>(['getTransferTasks'], () => apiClient.get(ENDPOINTS.tasks).then((res) => res.data), {
-    cacheTime: Infinity,
-    onError: (error) => {
-      verifyAuth(error.status!);
-      toast.error('Error fetching Transfer Tasks');
+  useQuery<ITransferTasks, AxiosError>(
+    ['getTransferTasks'],
+    () => apiClient.get(ENDPOINTS.otaTasks).then((res) => res.data),
+    {
+      cacheTime: Infinity,
+      onError: (error) => {
+        verifyAuth(error.status!);
+        toast.error('Error fetching Transfer Tasks');
+      }
     }
-  });
+  );
 
-export const useS3Upload = () =>
-  useMutation(['upload'], (payload: UploadFile) => apiClient.post(ENDPOINTS.upload, payload).then((res) => res.data), {
-    retry: false,
-    onError: (error: AxiosError) => {
-      verifyAuth(error.status!);
-      toast.error('Error while trying to upload a file');
+export const useS3Upload = (config?: ConfigMutation) =>
+  useMutation(
+    ['upload'],
+    async (payload: RcFile) => {
+      const base64 = await convertToBase64(payload);
+      return apiClient
+        .post(ENDPOINTS.upload, {
+          filename: payload.name,
+          file: base64
+        })
+        .then((res) => res.data);
     },
-    onSuccess: () => {
-      toast.success('File Uploaded');
+    {
+      retry: false,
+      onError: (error: AxiosError) => {
+        verifyAuth(error.status!);
+        toast.error('Error while trying to upload a file');
+      },
+      onSuccess: () => {
+        toast.success('File Uploaded');
+      },
+      ...config
     }
-  });
+  );
 
 export const useGetFileNames = () =>
-  useQuery<IFilenames, AxiosError>(['getFilenames'], () => apiClient.get(ENDPOINTS.s3Filenames).then((res) => res.data), {
-    cacheTime: Infinity,
-    onError: (error) => {
-      verifyAuth(error.status!);
-      toast.error('Error getting filenames');
+  useQuery<Array<string>, AxiosError>(
+    ['getFilenames'],
+    () => apiClient.post(ENDPOINTS.s3Filenames).then((res) => res.data),
+    {
+      cacheTime: Infinity,
+      retry: false,
+      onError: (error) => {
+        verifyAuth(error.status!);
+        toast.error('Error getting filenames');
+      }
     }
-  });
+  );
 
-export const useStartTransferTask = (
-  config?: Omit<UseMutationOptions<{}, AxiosError, {}, {}>, 'mutationKey' | 'mutationFn'>
-) =>
+export const useStartTransferTask = (config?: ConfigMutation) =>
   useMutation(
     ['startTrasnferTask'],
     (payload: IStartTransferTask) => apiClient.post(ENDPOINTS.startTransferTasks, payload).then((res) => res.data),

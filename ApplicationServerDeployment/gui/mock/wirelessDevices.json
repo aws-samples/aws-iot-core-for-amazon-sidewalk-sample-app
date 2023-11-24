@@ -1,58 +1,58 @@
 {
-  "wirelesDevices": [
+  "wirelessDevices": [
     {
       "deviceId": "6540562b20d2ed23212f08ad",
-      "transferStatus": "Failed",
+      "transferStatus": "FAILED",
       "statusUpdatedTimeUTC": 1698715357655,
       "transferEndTimeUTC": 1698715355655,
       "transferStartTimeUTC": 1698715255655,
       "fileName": "sunt.png",
       "fileSizeKB": 651,
-      "firmwareUpgradeStatus": "Failed",
+      "firmwareUpgradeStatus": "FAILED",
       "firmwareVersion": "tempor"
     },
     {
       "deviceId": "6540562b9a43699094046e4c",
-      "transferStatus": "Cancelled",
+      "transferStatus": "CANCELLED",
       "statusUpdatedTimeUTC": 1698715357655,
       "transferEndTimeUTC": 1698715355655,
       "transferStartTimeUTC": 1698715255655,
       "fileName": "eu.png",
       "fileSizeKB": 182,
-      "firmwareUpgradeStatus": "Failed",
+      "firmwareUpgradeStatus": "FAILED",
       "firmwareVersion": "occaecat"
     },
     {
       "deviceId": "6540562b0a810cf3a1abcefd",
-      "transferStatus": "Pending",
+      "transferStatus": "PENDING",
       "statusUpdatedTimeUTC": 1698715357655,
       "transferEndTimeUTC": 1698715355655,
       "transferStartTimeUTC": 1698715255655,
       "fileName": "laboris.png",
       "fileSizeKB": 683,
-      "firmwareUpgradeStatus": "None",
+      "firmwareUpgradeStatus": "NONE",
       "firmwareVersion": "proident"
     },
     {
       "deviceId": "6540562bd15c1e6d1bf10979",
-      "transferStatus": "Transferring",
+      "transferStatus": "TRANSFERRING",
       "statusUpdatedTimeUTC": 1698715357655,
       "transferEndTimeUTC": 1698715355655,
       "transferStartTimeUTC": 1698715255655,
       "fileName": "labore.png",
       "fileSizeKB": 656,
-      "firmwareUpgradeStatus": "Completed",
+      "firmwareUpgradeStatus": "COMPLETED",
       "firmwareVersion": "exercitation"
     },
     {
       "deviceId": "6540562b61ea0399b45ae9d0",
-      "transferStatus": "None",
+      "transferStatus": "NONE",
       "statusUpdatedTimeUTC": 1698715357655,
       "transferEndTimeUTC": 1698715355655,
       "transferStartTimeUTC": 1698715255655,
       "fileName": "cupidatat.png",
       "fileSizeKB": 577,
-      "firmwareUpgradeStatus": "None",
+      "firmwareUpgradeStatus": "NONE",
       "firmwareVersion": "labore"
     }
   ]
