@@ -13,12 +13,6 @@ from typing import Final
 
 OTA_S3_BUCKET_NAME: Final = os.environ.get('OTA_S3_BUCKET_NAME')
 
-from device_transfers_handler import DeviceTransfersHandler
-from transfer_tasks_handler import TransferTasksHandler
-
-device_transfers_handler: Final = DeviceTransfersHandler()
-transfer_tasks_handler: Final = TransferTasksHandler()
-
 def get_all_filenames(bucket_name):
     s3 = boto3.client('s3')
     response = s3.list_objects_v2(Bucket=bucket_name)
