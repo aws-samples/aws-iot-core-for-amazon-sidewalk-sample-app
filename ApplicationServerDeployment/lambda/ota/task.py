@@ -1,6 +1,7 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
+from decimal import Decimal
 from typing import final, List
 
 
@@ -10,9 +11,9 @@ class TransferTask(object):
     A class that represents the TransferTask table record.
     """
 
-    def __init__(self, taskId, task_status: str = None, creation_time_UTC: int = None, task_start_time_UTC: int = None, task_end_time_UTC: int = None,
-                 file_name: str = None, file_size_kb: int = None, origination: str = None, deviceIds: List[str] = None):
-        self._task_id = taskId
+    def __init__(self, task_id, task_status: str = None, creation_time_UTC: int = None, task_start_time_UTC: int = None, task_end_time_UTC: int = None,
+                 file_name: str = None, file_size_kb: int = None, origination: str = None, device_ids: List[str] = None):
+        self._task_id = task_id
         self._task_status = task_status
         self._creation_time_UTC = creation_time_UTC
         self._task_start_time_UTC = task_start_time_UTC
@@ -20,7 +21,7 @@ class TransferTask(object):
         self._file_name = file_name
         self._file_size_kb = file_size_kb
         self._origination = origination
-        self._deviceIds = deviceIds
+        self._device_ids = device_ids
 
     def get_task_id(self) -> str:
         return str(self._task_id)
@@ -40,14 +41,14 @@ class TransferTask(object):
     def get_file_name(self) -> str:
         return str(self._file_name)
 
-    def get_file_size_kb(self) -> int:
-        return int(self._file_size_kb)
+    def get_file_size_kb(self) -> Decimal:
+        return Decimal(self._file_size_kb)
 
     def get_origination(self) -> str:
         return str(self._origination)
 
-    def get_deviceIds(self) -> List[str]:
-        return [str(device_id) for device_id in self._deviceIds]
+    def get_device_ids(self) -> List[str]:
+        return [str(device_id) for device_id in self._device_ids]
 
 
     def to_dict(self) -> dict:
@@ -65,5 +66,5 @@ class TransferTask(object):
             'file_name': self._file_name,
             'file_size_kb': self._file_size_kb,
             'origination': self._origination,
-            'deviceIds': self._deviceIds
+            'device_ids': self._device_ids
         }

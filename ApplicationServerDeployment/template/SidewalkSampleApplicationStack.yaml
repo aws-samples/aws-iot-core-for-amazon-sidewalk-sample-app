@@ -88,14 +88,14 @@ Resources:
     Properties:
       BillingMode: PROVISIONED
       AttributeDefinitions:
-        - AttributeName: deviceId
+        - AttributeName: device_id
           AttributeType: "S"
-        - AttributeName: taskId
+        - AttributeName: task_id
           AttributeType: "S"
       KeySchema:
-        - AttributeName: deviceId
+        - AttributeName: device_id
           KeyType: HASH
-        - AttributeName: taskId
+        - AttributeName: task_id
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 2
@@ -108,10 +108,10 @@ Resources:
     Properties:
       BillingMode: PROVISIONED
       AttributeDefinitions:
-        - AttributeName: taskId
+        - AttributeName: task_id
           AttributeType: "S"
       KeySchema:
-        - AttributeName: taskId
+        - AttributeName: task_id
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 2
@@ -385,6 +385,25 @@ Resources:
                 Action:
                   - 'iam:PassRole'
                 Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/${SidewalkOTAFuotaS3Role}
+        - PolicyName: SidewalkOTAStartTransferDdbAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
+                Resource:
+                  - !GetAtt DeviceTransfers.Arn
+                  - !GetAtt TransferTasks.Arn
         - PolicyName: SidewalkOTAStartTransferIoTAccess
           PolicyDocument:
             Version: '2012-10-17'
