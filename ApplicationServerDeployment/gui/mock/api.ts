@@ -22,7 +22,7 @@ export default [
   },
   {
     url: '/api/otaCancel',
-    method: 'delete',
+    method: 'post',
     response: () => undefined
   },
   {

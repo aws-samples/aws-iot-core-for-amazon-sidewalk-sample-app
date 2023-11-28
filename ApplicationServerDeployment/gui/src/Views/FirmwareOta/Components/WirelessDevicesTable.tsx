@@ -1,15 +1,15 @@
-import { DatePicker, DatePickerProps, Select, Table, Upload } from 'antd';
+import { DatePicker, Select, Table, Upload, Button, Flex, DatePickerProps } from 'antd';
 import { IStartTransferTask, IWirelessDevice, TransferStatusType } from '../../../types';
 import { ColumnsType } from 'antd/es/table';
 import { useGetFileNames, useGetWirelessDevices, useS3Upload, useStartTransferTask } from '../../../hooks/api/api';
 import { UploadOutlined } from '@ant-design/icons';
 import { TransferStatus } from '../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
-import { Button, Flex } from 'antd';
-import { RcFile } from 'antd/es/upload';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { getDurationString, getFileSize } from '../../../utils';
+import { RcFile } from 'antd/es/upload/interface';
 
 export const WirelessDevicesTable = () => {
   const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
@@ -55,9 +55,14 @@ export const WirelessDevicesTable = () => {
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
-      title: 'Transfer End Time UTC',
-      dataIndex: 'transferEndTimeUTC',
+      title: 'Start Time UTC',
+      dataIndex: 'transferStartTimeUTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
+    },
+    {
+      title: 'Duration',
+      render: (_value: number, record: IWirelessDevice) =>
+        getDurationString({ start: record.transferStartTimeUTC, end: record.transferEndTimeUTC })
     },
     {
       title: 'Filename',
@@ -65,7 +70,8 @@ export const WirelessDevicesTable = () => {
     },
     {
       title: 'Size',
-      dataIndex: 'fileSizeKB'
+      dataIndex: 'fileSizeKB',
+      render: (value: number) => getFileSize(value)
     },
     {
       title: 'Firmware Upgrade Status',

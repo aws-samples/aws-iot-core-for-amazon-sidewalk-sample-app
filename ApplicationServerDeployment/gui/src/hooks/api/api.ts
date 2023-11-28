@@ -1,7 +1,7 @@
 import { useMutation, useQuery, UseMutationOptions } from 'react-query';
 import { apiClient } from '../../apiClient';
 import { ENDPOINTS } from '../../endpoints';
-import { IStartTransferTask, ITransferTasks, IWirelessDevices } from '../../types';
+import { ICancelTask, IStartTransferTask, ITransferTasks, IWirelessDevices } from '../../types';
 import { RcFile } from 'antd/es/upload/interface';
 import toast from 'react-hot-toast';
 import { convertToBase64, verifyAuth } from '../../utils';
@@ -83,6 +83,19 @@ export const useStartTransferTask = (config?: ConfigMutation) =>
       onError: (error: AxiosError) => {
         verifyAuth(error.status!);
         toast.error('Error while trying to start a transfer task');
+      },
+      ...config
+    }
+  );
+
+  export const useCancelTask = (config?: ConfigMutation) =>
+  useMutation(
+    ['cancelTask'],
+    (payload: ICancelTask) => apiClient.post(ENDPOINTS.cancelTransferTasks, payload).then((res) => res.data),
+    {
+      onError: (error: AxiosError) => {
+        verifyAuth(error.status!);
+        toast.error('Error while trying to cancel a transfer task');
       },
       ...config
     }

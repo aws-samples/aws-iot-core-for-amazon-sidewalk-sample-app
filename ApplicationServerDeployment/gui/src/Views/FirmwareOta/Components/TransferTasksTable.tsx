@@ -1,14 +1,28 @@
-import { Collapse, Table } from 'antd';
+import { Collapse, Table, Button, Flex } from 'antd';
 import { ITransferTask, TransferStatusType } from '../../../types';
-import { ColumnsType } from 'antd/es/table';
-import { useGetTransferTasks } from '../../../hooks/api/api';
+import { useCancelTask, useGetTransferTasks } from '../../../hooks/api/api';
 import { TransferStatus } from '../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
-import { Button, Flex } from 'antd';
 import { CaretRightOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { getDurationString, getFileSize } from '../../../utils';
+import { ColumnsType } from 'antd/es/table/interface';
 
 export const TranserTasksTable = () => {
-  const { data, isLoading } = useGetTransferTasks();
+  const {
+    data: transferTaskList,
+    isLoading: loadingTransferTasksList,
+    refetch: refetchTransferTasks
+  } = useGetTransferTasks();
+  const { mutate: cancelTask, isLoading: cancelingTask } = useCancelTask({
+    onSuccess: () => {
+      toast.success('Tasks cancelled');
+      setTasksSelected([]);
+      refetchTransferTasks();
+    }
+  });
+  const [tasksSelected, setTasksSelected] = useState([] as Array<string>);
 
   const columns: ColumnsType<ITransferTask> = [
     {
@@ -26,12 +40,14 @@ export const TranserTasksTable = () => {
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
-      title: 'Transfer End Time UTC',
-      dataIndex: 'taskEndTimeUTC',
+      title: 'Start Time UTC',
+      dataIndex: 'taskStartTimeUTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
-      title: 'Duration'
+      title: 'Duration',
+      render: (_value: number, record: ITransferTask) =>
+        getDurationString({ start: record.taskStartTimeUTC, end: record.taskEndTimeUTC })
     },
     {
       title: 'Filename',
@@ -39,7 +55,8 @@ export const TranserTasksTable = () => {
     },
     {
       title: 'File Size',
-      dataIndex: 'fileSizeKB'
+      dataIndex: 'fileSizeKB',
+      render: (value: number) => getFileSize(value)
     },
     {
       title: 'Origination',
@@ -78,30 +95,44 @@ export const TranserTasksTable = () => {
     }
   ];
 
+  const handleCancelTaskButtonClick = () => {
+    cancelTask({ taskIds: tasksSelected });
+  };
+
+  const handleTasksSelected = (selectedRowKeys: React.Key[]) => {
+    setTasksSelected(selectedRowKeys as Array<string>);
+  };
+
   return (
     <>
       <Flex gap="small" wrap="wrap" justify="space-between">
         <h2>Tasks</h2>
         <Flex gap="small" align="center">
-          <Button type="primary" size="middle" disabled={data?.transferTasks.length === 0}>
-            Cancel Task
+          <Button
+            type="primary"
+            size="middle"
+            disabled={cancelingTask || transferTaskList?.transferTasks.length === 0 || tasksSelected.length === 0}
+            onClick={handleCancelTaskButtonClick}
+            loading={cancelingTask}
+          >
+            {cancelingTask ? 'Cancelling task' : 'Cancel Task'}
           </Button>
         </Flex>
       </Flex>
       <Table
         locale={{
-          emptyText: (<div className='m-3 black'>No Tasks Created - Start a Firmware Update!</div>)
+          emptyText: <div className="m-3 black">No Tasks Created - Start a Firmware Update!</div>
         }}
         rowSelection={{
           type: 'checkbox',
-          onChange: (selectedRowKeys: React.Key[], selectedRows: ITransferTask[]) => {
-            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-          }
+          onChange: handleTasksSelected,
+          selectedRowKeys: tasksSelected
         }}
         columns={columns}
-        dataSource={data?.transferTasks}
+        dataSource={transferTaskList?.transferTasks}
         rowKey={(item) => item.taskId}
-        loading={isLoading}
+        loading={loadingTransferTasksList}
+        pagination={{ pageSize: 10 }}
       />
     </>
   );

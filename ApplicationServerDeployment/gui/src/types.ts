@@ -42,11 +42,12 @@ export interface ITransferTask {
   taskId: string;
   taskStatus: TransferStatusType;
   creationTimeUTC: number;
+  taskStartTimeUTC: number;
   taskEndTimeUTC: number;
   fileName: string;
   fileSizeKB: number;
   origination: string;
-  deviceIds: ['String'];
+  deviceIds: Array<string>;
 }
 
 export interface ITransferTasks {
@@ -61,4 +62,8 @@ export interface IStartTransferTask {
   fileName: string;
   startTimeUTC?: number;
   deviceIds: Array<string>;
+}
+
+export interface ICancelTask {
+  taskIds: Array<string>;
 }
