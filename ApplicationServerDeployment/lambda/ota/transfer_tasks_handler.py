@@ -93,7 +93,7 @@ class TransferTasksHandler:
                     'file_name': transferTask.get_file_name(),
                     'file_size_kb': transferTask.get_file_size_kb(),
                     'origination': transferTask.get_origination(),
-                    'deviceIds': transferTask.get_deviceIds()
+                    'deviceIds': transferTask.get_device_ids()
                 },
                 ReturnValues="ALL_OLD"
             )

@@ -88,14 +88,14 @@ Resources:
     Properties:
       BillingMode: PROVISIONED
       AttributeDefinitions:
-        - AttributeName: deviceId
+        - AttributeName: device_id
           AttributeType: "S"
-        - AttributeName: taskId
+        - AttributeName: task_id
           AttributeType: "S"
       KeySchema:
-        - AttributeName: deviceId
+        - AttributeName: device_id
           KeyType: HASH
-        - AttributeName: taskId
+        - AttributeName: task_id
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 2
@@ -108,10 +108,10 @@ Resources:
     Properties:
       BillingMode: PROVISIONED
       AttributeDefinitions:
-        - AttributeName: taskId
+        - AttributeName: task_id
           AttributeType: "S"
       KeySchema:
-        - AttributeName: taskId
+        - AttributeName: task_id
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 2
@@ -371,6 +371,47 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTAStartTransferLambdaS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/${SidewalkOTAFuotaS3Role}
+        - PolicyName: SidewalkOTAStartTransferDdbAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
+                Resource:
+                  - !GetAtt DeviceTransfers.Arn
+                  - !GetAtt TransferTasks.Arn
+        - PolicyName: SidewalkOTAStartTransferIoTAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'iotwireless:CreateFuotaTask'
+                Resource: !Sub 'arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:FuotaTask/*'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
@@ -431,6 +472,19 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTAStartTransferLambdaS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                  - 's3:PutObjectAcl'
+                  - 's3:GetObjectAcl'
+                Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
+
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
@@ -451,8 +505,53 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTAStartTransferLambdaS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                  - 's3:PutObjectAcl'
+                  - 's3:GetObjectAcl'
+                Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                Resource: !GetAtt SidewalkOTASourceBucket.Arn
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    DeletionPolicy: Delete
+
+  # Role which IoT Wireless service assumes to create to get the file from s3.
+  SidewalkOTAFuotaS3Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkOTAFuotaS3Role
+      Description: Allows IoT Wireless to access the OTA S3
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - iotwireless.amazonaws.com
+                - iotwireless.aws.internal
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTAFuotaS3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:ListBucketVersions'
+                  - 's3:ListBucket'
+                Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
     DeletionPolicy: Delete
 
   # SidewalkUplinkLambda function. Handles uplink messages
@@ -501,6 +600,7 @@ Resources:
     Type: AWS::Lambda::Function
     DependsOn:
       - SidewalkOTAStartTransferLambdaExecutionRole
+      - SidewalkOTAFuotaS3Role
       - CloudFrontDistribution
     Properties:
       FunctionName: SidewalkOTAStartTransferLambda
@@ -520,6 +620,8 @@ Resources:
               - ''
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
+          OTA_S3_BUCKET_NAME: !Ref SidewalkOTASourceBucket
+          S3_FUOTA_ROLE_ARN: !Sub arn:aws:iam::${AWS::AccountId}:role/${SidewalkOTAFuotaS3Role}
 
   # SidewalkOTAUploadFileLambda function.
   SidewalkOTAUploadFileLambda:
@@ -545,6 +647,7 @@ Resources:
               - ''
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
+          OTA_S3_BUCKET_NAME: !Ref SidewalkOTASourceBucket
 
   # SidewalkOTACancelTransferLambda function.
   SidewalkOTACancelTransferLambda:
@@ -620,6 +723,7 @@ Resources:
               - ''
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
+          OTA_S3_BUCKET_NAME: !Ref SidewalkOTASourceBucket
 
   # SidewalkDbHandlerLambda function. Handles read requests to databases
   SidewalkDbHandlerLambda:
@@ -1203,7 +1307,7 @@ Resources:
     Properties:
       AuthorizationType: CUSTOM
       AuthorizerId: !Ref SidewalkTokenAuthorizer
-      HttpMethod: POST
+      HttpMethod: GET
       Integration:
         IntegrationHttpMethod: POST
         Type: AWS_PROXY
@@ -1332,7 +1436,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: SidewalkOTAGetS3FilesLambda
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaGetS3
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/otaGetS3
 
   # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
   SidewalkOTAUploadFileLambdaPermissionsForApiGateway:
@@ -1627,6 +1731,54 @@ Resources:
                     - - !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution
                       - !Ref CloudFrontDistribution
 
+
+  # S3 bucket for uploading the OTA firmware update files
+  SidewalkOTASourceBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      # BucketName consists of 'sidewalk-ota-src-' prefix and 32 chars-long GUID taken from the StackId
+      BucketName: !Join
+        - '-'
+        - - sidewalk-ota-src
+          - !Select [2, !Split [/, !Ref AWS::StackId ]]
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: TRUE
+        BlockPublicPolicy: TRUE
+        IgnorePublicAcls: TRUE
+        RestrictPublicBuckets: TRUE
+    DeletionPolicy: Delete
+
+  # Bucket policy to allow communication with cloudFront
+  S3SidewalkOTASourceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DependsOn:
+      - SidewalkOTASourceBucket
+      - CloudFrontDistribution
+    Properties:
+      Bucket:
+        Ref: SidewalkOTASourceBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ''
+                - - !GetAtt SidewalkOTASourceBucket.Arn
+                  - /*
+            Principal:
+              Service:
+                cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceArn:
+                  Fn::Join:
+                    - '/'
+                    - - !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution
+                      - !Ref CloudFrontDistribution
 
   # ------------------------------
   # Cloud Front related resources

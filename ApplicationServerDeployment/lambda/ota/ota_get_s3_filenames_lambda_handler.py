@@ -2,27 +2,16 @@
 # SPDX-License-Identifier: MIT-0
 
 """
-Handles uplinks coming from the Sidewalk Sensor Monitoring Demo Application.
+Handles that fetches all the files present in OTA S3 bucket.
 """
 
-import base64
+import os
 import boto3
 import json
 import traceback
-from datetime import datetime, timezone
 from typing import Final
 
-import time_utils
-from device import Device
-from measurement import Measurement
-
-OTA_S3_BUCKET_NAME: Final = "sidewalk-ota-src"
-
-from device_transfers_handler import DeviceTransfersHandler
-from transfer_tasks_handler import TransferTasksHandler
-
-device_transfers_handler: Final = DeviceTransfersHandler()
-transfer_tasks_handler: Final = TransferTasksHandler()
+OTA_S3_BUCKET_NAME: Final = os.environ.get('OTA_S3_BUCKET_NAME')
 
 def get_all_filenames(bucket_name):
     s3 = boto3.client('s3')
@@ -42,8 +31,7 @@ def lambda_handler(event, context):
     try:
         # ---------------------------------------------------------------
         # Receive and record incoming event in the CloudWatch log group.
-        # Read its metadata.
-        # Decode payload data.
+        # Get the files names from s3 bucket
         # ---------------------------------------------------------------
         print(f'Received event: {event}')
         filenames = get_all_filenames(OTA_S3_BUCKET_NAME)
