@@ -3,6 +3,7 @@ import App from "./App";
 import { Login } from "./Views/Login/Login";
 import { SensorMonitoring } from "./Views/SensorMonitoring/SensorMonitoring";
 import { FirmwareOta } from "./Views/FirmwareOta/FirmwareOta";
+import { withAuthProvider } from "./utils";
 
 export enum Routes {
   auth = "/auth",
@@ -13,7 +14,7 @@ export enum Routes {
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: withAuthProvider(<App />),
     ErrorBoundary: () => <div>There was an error</div>,
     children: [
       {

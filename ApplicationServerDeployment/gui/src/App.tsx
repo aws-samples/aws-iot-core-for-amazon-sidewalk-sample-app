@@ -3,12 +3,12 @@
 
 import { Header } from './components/Header/Header';
 import { Suspense, useEffect, useState } from 'react';
-import './App.css';
 import { Spinner } from './components/Spinner/Spinner';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { Routes } from './routes';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import './App.css';
 
 const queryClient = new QueryClient();
 

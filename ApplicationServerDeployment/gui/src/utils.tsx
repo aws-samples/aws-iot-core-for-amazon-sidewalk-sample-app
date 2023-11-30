@@ -4,6 +4,8 @@
 import { RcFile } from 'antd/es/upload';
 import { ACCESS_TOKEN, UNAUTHORIZE } from './constants';
 import { formatDuration, intervalToDuration } from 'date-fns';
+import { ProvideAuth } from './hooks/useAuth';
+import { ReactNode } from 'react';
 
 export const verifyAuth = (statusCode: number) => {
   if (statusCode === 401 || statusCode === 403) {
@@ -54,3 +56,5 @@ export const getDurationString = ({ start, end }: { start: number | Date; end: n
   const durationAsString = formatDuration(duration);
   return <>{durationAsString}</>;
 };
+
+export const withAuthProvider = (Component: ReactNode) => <ProvideAuth>{Component}</ProvideAuth>;
