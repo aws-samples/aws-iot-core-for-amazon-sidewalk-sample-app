@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     """
     credentials = os.environ['CREDENTIALS']
     headers = event.get("headers")
-    username = headers.get("username")
+    username = headers.get("username") or headers.get("Username")
     expected_username = base64.b64decode(credentials).decode().split(":")[0]
     if expected_username != username:
         return generate_policy("user", "Deny", event.get("methodArn"))
