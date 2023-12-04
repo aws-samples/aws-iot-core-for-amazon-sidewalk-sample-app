@@ -392,6 +392,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
                   - dynamodb:UpdateTimeToLive
                   - dynamodb:PutItem
                   - dynamodb:DescribeTable
@@ -432,6 +433,35 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTACancelTransferIoTAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'iotwireless:DeleteFuotaTask'
+                Resource: !Sub 'arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:FuotaTask/*'
+        - PolicyName: SidewalkOTAStartCancelDdbAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
+                Resource:
+                  - !GetAtt DeviceTransfers.Arn
+                  - !GetAtt TransferTasks.Arn
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
