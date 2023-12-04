@@ -25,7 +25,9 @@ DEMO_APP_ACTION_NOTIFICATION: Final = "DEMO_APP_ACTION_NOTIFICATION"
 
 from measurements_handler import MeasurementsHandler
 from sidewalk_devices_handler import SidewalkDevicesHandler
+from ota_notifications_handler import OTANotificationsHandler
 
+ota_notifications_handler: Final = OTANotificationsHandler()
 device_handler: Final = SidewalkDevicesHandler()
 measurement_handler: Final = MeasurementsHandler()
 
@@ -71,10 +73,17 @@ def lambda_handler(event, context):
 
         notification = event.get("notification")
         if notification is not None:
-            return {
-                'statusCode': 200,
-                'body': json.dumps('Notification received')
-            }
+            try:
+                ota_notifications_handler.save_fuota_task_notifications(notification)
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps('Notification received')
+                }
+            except json.JSONDecodeError as e:
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps('Invalid JSON format in the notification field.')
+                }
 
         uplink = event.get("uplink")
         if uplink is None:
@@ -131,7 +140,7 @@ def lambda_handler(event, context):
                             link_type=link_type,
                             sensor=sensor, sensor_unit=sensor_units)
             device_handler.add_device(device)
-
+            #call save_device_transfer_notifications
             response_body = send_payload_to_downlink_lambda(DEMO_APP_CAP_DISCOVERY_RESP, wireless_device_id)
             return {
                 'statusCode': 200,

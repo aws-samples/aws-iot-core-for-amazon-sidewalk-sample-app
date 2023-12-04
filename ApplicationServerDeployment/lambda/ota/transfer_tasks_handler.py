@@ -105,3 +105,50 @@ class TransferTasksHandler:
         else:
             return transferTask
 
+
+    def update_transfer_task_start_details(self, transfer_task: TransferTask):
+        """
+        Updates deviceTransfer object in the DeviceTransfers table.
+
+        param deviceTransfer: Updated DeviceTransfer object.
+        """
+        try:
+            self._table.update_item(
+                Key={
+                    'task_id': transfer_task.get_task_id()
+                },
+                UpdateExpression="SET task_status = :status ,"
+                                 "task_start_time_UTC = :start_time ",
+                ExpressionAttributeValues={
+                    ':status': transfer_task.get_transfer_status(),
+                    ':start_time': transfer_task.get_task_start_time_UTC(),
+                    ':end_time': transfer_task.get_task_end_time_UTC()
+                },
+                ReturnValues="ALL_NEW"  # You can adjust the return values as needed
+            )
+        except Exception as e:
+            # Handle the exception according to your requirements
+            print(f"Error updating item: {e}")
+
+    def update_transfer_task_finish_details(self, transfer_task: TransferTask):
+        """
+        Updates deviceTransfer object in the DeviceTransfers table.
+
+        param deviceTransfer: Updated DeviceTransfer object.
+        """
+        try:
+            self._table.update_item(
+                Key={
+                    'task_id': transfer_task.get_task_id()
+                },
+                UpdateExpression="SET transfer_status = :status, "
+                                 "task_end_time_UTC = :end_time ",
+                ExpressionAttributeValues={
+                    ':status': transfer_task.get_transfer_status(),
+                    ':end_time': transfer_task.get_task_end_time_UTC()
+                },
+                ReturnValues="ALL_NEW"  # You can adjust the return values as needed
+            )
+        except Exception as e:
+            # Handle the exception according to your requirements
+            print(f"Error updating item: {e}")
