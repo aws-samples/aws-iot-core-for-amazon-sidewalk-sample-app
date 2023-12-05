@@ -34,13 +34,14 @@ class Command:
         payload: [Tag]
             List of Tag objects.
     """
+
     def __init__(self):
-        self.status_hdr_ind = ''
-        self.op_code = ''
-        self.cls = ''
-        self.id = ''
-        self.status_code = ''
-        self.raw_payload = ''
+        self.status_hdr_ind = ""
+        self.op_code = ""
+        self.cls = ""
+        self.id = ""
+        self.status_code = ""
+        self.raw_payload = ""
         self.payload = []
         self.decoded_cmd = {}
 
@@ -54,15 +55,16 @@ class Command:
         raw_cmd = Command.hex_to_bin(byte_stream)
 
         # decode binary stream
-        status_hdr_ind_bool = True if raw_cmd[0] == '1' else False
+        status_hdr_ind_bool = True if raw_cmd[0] == "1" else False
         self.status_hdr_ind = raw_cmd[0]
-        self.op_code = raw_cmd[1:2 + 1]
-        self.cls = raw_cmd[3:4 + 1]
-        self.id = bin((int(raw_cmd[5:7 + 1], 2) << 2) | int(self.op_code, 2))[2:]
+        self.op_code = raw_cmd[1: 2 + 1]
+        self.cls = raw_cmd[3: 4 + 1]
+        self.id = bin((int(raw_cmd[5: 7 + 1], 2) << 2)
+                      | int(self.op_code, 2))[2:]
         padding = 3 - len(self.id)
         if padding:
-            self.id = padding * '0' + self.id
-        self.status_code = raw_cmd[8:16] if status_hdr_ind_bool else ''
+            self.id = padding * "0" + self.id
+        self.status_code = raw_cmd[8:16] if status_hdr_ind_bool else ""
         self.raw_payload = raw_cmd[16:] if status_hdr_ind_bool else raw_cmd[8:]
         self.payload = []
         try:
@@ -75,11 +77,19 @@ class Command:
 
         # create human-readable dict
         self.decoded_cmd = self.combine_tags(self.payload)
-        self.decoded_cmd['id'] = Id(self.id).name
+        self.decoded_cmd["id"] = Id(self.id).name
 
         return self
 
-    def encode(self, status_hdr_ind: bool, op_code: OpCode, cls: Class, id: Id, status_code: str = '', payload: [Tag] = None):
+    def encode(
+        self,
+        status_hdr_ind: bool,
+        op_code: OpCode,
+        cls: Class,
+        id: Id,
+        status_code: str = "",
+        payload: [Tag] = None,
+    ):
         """
         Encodes arguments into byte_stream.
 
@@ -91,16 +101,16 @@ class Command:
         :param payload:         List of Tag objects.
         :return:                Command object.
         """
-        self.status_hdr_ind = '1' if status_hdr_ind else '0'
+        self.status_hdr_ind = "1" if status_hdr_ind else "0"
         self.op_code = op_code.value
         self.cls = cls.value
         self.id = id.value
         self.status_code = status_code
         payload = payload or []
         self.payload = payload
-        self.raw_payload = ''.join([tag.bin_repr() for tag in payload])
+        self.raw_payload = "".join([tag.bin_repr() for tag in payload])
         self.decoded_cmd = self.combine_tags(self.payload)
-        self.decoded_cmd['id'] = Id(self.id).name
+        self.decoded_cmd["id"] = Id(self.id).name
 
         return self
 
@@ -110,10 +120,18 @@ class Command:
         :param separate_bytes:  If true, inserts space, which separates bytes.
         :return:                Binary string.
         """
-        cmd_id = '' if self.id == '' else IdToCmdIdValueMap[Id(self.id)]
-        bin_str = self.status_hdr_ind + self.op_code + self.cls + cmd_id + self.status_code + self.raw_payload
+        cmd_id = "" if self.id == "" else IdToCmdIdValueMap[Id(self.id)]
+        bin_str = (
+            self.status_hdr_ind
+            + self.op_code
+            + self.cls
+            + cmd_id
+            + self.status_code
+            + self.raw_payload
+        )
         if separate_bytes:
-            bin_str = ' '.join(bin_str[i:i + 8] for i in range(0, len(bin_str), 8))
+            bin_str = " ".join(bin_str[i: i + 8]
+                               for i in range(0, len(bin_str), 8))
         return bin_str
 
     def hex_repr(self):
@@ -124,7 +142,7 @@ class Command:
         try:
             return Command.bin_to_hex(self.bin_repr()).upper()
         except ValueError:
-            return ''
+            return ""
 
     def json_repr(self):
         """
@@ -135,18 +153,18 @@ class Command:
 
     def __repr__(self):
         bin_str = self.bin_repr()
-        return f'Command(\'{Command.bin_to_hex(bin_str)}\')'
+        return f"Command('{Command.bin_to_hex(bin_str)}')"
 
     def __str__(self):
         payload = [(tag.dict_repr()) for tag in self.payload]
         command = {
-            'status_hdr_indicator': True if self.status_hdr_ind == '1' else False,
-            'op-code': OpCode(self.op_code).name,
-            'class': Class(self.cls).name,
-            'id': Id(self.id).name,
-            'status_code': self.status_code,
-            'payload': payload,
-            'decoded': self.decoded_cmd
+            "status_hdr_indicator": True if self.status_hdr_ind == "1" else False,
+            "op-code": OpCode(self.op_code).name,
+            "class": Class(self.cls).name,
+            "id": Id(self.id).name,
+            "status_code": self.status_code,
+            "payload": payload,
+            "decoded": self.decoded_cmd,
         }
         return json.dumps(command)
 
@@ -159,7 +177,7 @@ class Command:
         """
         bin_str = bin(int(hex_str, 16))[2:]
         padding = (4 - (len(bin_str) % 4)) % 4
-        return '0' * padding + bin_str
+        return "0" * padding + bin_str
 
     @staticmethod
     def bin_to_hex(bin_str: str) -> str:
@@ -179,18 +197,18 @@ class Command:
         """
         exhausted = False
         while not exhausted:
-            format = bin_payload[0:1 + 1]
-            type = bin_payload[2:7 + 1]
+            format = bin_payload[0: 1 + 1]
+            type = bin_payload[2: 7 + 1]
             frmt = TlvFormat(format)
 
             if frmt == TlvFormat.STANDARD:
                 # 11 (STANDARD) | 6b key | 1B len | val
-                val_len = bin_payload[8:15 + 1]
+                val_len = bin_payload[8: 15 + 1]
                 length = int(val_len, 2)
                 val_start_idx = 16
             else:
                 # __ (SIZE_OPTIMIZED) | 6b key | val
-                val_len = ''
+                val_len = ""
                 if frmt == TlvFormat.SIZE_OPTIMIZED_4B:
                     length = 4
                 else:
