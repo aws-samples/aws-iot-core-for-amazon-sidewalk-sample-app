@@ -519,7 +519,41 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
 
-  # Token authenticator Lambda's execution role with basic lambda permissions.
+  SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole
+      Description: Allows SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole to call AWS services
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SidewalkOTAStartTransferLambdaS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                  - 's3:PutObjectAcl'
+                  - 's3:GetObjectAcl'
+                Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                Resource: !GetAtt SidewalkOTASourceBucket.Arn
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    DeletionPolicy: Delete
+
   SidewalkOTAGetS3FilesLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -805,6 +839,31 @@ Resources:
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
 
+  # SidewalkOTADbHandlerLambda function. Handles read requests to databases
+  SidewalkOTASetCurrentFirmwareHandlerLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole
+      - CloudFrontDistribution
+    Properties:
+      FunctionName: SidewalkOTASetCurrentFirmwareHandlerLambda
+      Description: Selects firmware file for device initiated OTA
+      Handler: ota_set_current_firmware_lambda_handler.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 3
+      PackageType: Zip
+      Code:
+        ZipFile: "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+
   # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
   SidewalkTokenGeneratorLambda:
     Type: AWS::Lambda::Function
@@ -942,6 +1001,16 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/aws/lambda/${SidewalkOTAGetS3FilesLambda}'
+      RetentionInDays: 7
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Log group for storing SidewalkOTAGetS3FilesLambda logs
+  SidewalkOTASetCurrentFirmwareHandlerLambdaLogGroup:
+    DependsOn: SidewalkOTASetCurrentFirmwareHandlerLambda
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTASetCurrentFirmwareHandlerLambdaLogGroup}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -1355,6 +1424,39 @@ Resources:
       ResourceId: !Ref OtaGetS3FilesResource
       RestApiId: !Ref SidewalkApiGateway
 
+  OtaSetCurrentFirmwareResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiResource.ResourceId
+      RestApiId: !Ref SidewalkApiGateway
+      PathPart: otaSetCurrentFirmware
+
+  OtaSetCurrentFirmwareMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn:
+      - SidewalkTokenAuthorizer
+    Properties:
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref SidewalkTokenAuthorizer
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        IntegrationResponses:
+          - StatusCode: 200
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt SidewalkOTASetCurrentFirmwareHandlerLambda.Arn
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: false
+      ResourceId: !Ref OtaSetCurrentFirmwareResource
+      RestApiId: !Ref SidewalkApiGateway
+
+
   # API Gateway jwt authorizer
   SidewalkTokenAuthorizer:
     Type: AWS::ApiGateway::Authorizer
@@ -1467,6 +1569,17 @@ Resources:
       FunctionName: SidewalkOTAGetS3FilesLambda
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/otaGetS3
+
+  # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
+  SidewalkOTASetCurrentFirmwareHandlerLambdaPermissionsForApiGateway:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - SidewalkOTASetCurrentFirmwareHandlerLambda
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: SidewalkOTASetCurrentFirmwareHandlerLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/otaSetCurrentFirmware
 
   # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
   SidewalkOTAUploadFileLambdaPermissionsForApiGateway:
