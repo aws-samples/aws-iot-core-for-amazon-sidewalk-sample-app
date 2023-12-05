@@ -1,0 +1,12 @@
+{
+  "deviceId": "6540562b9a43699094046e4c",
+  "transferStatus": "TRANSFERRING",
+  "statusUpdatedTimeUTC": 1698715357655,
+  "transferEndTimeUTC": null,
+  "transferStartTimeUTC": 1701487625960,
+  "transferProgress": 19,
+  "fileName": "sunt.png",
+  "fileSizeKB": 651,
+  "firmwareUpgradeStatus": "FAILED",
+  "firmwareVersion": "tempor"
+}

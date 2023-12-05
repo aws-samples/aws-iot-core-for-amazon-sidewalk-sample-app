@@ -1,7 +1,7 @@
-import { useMutation, useQuery, UseMutationOptions } from 'react-query';
+import { useMutation, useQuery, UseMutationOptions, QueryFunctionContext, QueryFunction } from 'react-query';
 import { apiClient } from '../../apiClient';
 import { ENDPOINTS } from '../../endpoints';
-import { ICancelTask, IStartTransferTask, ITransferTasks, IWirelessDevices } from '../../types';
+import { ICancelTask, IStartTransferTask, ITransferTasks, IWirelessDevice, IWirelessDevices } from '../../types';
 import { RcFile } from 'antd/es/upload/interface';
 import toast from 'react-hot-toast';
 import { convertToBase64, verifyAuth } from '../../utils';
@@ -15,6 +15,7 @@ export const useGetWirelessDevices = () =>
     () => apiClient.get(ENDPOINTS.otaDevices).then((res) => res.data),
     {
       cacheTime: Infinity,
+      refetchOnWindowFocus: false,
       onError: (error) => {
         console.log('error fetching', error);
         verifyAuth(error.status!);
@@ -29,6 +30,7 @@ export const useGetTransferTasks = () =>
     () => apiClient.get(ENDPOINTS.otaTasks).then((res) => res.data),
     {
       cacheTime: Infinity,
+      refetchOnWindowFocus: false,
       onError: (error) => {
         verifyAuth(error.status!);
         toast.error('Error fetching Transfer Tasks');
@@ -62,18 +64,15 @@ export const useS3Upload = (config?: ConfigMutation) =>
   );
 
 export const useGetFileNames = () =>
-  useQuery<Array<string>, AxiosError>(
-    ['getFilenames'],
-    () => apiClient.post(ENDPOINTS.s3Filenames).then((res) => res.data),
-    {
-      cacheTime: Infinity,
-      retry: false,
-      onError: (error) => {
-        verifyAuth(error.status!);
-        toast.error('Error getting filenames');
-      }
+  useQuery<Array<string>, AxiosError>(['getFilenames'], () => apiClient.get(ENDPOINTS.s3Filenames).then((res) => res.data), {
+    cacheTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+    onError: (error) => {
+      verifyAuth(error.status!);
+      toast.error('Error getting filenames');
     }
-  );
+  });
 
 export const useStartTransferTask = (config?: ConfigMutation) =>
   useMutation(
@@ -88,7 +87,7 @@ export const useStartTransferTask = (config?: ConfigMutation) =>
     }
   );
 
-  export const useCancelTask = (config?: ConfigMutation) =>
+export const useCancelTask = (config?: ConfigMutation) =>
   useMutation(
     ['cancelTask'],
     (payload: ICancelTask) => apiClient.post(ENDPOINTS.cancelTransferTasks, payload).then((res) => res.data),

@@ -18,6 +18,7 @@ export const useAuth = () => useContext(authContext);
 export const useAuthProvider = () => {
   const [isLogginIn, setIsLogginIn] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(() => !!localStorage.getItem(ACCESS_TOKEN));
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   const navigate = useNavigate();
 
   const login = async (username: string, password: string) => {
@@ -30,6 +31,7 @@ export const useAuthProvider = () => {
       });
       setAuthHeader(response.data);
       setIsAuthorized(true);
+      setShouldRedirect(true);
     } catch (error) {
       logger.log('error during login', error);
       toast.error('User or password incorrect');
@@ -49,7 +51,7 @@ export const useAuthProvider = () => {
   }, []);
 
   useEffect(() => {
-    if (isAuthorized) {
+    if (shouldRedirect) {
       navigate(Routes.sensorMonitoring);
     }
   }, [isAuthorized]);

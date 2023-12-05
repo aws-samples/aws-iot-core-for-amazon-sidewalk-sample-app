@@ -32,6 +32,7 @@ export interface IWirelessDevice {
   statusUpdatedTimeUTC: number;
   transferStartTimeUTC: number;
   transferEndTimeUTC: number;
+  transferProgress: number;
   fileName: string;
   fileSizeKB: number;
   firmwareUpgradeStatus: 'Pending' | 'Completed' | 'Failed' | 'None';

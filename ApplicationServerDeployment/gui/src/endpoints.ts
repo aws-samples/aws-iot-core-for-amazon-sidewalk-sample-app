@@ -13,7 +13,8 @@ export const ENDPOINTS = {
   cancelTransferTasks: '/otaCancel',
   s3Filenames: '/otaGetS3',
   upload: '/otaUpload',
-  getDevicesByTaskId: '/otaDevices' // ?fuotaTaskId=val
+  getDevicesByTaskId: '/otaDevices', // ?fuotaTaskId=val
+  getDeviceById: '/ota/deviceTransfers/:id'
 };
 
 export const interpolateParams = (route: string, params: { [k: string]: string }) => {

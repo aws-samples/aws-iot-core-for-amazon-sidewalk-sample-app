@@ -21,7 +21,7 @@ export const convertToBase64 = (file: RcFile) => {
     fileReader.readAsDataURL(file);
 
     fileReader.onload = () => {
-      resolve(fileReader.result);
+      resolve((fileReader.result as string).split(',')[1]);
     };
 
     fileReader.onerror = (error) => {
@@ -51,10 +51,15 @@ export const getFileSize = (number: number) => {
   return number;
 };
 
+export const showValueOrDash = (value: string | number) => value || '-';
+
 export const getDurationString = ({ start, end }: { start: number | Date; end: number | Date }) => {
+  if (!start || !end) {
+    return '-';
+  }
   const duration = intervalToDuration({ start, end });
   const durationAsString = formatDuration(duration);
-  return <>{durationAsString}</>;
+  return <>{showValueOrDash(durationAsString)}</>;
 };
 
 export const withAuthProvider = (Component: ReactNode) => <ProvideAuth>{Component}</ProvideAuth>;

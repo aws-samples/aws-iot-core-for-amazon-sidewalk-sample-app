@@ -6,5 +6,6 @@ export const APP_CONFIG = {
     measurement: 15 * 1000,
     devices: 5 * 1000,
     online: 1 * 1000,
-  },
+    otaProgressTasks: 1 * 1000
+  }
 };

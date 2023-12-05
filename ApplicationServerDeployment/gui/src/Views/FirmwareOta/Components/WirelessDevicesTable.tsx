@@ -1,17 +1,27 @@
 import { DatePicker, Select, Table, Upload, Button, Flex, DatePickerProps } from 'antd';
 import { IStartTransferTask, IWirelessDevice, TransferStatusType } from '../../../types';
 import { ColumnsType } from 'antd/es/table';
-import { useGetFileNames, useGetWirelessDevices, useS3Upload, useStartTransferTask } from '../../../hooks/api/api';
+import {
+  useGetFileNames,
+  useGetWirelessDevices,
+  useS3Upload,
+  useStartTransferTask
+} from '../../../hooks/api/api';
 import { UploadOutlined } from '@ant-design/icons';
 import { TransferStatus } from '../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getDurationString, getFileSize } from '../../../utils';
+import { getDurationString, getFileSize, showValueOrDash, verifyAuth } from '../../../utils';
 import { RcFile } from 'antd/es/upload/interface';
+import { apiClient } from '../../../apiClient';
+import { ENDPOINTS, interpolateParams } from '../../../endpoints';
+import { AxiosError } from 'axios';
+import { APP_CONFIG } from '../../../appConfig';
 
 export const WirelessDevicesTable = () => {
+  const [_, forceRender] = useState({});
   const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
     fileName: '',
     startTimeUTC: undefined,
@@ -38,6 +48,8 @@ export const WirelessDevicesTable = () => {
   });
 
   const lastItemUploaded = useRef('');
+  const wirelessDevicesIntervalRefs = useRef<{ [key: string]: string | number }>({});
+  const mockProgressCounter = useRef<{ [key: string]: number }>({});
 
   const columns: ColumnsType<IWirelessDevice> = [
     {
@@ -48,6 +60,11 @@ export const WirelessDevicesTable = () => {
       title: 'Transfer Status',
       dataIndex: 'transferStatus',
       render: (value: TransferStatusType) => <TransferStatus type={value} />
+    },
+    {
+      title: 'Transfer Progress',
+      dataIndex: 'transferProgress',
+      render: (value: number) => (value ? `${value}%` : `${showValueOrDash(value)}`)
     },
     {
       title: 'Status Updated UTC',
@@ -61,8 +78,10 @@ export const WirelessDevicesTable = () => {
     },
     {
       title: 'Duration',
-      render: (_value: number, record: IWirelessDevice) =>
-        getDurationString({ start: record.transferStartTimeUTC, end: record.transferEndTimeUTC })
+      render: (_value: number, record: IWirelessDevice) => {
+        // check if 'end' should be update time
+        return getDurationString({ start: record.transferStartTimeUTC, end: record.transferEndTimeUTC || Date.now() })
+      }
     },
     {
       title: 'Filename',
@@ -132,6 +151,29 @@ export const WirelessDevicesTable = () => {
     startTransferTask(startTransferTaskPayload);
   };
 
+  const fetchDeviceByIdAndMutate = async (id: string) => {
+    try {
+      const result = await apiClient.get<IWirelessDevice>(interpolateParams(ENDPOINTS.getDeviceById, { id }));
+      const individualDevice = result.data;
+
+      const deviceToReplace = devicesList?.wirelessDevices.find((device) => device.deviceId === individualDevice.deviceId);
+
+      // mutate individual wireless data and force render
+      Object.keys(deviceToReplace!).forEach((key) => {
+        // @ts-ignore
+        deviceToReplace[key] = individualDevice[key];
+      });
+      forceRender({});
+
+      // should keep fetching while...
+      return individualDevice.transferProgress !== 100;
+    } catch (error) {
+      verifyAuth((error as AxiosError)?.response?.status || 500);
+      toast.error('Erros while getting device by id');
+      return false;
+    }
+  };
+
   useEffect(() => {
     const newItemUploaded = s3List?.find((filename) => filename === lastItemUploaded.current);
 
@@ -139,6 +181,34 @@ export const WirelessDevicesTable = () => {
       handleFilenameSelected(newItemUploaded);
     }
   }, [s3List?.length]);
+
+  // POLLING INDIVIDUAL DEVICE LOGIC
+  useEffect(() => {
+    if (!devicesList) return;
+    const devicesToPoll = devicesList?.wirelessDevices.filter(
+      (device) => device.transferStatus === 'TRANSFERRING' || device.transferStatus === 'PENDING'
+    );
+
+    if (devicesToPoll?.length === 0) return;
+
+    for (const device of devicesToPoll!) {
+      mockProgressCounter.current[device.deviceId] = 1;
+      wirelessDevicesIntervalRefs.current[device.deviceId] = window.setInterval(async () => {
+        // mocklogic
+        const shouldKeepFetching = await fetchDeviceByIdAndMutate(
+          `${device.deviceId}_${mockProgressCounter.current[device.deviceId]}`
+        );
+
+        if (!shouldKeepFetching) {
+          window.clearInterval(wirelessDevicesIntervalRefs.current[device.deviceId] as number);
+          mockProgressCounter.current[device.deviceId] = 1;
+        }
+
+        // mock logic
+        mockProgressCounter.current[device.deviceId] += 1;
+      }, APP_CONFIG.intervals.otaProgressTasks);
+    }
+  }, [devicesList]);
 
   return (
     <>
