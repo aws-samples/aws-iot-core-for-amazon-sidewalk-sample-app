@@ -8,7 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "antd": "^5.10.2",
+    "antd": "^5.12.1",
     "axios": "^1.6.2",
     "chart.js": "^4.1.1",
     "classnames": "^2.3.2",
@@ -25,12 +25,14 @@
     "react-router": "^6.17.0",
     "react-router-dom": "^6.17.0",
     "react-time-ago": "^7.2.1",
+    "scroll-into-view": "^1.16.2",
     "vite-plugin-svgr": "^2.4.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.191",
     "@types/react": "^18.2.36",
     "@types/react-dom": "^18.0.9",
+    "@types/scroll-into-view": "^1.16.4",
     "@vitejs/plugin-react": "^4.1.0",
     "prettier": "^3.0.3",
     "typescript": "^4.9.3",

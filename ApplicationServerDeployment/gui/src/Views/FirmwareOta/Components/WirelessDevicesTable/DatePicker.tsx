@@ -1,7 +1,7 @@
-import { DatePicker as AntdDatePicker, DatePickerProps } from "antd";
-import { useState } from "react";
-import { IStartTransferTask } from "../../../../types";
-import dayjs from "dayjs";
+import { DatePicker as AntdDatePicker, DatePickerProps } from 'antd';
+import { useState } from 'react';
+import { IStartTransferTask } from '../../../../types';
+import dayjs from 'dayjs';
 
 interface Props {
   onDatePickerChange: (date: DatePickerProps['value']) => void;
@@ -9,16 +9,6 @@ interface Props {
 }
 
 export const DatePicker = ({ onDatePickerChange, dateValue }: Props) => {
-  const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
-    fileName: '',
-    startTimeUTC: undefined,
-    deviceIds: []
-  });
-
-  // const handleDatePickerChange = (value: DatePickerProps['value']) => {
-  //   setStartTransferTaskPayload((prevState) => ({ ...prevState, startTimeUTC: value?.valueOf() }));
-  // };
-
   const range = (start: number, end: number) => {
     const result = [];
     for (let i = start; i < end; i++) {

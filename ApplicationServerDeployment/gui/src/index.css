@@ -174,3 +174,16 @@ body {
 .pl-3 {
   padding-left: 1.5rem;
 }
+
+.highlight-row {
+  border-radius: 3px;
+  animation: highlight 1000ms ease-out;
+}
+@keyframes highlight {
+  0% {
+    background-color: beige;
+  }
+  100% {
+    background-color: white;
+  }
+}

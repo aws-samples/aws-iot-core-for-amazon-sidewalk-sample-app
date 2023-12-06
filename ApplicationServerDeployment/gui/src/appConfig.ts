@@ -7,5 +7,15 @@ export const APP_CONFIG = {
     devices: 5 * 1000,
     online: 1 * 1000,
     otaProgressTasks: 1 * 1000
+  },
+  ota: {
+    tables: {
+      devices: {
+        pageSize: 10
+      },
+      tasks: {
+        pageSize: 10
+      }
+    }
   }
 };

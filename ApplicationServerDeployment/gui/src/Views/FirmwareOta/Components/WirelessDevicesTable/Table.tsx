@@ -5,7 +5,6 @@ import { useGetFileNames, useGetWirelessDevices, useS3Upload, useStartTransferTa
 import { UploadOutlined } from '@ant-design/icons';
 import { TransferStatus } from '../../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
-import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { getDurationString, getFileSize, showValueOrDash, verifyAuth } from '../../../../utils';
@@ -14,6 +13,7 @@ import { apiClient } from '../../../../apiClient';
 import { ENDPOINTS, interpolateParams } from '../../../../endpoints';
 import { AxiosError } from 'axios';
 import { DatePicker } from './DatePicker';
+import { useRowScroller } from '../ScrollManager';
 
 export const WirelessDevicesTable = () => {
   const [_, forceRender] = useState({});
@@ -44,10 +44,12 @@ export const WirelessDevicesTable = () => {
       refetchWirelessDevices();
     }
   });
+  const scrollManager = useRowScroller();
 
   const lastItemUploaded = useRef('');
   const wirelessDevicesIntervalRefs = useRef<{ [key: string]: string | number }>({});
   const mockProgressCounter = useRef<{ [key: string]: number }>({});
+  const canStartTrasnferTask = startTransferTaskPayload.fileName.length > 0 && startTransferTaskPayload.deviceIds.length > 0;
 
   const columns: ColumnsType<IWirelessDevice> = [
     {
@@ -102,7 +104,7 @@ export const WirelessDevicesTable = () => {
     {
       title: 'Task ID',
       dataIndex: 'taskId',
-      render: (value: string) => <a onClick={() => tableRef.current?.scrollTo()}>{showValueOrDash(value)}</a>
+      render: (value: string) => <a onClick={() => scrollManager.scrollTo(value, 'tasks')}>{showValueOrDash(value)}</a>
     }
   ];
 
@@ -128,8 +130,6 @@ export const WirelessDevicesTable = () => {
   const handleDeviceSelected = (selectedRowKeys: React.Key[]) => {
     setStartTransferTaskPayload((prevState) => ({ ...prevState, deviceIds: selectedRowKeys as Array<string> }));
   };
-
-  const canStartTrasnferTask = startTransferTaskPayload.fileName.length > 0 && startTransferTaskPayload.deviceIds.length > 0;
 
   const handleStarTransferTask = () => {
     startTransferTask(startTransferTaskPayload);
@@ -197,7 +197,11 @@ export const WirelessDevicesTable = () => {
   //   }
   // }, [devicesList]);
 
-  console.log({ tableRef });
+  useEffect(() => {
+    if (!devicesList) return;
+
+    scrollManager.setItemsDisposition(devicesList, 'devices');
+  }, [devicesList?.wirelessDevices.length]);
 
   return (
     <>
@@ -221,10 +225,7 @@ export const WirelessDevicesTable = () => {
             options={s3List?.map((filename) => ({ label: filename, value: filename }))}
             value={startTransferTaskPayload.fileName}
           />
-          <DatePicker
-            dateValue={startTransferTaskPayload.startTimeUTC}
-            onDatePickerChange={handleDatePickerChange}
-          />
+          <DatePicker dateValue={startTransferTaskPayload.startTimeUTC} onDatePickerChange={handleDatePickerChange} />
           <Button
             type="primary"
             size="middle"
@@ -236,34 +237,27 @@ export const WirelessDevicesTable = () => {
           </Button>
         </Flex>
       </Flex>
-      <div ref={tableRef}>
-        <Table
-          locale={{
-            emptyText: <div className="m-3 black">No Wireless devices detected</div>
-          }}
-          rowSelection={{
-            type: 'checkbox',
-            onChange: handleDeviceSelected,
-            selectedRowKeys: startTransferTaskPayload.deviceIds
-          }}
-          columns={columns}
-          dataSource={devicesList?.wirelessDevices}
-          rowKey={(item) => item.deviceId}
-          loading={isLoadingDevices}
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: 'max-content' }}
-          ref={{
-            current: {
-              nativeElement: tableRef.current!,
-              scrollTo: (config) => {
-                // config.key = '6540562b61ea0399b45ae9d0';
-                console.log({ config });
-                return config;
-              }
-            }
-          }}
-        />
-      </div>
+
+      <Table
+        locale={{
+          emptyText: <div className="m-3 black">No Wireless devices detected</div>
+        }}
+        rowSelection={{
+          type: 'checkbox',
+          onChange: handleDeviceSelected,
+          selectedRowKeys: startTransferTaskPayload.deviceIds
+        }}
+        columns={columns}
+        dataSource={devicesList?.wirelessDevices}
+        rowKey={(item) => item.deviceId}
+        loading={isLoadingDevices}
+        pagination={{
+          pageSize: scrollManager.tables.devices.pageSize,
+          current: scrollManager.pageIndex.devices,
+          onChange: (page) => scrollManager.setPageIndex(page, 'devices')
+        }}
+        scroll={{ x: 'max-content' }}
+      />
     </>
   );
 };

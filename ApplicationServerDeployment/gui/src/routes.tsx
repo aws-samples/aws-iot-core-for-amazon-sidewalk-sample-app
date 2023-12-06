@@ -1,38 +1,38 @@
-import { Navigate, createBrowserRouter } from "react-router-dom";
-import App from "./App";
-import { Login } from "./Views/Login/Login";
-import { SensorMonitoring } from "./Views/SensorMonitoring/SensorMonitoring";
-import { FirmwareOta } from "./Views/FirmwareOta/FirmwareOta";
-import { withAuthProvider } from "./utils";
+import { Navigate, createBrowserRouter } from 'react-router-dom';
+import App from './App';
+import { Login } from './Views/Login/Login';
+import { SensorMonitoring } from './Views/SensorMonitoring/SensorMonitoring';
+import { FirmwareOta } from './Views/FirmwareOta/FirmwareOta';
+import { withAuthProvider } from './utils';
 
 export enum Routes {
-  auth = "/auth",
-  sensorMonitoring = "/sensor-monitoring",
-  firmwareOTA = "/firmware-ota",
+  auth = '/auth',
+  sensorMonitoring = '/sensor-monitoring',
+  firmwareOTA = '/firmware-ota'
 }
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: withAuthProvider(<App />),
-    ErrorBoundary: () => <div>There was an error</div>,
+    ErrorBoundary: () => <div className="full-height-with-header flex-abs-center">There was an error, check console</div>,
     children: [
       {
         path: Routes.auth,
-        element: <Login />,
+        element: <Login />
       },
       {
         path: Routes.sensorMonitoring,
-        element: <SensorMonitoring />,
+        element: <SensorMonitoring />
       },
       {
         path: Routes.firmwareOTA,
-        element: <FirmwareOta />,
+        element: <FirmwareOta />
       },
       {
-        path: "*",
-        element: <Navigate to={Routes.auth} replace />,
-      },
-    ],
-  },
+        path: '*',
+        element: <Navigate to={Routes.auth} replace />
+      }
+    ]
+  }
 ]);
