@@ -865,6 +865,7 @@ Resources:
               - ''
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
+          OTA_S3_BUCKET_NAME: !Ref SidewalkOTASourceBucket
 
   # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
   SidewalkTokenGeneratorLambda:
