@@ -1010,7 +1010,7 @@ Resources:
     DependsOn: SidewalkOTASetCurrentFirmwareHandlerLambda
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '/aws/lambda/${SidewalkOTASetCurrentFirmwareHandlerLambdaLogGroup}'
+      LogGroupName: !Sub '/aws/lambda/${SidewalkOTASetCurrentFirmwareHandlerLambda}'
       RetentionInDays: 7
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -1438,7 +1438,7 @@ Resources:
     Properties:
       AuthorizationType: CUSTOM
       AuthorizerId: !Ref SidewalkTokenAuthorizer
-      HttpMethod: GET
+      HttpMethod: POST
       Integration:
         IntegrationHttpMethod: POST
         Type: AWS_PROXY
