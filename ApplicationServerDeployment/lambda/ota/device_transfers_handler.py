@@ -51,7 +51,7 @@ class DeviceTransfersHandler:
             logger.error(f'Error while calling get_all_device_transfers: {err}', exc_info=True)
             raise
 
-    def get_device_transfer_details(self, deviceId: str) -> DeviceTransfer:
+    def get_device_transfer_details(self, device_id: str) -> DeviceTransfer:
         """
         Queries Measurements table for the records coming from given device withing a given time span.
 
@@ -60,7 +60,7 @@ class DeviceTransfersHandler:
         """
         items = []
         try:
-            response = self._table.query(KeyConditionExpression=Key('device_id').eq(deviceId))
+            response = self._table.query(KeyConditionExpression=Key('device_id').eq(device_id))
             items = response.get('Items', [])
         except ClientError as err:
             logger.error(f'Error while calling get_device_transfer_details: {err}')

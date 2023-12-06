@@ -25,9 +25,9 @@ def get_all_device_transfers():
     :return:    Response with list of records from DeviceTransfers table.
     """
     device_transfers = device_transfers_handler.get_all_device_transfers()
-    device_transfers_json = []
+    device_transfers_json = {"wirelessDevices": []}
     for device_transfer in device_transfers:
-        device_transfers_json.append(device_transfer.to_dict())
+        device_transfers_json["wirelessDevices"].append(device_transfer.to_dict())
     print(device_transfers_json)
     return _create_response_message(200, device_transfers_json)
 
@@ -38,9 +38,9 @@ def get_all_transfer_tasks():
     :return:    Response with list of records from TransferTasks table.
     """
     transfer_tasks = transfer_tasks_handler.get_all_transfer_tasks()
-    transfer_tasks_json = []
+    transfer_tasks_json = {"transferTasks": []}
     for transfer_task in transfer_tasks:
-        transfer_tasks_json.append(transfer_task.to_dict())
+        transfer_tasks_json["transferTasks"].append(transfer_task.to_dict())
     print(transfer_tasks_json)
     return _create_response_message(200, transfer_tasks_json)
 
@@ -223,7 +223,7 @@ def lambda_handler(event, context):
     """
     method = event.get("httpMethod")
     path = event.get("path").split("api", 1)[1]
-    mock = True
+    mock = False
 
     if "on.aws/" in path:
         path = path.split("on.aws", 1)[1]

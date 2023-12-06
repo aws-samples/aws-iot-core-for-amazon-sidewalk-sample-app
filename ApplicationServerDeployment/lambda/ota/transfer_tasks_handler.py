@@ -51,7 +51,7 @@ class TransferTasksHandler:
             logger.error(f'Error while calling get_all_transfer_tasks: {err}', exc_info=True)
             raise
 
-    def get_transfer_task_details(self, taskId: str) -> TransferTask:
+    def get_transfer_task_details(self, task_id: str) -> TransferTask:
         """
         Queries Measurements table for the records coming from given device withing a given time span.
 
@@ -60,7 +60,7 @@ class TransferTasksHandler:
         """
         items = []
         try:
-            response = self._table.query(KeyConditionExpression=Key(self.PRIMARY_KEY).eq(taskId))
+            response = self._table.query(KeyConditionExpression=Key('task_id').eq(task_id))
             items = response.get('Items', [])
         except ClientError as err:
             logger.error(f'Error while calling get_transfer_task_details: {err}')
