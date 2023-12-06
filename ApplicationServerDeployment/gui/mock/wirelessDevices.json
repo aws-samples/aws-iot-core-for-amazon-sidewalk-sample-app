@@ -2,7 +2,7 @@
   "wirelessDevices": [
     {
       "deviceId": "6540562b20d2ed23212f08ad",
-      "transferStatus": "PENDING",
+      "transferStatus": "COMPLETED",
       "statusUpdatedTimeUTC": 1698715357655,
       "transferEndTimeUTC": null,
       "transferStartTimeUTC": 1701487625960,
@@ -10,7 +10,8 @@
       "fileName": "sunt.png",
       "fileSizeKB": 651,
       "firmwareUpgradeStatus": "FAILED",
-      "firmwareVersion": "tempor"
+      "firmwareVersion": "tempor",
+      "taskId": "6540591dcbd0b5cf9e4baed5"
     },
     {
       "deviceId": "6540562b9a43699094046e4c",
@@ -22,7 +23,8 @@
       "fileName": "eu.png",
       "fileSizeKB": 182,
       "firmwareUpgradeStatus": "FAILED",
-      "firmwareVersion": "occaecat"
+      "firmwareVersion": "occaecat",
+      "taskId": null
     },
     {
       "deviceId": "6540562b0a810cf3a1abcefd",
@@ -34,7 +36,8 @@
       "fileName": "laboris.png",
       "fileSizeKB": 683,
       "firmwareUpgradeStatus": "NONE",
-      "firmwareVersion": "proident"
+      "firmwareVersion": "proident",
+      "taskId": null
     },
     {
       "deviceId": "6540562bd15c1e6d1bf10979",
@@ -46,7 +49,8 @@
       "fileName": "labore.png",
       "fileSizeKB": 656,
       "firmwareUpgradeStatus": "COMPLETED",
-      "firmwareVersion": "exercitation"
+      "firmwareVersion": "exercitation",
+      "taskId": null
     },
     {
       "deviceId": "6540562b61ea0399b45ae9d0",
@@ -58,7 +62,8 @@
       "fileName": "cupidatat.png",
       "fileSizeKB": 577,
       "firmwareUpgradeStatus": "NONE",
-      "firmwareVersion": "labore"
+      "firmwareVersion": "labore",
+      "taskId": null
     }
   ]
 }

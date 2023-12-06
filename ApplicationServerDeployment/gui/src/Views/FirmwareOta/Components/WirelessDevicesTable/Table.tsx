@@ -1,27 +1,25 @@
-import { DatePicker, Select, Table, Upload, Button, Flex, DatePickerProps } from 'antd';
-import { IStartTransferTask, IWirelessDevice, TransferStatusType } from '../../../types';
+import { Select, Table, Upload, Button, Flex, DatePickerProps } from 'antd';
+import { IStartTransferTask, IWirelessDevice, TransferStatusType } from '../../../../types';
 import { ColumnsType } from 'antd/es/table';
-import {
-  useGetFileNames,
-  useGetWirelessDevices,
-  useS3Upload,
-  useStartTransferTask
-} from '../../../hooks/api/api';
+import { useGetFileNames, useGetWirelessDevices, useS3Upload, useStartTransferTask } from '../../../../hooks/api/api';
 import { UploadOutlined } from '@ant-design/icons';
-import { TransferStatus } from '../../../components/TransferStatus/TransferStatus';
+import { TransferStatus } from '../../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getDurationString, getFileSize, showValueOrDash, verifyAuth } from '../../../utils';
+import { getDurationString, getFileSize, showValueOrDash, verifyAuth } from '../../../../utils';
 import { RcFile } from 'antd/es/upload/interface';
-import { apiClient } from '../../../apiClient';
-import { ENDPOINTS, interpolateParams } from '../../../endpoints';
+import { apiClient } from '../../../../apiClient';
+import { ENDPOINTS, interpolateParams } from '../../../../endpoints';
 import { AxiosError } from 'axios';
-import { APP_CONFIG } from '../../../appConfig';
+import { DatePicker } from './DatePicker';
 
 export const WirelessDevicesTable = () => {
   const [_, forceRender] = useState({});
+  const [scrollToValue, setScrollToValue] = useState('');
+  const tableRef = useRef<HTMLDivElement>(null);
+
   const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
     fileName: '',
     startTimeUTC: undefined,
@@ -80,7 +78,7 @@ export const WirelessDevicesTable = () => {
       title: 'Duration',
       render: (_value: number, record: IWirelessDevice) => {
         // check if 'end' should be update time
-        return getDurationString({ start: record.transferStartTimeUTC, end: record.transferEndTimeUTC || Date.now() })
+        return getDurationString({ start: record.transferStartTimeUTC, end: record.transferEndTimeUTC || Date.now() });
       }
     },
     {
@@ -100,30 +98,16 @@ export const WirelessDevicesTable = () => {
     {
       title: 'Firmware Version',
       dataIndex: 'firmwareVersion'
+    },
+    {
+      title: 'Task ID',
+      dataIndex: 'taskId',
+      render: (value: string) => <a onClick={() => tableRef.current?.scrollTo()}>{showValueOrDash(value)}</a>
     }
   ];
 
   const handleDatePickerChange = (value: DatePickerProps['value']) => {
     setStartTransferTaskPayload((prevState) => ({ ...prevState, startTimeUTC: value?.valueOf() }));
-  };
-
-  const range = (start: number, end: number) => {
-    const result = [];
-    for (let i = start; i < end; i++) {
-      result.push(i);
-    }
-    return result;
-  };
-
-  const disabledDateTime = () => ({
-    disabledHours: () => range(0, 24).splice(0, dayjs().hour()),
-    disabledMinutes: () => range(0, 60).splice(0, dayjs().minute()),
-    disabledSeconds: () => range(0, 60).splice(0, dayjs().second())
-  });
-
-  const disabledDate = (current: dayjs.Dayjs) => {
-    // Can not select days before today and now
-    return current && current < dayjs().startOf('day');
   };
 
   const filterOption = (input: string, option?: { label: string; value: string }) =>
@@ -169,7 +153,9 @@ export const WirelessDevicesTable = () => {
       return individualDevice.transferProgress !== 100;
     } catch (error) {
       verifyAuth((error as AxiosError)?.response?.status || 500);
-      toast.error('Erros while getting device by id');
+      toast.error('Error while getting device by id');
+
+      // polling stops...
       return false;
     }
   };
@@ -183,32 +169,35 @@ export const WirelessDevicesTable = () => {
   }, [s3List?.length]);
 
   // POLLING INDIVIDUAL DEVICE LOGIC
-  useEffect(() => {
-    if (!devicesList) return;
-    const devicesToPoll = devicesList?.wirelessDevices.filter(
-      (device) => device.transferStatus === 'TRANSFERRING' || device.transferStatus === 'PENDING'
-    );
+  // useEffect(() => {
+  //   if (!devicesList) return;
+  //   const devicesToPoll = devicesList?.wirelessDevices.filter(
+  //     (device) => device.transferStatus === 'TRANSFERRING' || device.transferStatus === 'PENDING'
+  //   );
 
-    if (devicesToPoll?.length === 0) return;
+  //   if (devicesToPoll?.length === 0) return;
 
-    for (const device of devicesToPoll!) {
-      mockProgressCounter.current[device.deviceId] = 1;
-      wirelessDevicesIntervalRefs.current[device.deviceId] = window.setInterval(async () => {
-        // mocklogic
-        const shouldKeepFetching = await fetchDeviceByIdAndMutate(
-          `${device.deviceId}_${mockProgressCounter.current[device.deviceId]}`
-        );
+  //   for (const device of devicesToPoll!) {
+  //     mockProgressCounter.current[device.deviceId] = 1;
+  //     wirelessDevicesIntervalRefs.current[device.deviceId] = window.setInterval(async () => {
+  //       // mocklogic
+  //       const shouldKeepFetching = await fetchDeviceByIdAndMutate(
+  //         `${device.deviceId}_${mockProgressCounter.current[device.deviceId]}`
+  //       );
 
-        if (!shouldKeepFetching) {
-          window.clearInterval(wirelessDevicesIntervalRefs.current[device.deviceId] as number);
-          mockProgressCounter.current[device.deviceId] = 1;
-        }
+  //       if (!shouldKeepFetching) {
+  //         window.clearInterval(wirelessDevicesIntervalRefs.current[device.deviceId] as number);
+  //         // mocklogic
+  //         mockProgressCounter.current[device.deviceId] = 1;
+  //       }
 
-        // mock logic
-        mockProgressCounter.current[device.deviceId] += 1;
-      }, APP_CONFIG.intervals.otaProgressTasks);
-    }
-  }, [devicesList]);
+  //       // mock logic
+  //       mockProgressCounter.current[device.deviceId] += 1;
+  //     }, APP_CONFIG.intervals.otaProgressTasks);
+  //   }
+  // }, [devicesList]);
+
+  console.log({ tableRef });
 
   return (
     <>
@@ -233,13 +222,8 @@ export const WirelessDevicesTable = () => {
             value={startTransferTaskPayload.fileName}
           />
           <DatePicker
-            showTime
-            placeholder="Now"
-            onChange={handleDatePickerChange}
-            format="YYYY-MM-DD HH:mm:ss"
-            disabledDate={disabledDate}
-            disabledTime={disabledDateTime}
-            value={startTransferTaskPayload.startTimeUTC ? dayjs(startTransferTaskPayload.startTimeUTC) : undefined}
+            dateValue={startTransferTaskPayload.startTimeUTC}
+            onDatePickerChange={handleDatePickerChange}
           />
           <Button
             type="primary"
@@ -252,21 +236,34 @@ export const WirelessDevicesTable = () => {
           </Button>
         </Flex>
       </Flex>
-      <Table
-        locale={{
-          emptyText: <div className="m-3 black">No Wireless devices detected</div>
-        }}
-        rowSelection={{
-          type: 'checkbox',
-          onChange: handleDeviceSelected,
-          selectedRowKeys: startTransferTaskPayload.deviceIds
-        }}
-        columns={columns}
-        dataSource={devicesList?.wirelessDevices}
-        rowKey={(item) => item.deviceId}
-        loading={isLoadingDevices}
-        pagination={{ pageSize: 10 }}
-      />
+      <div ref={tableRef}>
+        <Table
+          locale={{
+            emptyText: <div className="m-3 black">No Wireless devices detected</div>
+          }}
+          rowSelection={{
+            type: 'checkbox',
+            onChange: handleDeviceSelected,
+            selectedRowKeys: startTransferTaskPayload.deviceIds
+          }}
+          columns={columns}
+          dataSource={devicesList?.wirelessDevices}
+          rowKey={(item) => item.deviceId}
+          loading={isLoadingDevices}
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 'max-content' }}
+          ref={{
+            current: {
+              nativeElement: tableRef.current!,
+              scrollTo: (config) => {
+                // config.key = '6540562b61ea0399b45ae9d0';
+                console.log({ config });
+                return config;
+              }
+            }
+          }}
+        />
+      </div>
     </>
   );
 };

@@ -8,5 +8,6 @@
   "fileName": "sunt.png",
   "fileSizeKB": 651,
   "firmwareUpgradeStatus": "FAILED",
-  "firmwareVersion": "tempor"
+  "firmwareVersion": "tempor",
+  "taskId": null
 }

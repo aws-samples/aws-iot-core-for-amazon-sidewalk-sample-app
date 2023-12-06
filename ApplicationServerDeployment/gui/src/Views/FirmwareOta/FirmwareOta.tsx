@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import { Instructions } from './Components/Instructions';
-import { TranserTasksTable } from './Components/TransferTasksTable';
-import { WirelessDevicesTable } from './Components/WirelessDevicesTable';
+import { Instructions } from './components/Instructions';
+import { TranserTasksTable } from './components/TransferTasksTable/Table';
+import { WirelessDevicesTable } from './components/WirelessDevicesTable/Table';
 import styles from './styles.module.css';
 
 export const FirmwareOta = () => {

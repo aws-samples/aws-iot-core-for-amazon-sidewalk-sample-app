@@ -37,6 +37,7 @@ export interface IWirelessDevice {
   fileSizeKB: number;
   firmwareUpgradeStatus: 'Pending' | 'Completed' | 'Failed' | 'None';
   firmwareVersion: string;
+  taskId: string;
 }
 
 export interface ITransferTask {

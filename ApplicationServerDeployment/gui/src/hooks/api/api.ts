@@ -14,7 +14,6 @@ export const useGetWirelessDevices = () =>
     ['getWirelessDevices'],
     () => apiClient.get(ENDPOINTS.otaDevices).then((res) => res.data),
     {
-      cacheTime: Infinity,
       refetchOnWindowFocus: false,
       onError: (error) => {
         console.log('error fetching', error);
