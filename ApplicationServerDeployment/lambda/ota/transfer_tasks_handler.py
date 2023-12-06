@@ -10,6 +10,7 @@ from botocore.exceptions import ClientError
 from decimal import Decimal
 from boto3.dynamodb.conditions import Attr
 from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 
 from task import TransferTask
 
@@ -22,7 +23,9 @@ class TransferTasksHandler:
     """
 
     TABLE_NAME = 'TransferTasks'
-
+    PRIMARY_KEY = 'task_id'
+    client = boto3.client('dynamodb')
+    
     def __init__(self):
         self._table = boto3.resource('dynamodb').Table(self.TABLE_NAME)
 
@@ -63,7 +66,7 @@ class TransferTasksHandler:
         """
         items = []
         try:
-            response = self._table.query(KeyConditionExpression=Key('taskId').eq(taskId))
+            response = self._table.query(KeyConditionExpression=Key('task_id').eq(taskId))
             items = response.get('Items', [])
         except ClientError as err:
             logger.error(f'Error while calling get_transfer_task_details: {err}')
@@ -93,7 +96,7 @@ class TransferTasksHandler:
                     'file_name': transferTask.get_file_name(),
                     'file_size_kb': transferTask.get_file_size_kb(),
                     'origination': transferTask.get_origination(),
-                    'deviceIds': transferTask.get_device_ids()
+                    'device_ids': transferTask.get_device_ids()
                 },
                 ReturnValues="ALL_OLD"
             )
@@ -104,4 +107,154 @@ class TransferTasksHandler:
             raise
         else:
             return transferTask
+        
+
+    # -----------------
+    # Update operations
+    # -----------------
+    def update_transfer_task(self, transferTask: TransferTask):
+        """
+        Updates transferTask object to the TransferTasks table.
+
+        :param taskId:  Task identifier.
+        :return:             Updated TransferTask object.
+        """
+        try:
+            self._table.put_item(Item=transferTask.to_dict())
+        except ClientError as err:
+            logger.error(
+                f'Error while calling update_transfer_task for task_id: {transferTask.get_task_id()}: {err}'
+            )
+            raise
+        else:
+            return transferTask
+
+    # -----------------
+    # Batch Update operations
+    # -----------------
+    def batch_update_transfer_task(self, transferTasks):
+        """
+        Updates transferTask object to the TransferTasks table.
+
+        :param taskId:  Task identifier.
+        :return:             Updated TransferTask object.
+        """
+        unprocessed_items = []
+        try:
+            # Prepare the batch write request
+            print('Batch write ', transferTasks)
+            batch_write_request = []
+            for task in transferTasks:
+                update_request = {
+                    'PutRequest': {
+                        'Item': task
+                    }
+                }
+                batch_write_request.append(update_request)
+
+            # Perform the batch write
+            response = self.client.batch_write_item(RequestItems={self.TABLE_NAME: batch_write_request})
+
+            # Check for unprocessed items
+            unprocessed_items = response.get('UnprocessedItems', {})
+            while unprocessed_items:
+                response = self.client.batch_write_item(RequestItems=unprocessed_items)
+                unprocessed_items = response.get('UnprocessedItems', {})
+        except ClientError as err:
+            logger.error(
+                f'Error while calling update_transfer_task for tasks: {transferTasks}: {err}'
+            )
+            raise
+        else:
+            return unprocessed_items
+        
+
+    # -----------------
+    # Batch Get operations
+    # -----------------
+    def get_transfer_tasks(self, task_ids):
+        """
+        Updates transferTask object to the TransferTasks table.
+
+        :param taskId:  Task identifier.
+        :return:             Updated TransferTask object.
+        """
+        try:
+            # Prepare the batch write request
+            keys_to_get = [{self.PRIMARY_KEY: {'S': task_id}} for task_id in task_ids]
+
+            # Prepare the batch get request
+            batch_get_request = {
+                self.TABLE_NAME: {
+                    'Keys': keys_to_get
+                }
+            }
+
+            # Perform the batch get
+            response = self.client.batch_get_item(RequestItems=batch_get_request)
+
+            # Retrieve the items from the response
+            items = response.get('Responses', {}).get(self.TABLE_NAME, [])
+
+            # Print the retrieved items
+            for item in items:
+                print("Retrieved Item:", item)
+            converted_items = [{attr: list(value.values())[0] for attr, value in item.items()} for item in items]
+            print('converted items ', converted_items)
+            
+        except ClientError as err:
+            logger.error(
+                f'Error while calling get_transfer_tasks for tasks: {task_ids}: {err}'
+            )
+            raise
+        else:
+            return converted_items
+        
+    # -----------------
+    # Batch Get operations
+    # -----------------
+    def get_transfer_tasks(self, task_ids):
+        """
+        Updates transferTask object to the TransferTasks table.
+
+        :param taskId:  Task identifier.
+        :return:             Updated TransferTask object.
+        """
+        items = []
+        try:
+            # Prepare the batch write request
+            keys_to_get = [{self.PRIMARY_KEY: {'S': task_id}} for task_id in task_ids]
+
+            # Prepare the batch get request
+            batch_get_request = {
+                self.TABLE_NAME: {
+                    'Keys': keys_to_get
+                }
+            }
+
+            # Perform the batch get
+            response = self.client.batch_get_item(RequestItems=batch_get_request)
+
+            # Retrieve the items from the response
+            ddb_items = response.get('Responses', {}).get(self.TABLE_NAME, [])
+
+            # Print the retrieved items
+            for item in ddb_items:
+                print("Retrieved Item:", item)
+            items = [dynamo_obj_to_python_obj(item) for item in ddb_items]
+        except ClientError as err:
+            logger.error(
+                f'Error while calling get_transfer_tasks for tasks: {task_ids}: {err}'
+            )
+            raise
+        else:
+            return items
+
+
+def dynamo_obj_to_python_obj(dynamo_obj: dict) -> dict:
+    deserializer = TypeDeserializer()
+    return {
+        k: deserializer.deserialize(v) 
+        for k, v in dynamo_obj.items()
+    }  
 

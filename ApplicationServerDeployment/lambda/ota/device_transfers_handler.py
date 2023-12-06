@@ -62,7 +62,7 @@ class DeviceTransfersHandler:
         """
         items = []
         try:
-            response = self._table.query(KeyConditionExpression=Key('deviceId').eq(deviceId))
+            response = self._table.query(KeyConditionExpression=Key('device_id').eq(deviceId))
             items = response.get('Items', [])
         except ClientError as err:
             logger.error(f'Error while calling get_device_transfer_details: {err}')
@@ -104,3 +104,22 @@ class DeviceTransfersHandler:
         else:
             return deviceTransfer
 
+    # -----------------
+    # Update operations
+    # -----------------
+    def update_device_transfer(self, deviceTransfer: DeviceTransfer):
+        """
+        Updates deviceTransfer object to the DeviceTransfer table.
+
+        :param deviceTransfer:  deviceTransfer object.
+        :return:             Updated DeviceTransfer object.
+        """
+        try:
+            self._table.put_item(Item=deviceTransfer.to_dict())
+        except ClientError as err:
+            logger.error(
+                f'Error while calling update_device_transfer for deviceId: {deviceTransfer._device_id}: {err}'
+            )
+            raise
+        else:
+            return deviceTransfer

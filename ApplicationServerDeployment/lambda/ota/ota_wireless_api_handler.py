@@ -34,11 +34,12 @@ class IOTWirelessAPIHandler:
             NextToken=next_token
         )
 
-    def create_fuota_task(self, s3_uri: str, s3_update_role: str):
+    def create_fuota_task(self, s3_uri: str, s3_update_role: str, file_size: int):
         return self._wireless_client.create_fuota_task(
             FirmwareUpdateImage=s3_uri,
             FirmwareUpdateRole=s3_update_role,
-            ProtocolType='Sidewalk'
+            ProtocolType='Sidewalk',
+            FragmentSizeBytes=file_size
         )
     
     def associate_wireless_device_with_fuota_task(self, fuota_task_id: str, wireless_device_id: str):

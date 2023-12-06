@@ -42,23 +42,27 @@ def create_task(file_name, start_time_utc, device_ids):
     
     # Uncomment the code below for the actual implementation
 
-    # try:
+    try:
 
-    #     s3_bucket_name = os.environ.get('OTA_S3_BUCKET_NAME')
-    #     fuota_s3_role_arn = os.environ.get('S3_FUOTA_ROLE_ARN')
-    #     s3_uri = 's3://' + s3_bucket_name + '/' + file_name
+        s3_bucket_name = os.environ.get('OTA_S3_BUCKET_NAME')
+        fuota_s3_role_arn = os.environ.get('S3_FUOTA_ROLE_ARN')
+        s3_uri = 's3://' + s3_bucket_name + '/' + file_name
 
-    #     # Check if it the file is present in the s3 bucket
-    #     file_size = get_file_size(s3_bucket_name, file_name)
-    #     print(f'file_size ', file_size)
-    #     if file_size < 0:
-    #         print('The file does not exists ',  file_name)
-    #         return
+        # Check if it the file is present in the s3 bucket & return the size of the file
+        file_size = get_file_size(s3_bucket_name, file_name)
+        print(f'file_size ', file_size)
+        if file_size < 0:
+            print('The file does not exists ',  file_name)
+            return
         
-    #     # Call the CreateFUOTATaskAPI
-    #     create_fuota_task_response = iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn)
-    #     task_id = create_fuota_task_response.get('Id', '')
-    #     print(f'task id ', task_id)
+        if file_size < 1024:
+            print('The file less than 1024 ',  file_name)
+            file_size = 1024
+            
+        # Call the CreateFUOTATaskAPI
+        create_fuota_task_response = iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn, file_size=file_size)
+        task_id = create_fuota_task_response.get('Id', '')
+        print(f'task id ', task_id)
 
     #     # Call AssociateWirelessDeviceWithFuotaTask
     #     errored_devices = []
@@ -74,19 +78,19 @@ def create_task(file_name, start_time_utc, device_ids):
     #             errored_devices.append(device)
 
     #     # The start time for the transfer task for Sidewalk should always be 5 minutes ahead of the current time
-    #     now = datetime.now()
-    #     now_plus_5 = now + timedelta(minutes=5)
+        now = datetime.now()
+        now_plus_5 = now + timedelta(minutes=5)
     #     # Call StartTransferTask API
     #     iot_handler.start_fuota_task(
     #         fuota_task_id=task_id,
     #         start_time = now_plus_5
     #     )
 
-    #     # Add the entry to the tables
-    #     add_record_to_the_table(device_ids, task_id, now, file_name, file_size)
+        # Add the entry to the tables
+        add_record_to_the_table(device_ids, task_id, now, file_name, file_size)
 
-    # except Exception as e:
-    #     print(f'Exception ', e)
+    except Exception as e:
+        print(f'Exception ', e)
 
     return {
         'taskId': task_id,
