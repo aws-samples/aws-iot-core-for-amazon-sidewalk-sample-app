@@ -18,7 +18,10 @@ def get_all_filenames(bucket_name, prefix=''):
     response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
 
     # Extract filenames from the response
-    filenames = [obj['Key'] for obj in response.get('Contents', [])]
+    if not prefix:
+        filenames = [obj['Key'] for obj in response.get('Contents', []) if obj['Key'].count('/') == prefix.count('/')]
+    else:
+        filenames = [obj['Key'] for obj in response.get('Contents', []) if not obj['Key'].endswith('/')]
 
     return filenames
 
