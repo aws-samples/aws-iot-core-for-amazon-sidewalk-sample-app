@@ -535,7 +535,7 @@ Resources:
             Action:
               - sts:AssumeRole
       Policies:
-        - PolicyName: SidewalkOTAStartTransferLambdaS3Access
+        - PolicyName: SidewalkOTASetCurrentFirmwareHandlerLambdaS3Access
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -545,6 +545,8 @@ Resources:
                   - 's3:PutObject'
                   - 's3:PutObjectAcl'
                   - 's3:GetObjectAcl'
+                  - 's3:ListBucket'
+                  - 's3:DeleteObject'
                 Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
               - Effect: Allow
                 Action:
@@ -863,6 +865,7 @@ Resources:
               - ''
               - - https://
                 - !GetAtt CloudFrontDistribution.DomainName
+          OTA_S3_BUCKET_NAME: !Ref SidewalkOTASourceBucket
 
   # SidewalkTokenGeneratorLambda function. Handles signing jwt tokens with login info
   SidewalkTokenGeneratorLambda:
@@ -1579,7 +1582,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: SidewalkOTASetCurrentFirmwareHandlerLambda
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/otaSetCurrentFirmware
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/POST/api/otaSetCurrentFirmware
 
   # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
   SidewalkOTAUploadFileLambdaPermissionsForApiGateway:
