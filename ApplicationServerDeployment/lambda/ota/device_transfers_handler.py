@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT-0
 import boto3
 import logging
-import time
 
 from botocore.exceptions import ClientError
 from decimal import Decimal
@@ -12,7 +11,6 @@ from boto3.dynamodb.conditions import Key
 from transfer import DeviceTransfer
 
 logger = logging.getLogger(__name__)
-
 
 class DeviceTransfersHandler:
     """
@@ -62,7 +60,7 @@ class DeviceTransfersHandler:
         """
         items = []
         try:
-            response = self._table.query(KeyConditionExpression=Key('deviceId').eq(deviceId))
+            response = self._table.query(KeyConditionExpression=Key('device_id').eq(deviceId))
             items = response.get('Items', [])
         except ClientError as err:
             logger.error(f'Error while calling get_device_transfer_details: {err}')
@@ -226,3 +224,22 @@ class DeviceTransfersHandler:
             # Handle the exception according to your requirements
             print(f"Error updating item: {e}")
 
+    # -----------------
+    # Update operations
+    # -----------------
+    def update_device_transfer(self, device_transfer: DeviceTransfer):
+        """
+        Updates deviceTransfer object to the DeviceTransfer table.
+
+        :param deviceTransfer:  deviceTransfer object.
+        :return:                Updated DeviceTransfer object.
+        """
+        try:
+            self._table.put_item(Item=device_transfer.to_dict())
+        except ClientError as err:
+            logger.error(
+                f'Error while calling update_device_transfer for deviceId: {device_transfer._device_id}: {err}'
+            )
+            raise
+        else:
+            return device_transfer
