@@ -42,10 +42,14 @@ class Device(object):
             UTC time of last received uplink (in seconds).
         _time_to_live: int
             UTC time when record should be removed from the table (in seconds; equals last_uplink + 24 hours).
+        _ota_support: bool
+            True if the device supports OTA else False
+        _fw_version: str
+            Firmware version of the device
     """
 
     def __init__(self, wireless_device_id, led=None, led_on=None, button=None, button_pressed=None, link_type=None,
-                 sensor=False, sensor_unit=None, last_uplink=0, time_to_live=None):
+                 sensor=False, sensor_unit=None, last_uplink=0, time_to_live=None, ota_support=False, fw_version=None):
 
         self._button = [] if button is None else button
         self._led = [] if led is None else led
@@ -61,6 +65,9 @@ class Device(object):
 
         self._button_pressed = {} if button_pressed is None else button_pressed
         self._led_on = [] if led_on is None else led_on
+
+        self._ota_support = ota_support
+        self._fw_version = "0.0" if fw_version is None else fw_version
 
     def set_led_on(self, led_on: [int]):
         self._led_on = led_on
@@ -93,6 +100,9 @@ class Device(object):
     def is_sensor(self) -> bool:
         return self._sensor
 
+    def is_ota_supported(self) -> bool:
+        return self._ota_support
+
     def get_sensor_unit(self) -> Unit:
         return self._sensor_unit
 
@@ -102,6 +112,9 @@ class Device(object):
     def get_time_to_live(self) -> int:
         return int(self._time_to_live)
 
+    def get_fw_version(self) -> str:
+        return self._fw_version
+
     def to_dict(self) -> dict:
         """
         Returns dict representation of the Device object.
@@ -109,14 +122,16 @@ class Device(object):
         :return:    Dict representation of the Device.
         """
         return {
-                'wireless_device_id': self.get_wireless_device_id(),
-                'led': self.get_led(),
-                'led_on': self.get_led_on(),
-                'button': self.get_button(),
-                'button_pressed': self.get_enabled_button_pressed_state(),
-                'link_type': self.get_link_type().value,
-                'sensor': self.is_sensor(),
-                'sensor_unit': self.get_sensor_unit().value,
-                'last_uplink': self.get_last_uplink(),
-                'time_to_live': self.get_time_to_live()
-            }
+            'wireless_device_id': self.get_wireless_device_id(),
+            'led': self.get_led(),
+            'led_on': self.get_led_on(),
+            'button': self.get_button(),
+            'button_pressed': self.get_enabled_button_pressed_state(),
+            'link_type': self.get_link_type().value,
+            'sensor': self.is_sensor(),
+            'sensor_unit': self.get_sensor_unit().value,
+            'last_uplink': self.get_last_uplink(),
+            'time_to_live': self.get_time_to_live(),
+            'ota_support': self.is_ota_supported(),
+            'fw_version': self.get_fw_version(),
+        }

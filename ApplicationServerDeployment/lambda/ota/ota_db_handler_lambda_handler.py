@@ -98,6 +98,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId1",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 50,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -110,6 +111,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId2",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 30,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -122,6 +124,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId3",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 80,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -134,6 +137,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId4",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 90,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -145,7 +149,8 @@ def mock_device_transfers():
             },
             {
                 "deviceId": "DeviceId5",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "transferStatus": "COMPLETE",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 100,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -158,6 +163,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId6",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 50,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -170,6 +176,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId7",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 10,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -182,6 +189,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId8",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 20,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
@@ -194,6 +202,7 @@ def mock_device_transfers():
             {
                 "deviceId": "DeviceId9",
                 "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "progress_pct": 24,
                 "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
                 "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp

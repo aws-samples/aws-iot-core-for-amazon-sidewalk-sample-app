@@ -13,16 +13,14 @@ from typing import Final
 
 OTA_S3_BUCKET_NAME: Final = os.environ.get('OTA_S3_BUCKET_NAME')
 
-def get_all_filenames(bucket_name):
+def get_all_filenames(bucket_name, prefix=''):
     s3 = boto3.client('s3')
-    response = s3.list_objects_v2(Bucket=bucket_name)
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
 
     # Extract filenames from the response
     filenames = [obj['Key'] for obj in response.get('Contents', [])]
 
     return filenames
-
-
 
 def lambda_handler(event, context):
     """
@@ -34,11 +32,27 @@ def lambda_handler(event, context):
         # Get the files names from s3 bucket
         # ---------------------------------------------------------------
         print(f'Received event: {event}')
-        filenames = get_all_filenames(OTA_S3_BUCKET_NAME)
+
+        # Get all filenames in the root of the bucket
+        all_filenames = get_all_filenames(OTA_S3_BUCKET_NAME)
+
+        # Get filenames in the 'current' folder if it exists
+        current_folder_filenames = get_all_filenames(OTA_S3_BUCKET_NAME, 'current-firmware/')
+
+        # Extract the current firmware file name (if exists)
+        current_firmware_filename = None
+        if current_folder_filenames:
+            current_firmware_filename = current_folder_filenames[0]
+
+        # Prepare the output
+        output = {
+            'fileNames': all_filenames,
+            'currentFirmwareFileName': current_firmware_filename
+        }
 
         return {
             'statusCode': 200,
-            'body': json.dumps(filenames)
+            'body': json.dumps(output)
         }
 
     except Exception:

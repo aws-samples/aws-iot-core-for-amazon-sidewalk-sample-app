@@ -28,13 +28,13 @@ class Tag:
     """
 
     def __init__(self):
-        self.type = ''
-        self.format = ''
-        self.val = ''
-        self.val_len = ''
+        self.type = ""
+        self.format = ""
+        self.val = ""
+        self.val_len = ""
         self.json = {}
 
-    def decode(self, type: str, format: str, val: str, val_len: str = ''):
+    def decode(self, type: str, format: str, val: str, val_len: str = ""):
         """
         Decodes Tag object based on input parameters.
 
@@ -69,11 +69,11 @@ class Tag:
         :return:    Dict representing Tag object.
         """
         return {
-            'format': TlvFormat(self.format).name,
-            'type': TagType(self.type).name,
-            'val_len': self.val_len,
-            'val': self.val,
-            'json': self.json
+            "format": TlvFormat(self.format).name,
+            "type": TagType(self.type).name,
+            "val_len": self.val_len,
+            "val": self.val,
+            "json": self.json,
         }
 
     def bin_repr(self):
@@ -106,21 +106,21 @@ class Tag:
             val_len = int(len(self.val) / 8)  # get value size in bytes
             if val_len == 1:
                 self.format = TlvFormat.SIZE_OPTIMIZED_1B.value
-                self.val_len = ''
+                self.val_len = ""
             elif val_len == 2:
                 self.format = TlvFormat.SIZE_OPTIMIZED_2B.value
-                self.val_len = ''
+                self.val_len = ""
             elif val_len == 4:
                 self.format = TlvFormat.SIZE_OPTIMIZED_4B.value
-                self.val_len = ''
+                self.val_len = ""
             else:
                 self.format = TlvFormat.STANDARD.value
-                self.val_len = format(val_len, '08b')
+                self.val_len = format(val_len, "08b")
         except TypeError as e:
-            self.format = ''
-            self.type = ''
-            self.val_len = ''
-            self.val = ''
+            self.format = ""
+            self.type = ""
+            self.val_len = ""
+            self.val = ""
 
     # -------------
     # Tag decoders
@@ -130,70 +130,56 @@ class Tag:
         Decodes BUTTON_PRESS tag and turns it into a human-readable dict.
         :return:    Dict representing received "button pressed" event.
         """
-        return {
-            'button_press': [int(id, 2) for id in wrap(self.val, 8)]
-        }
+        return {"button_press": [int(id, 2) for id in wrap(self.val, 8)]}
 
     def _decode_current_gps_time_in_secs(self):
         """
         Decodes CURRENT_GPS_TIME_IN_SECS tag and turns it into a human-readable dict.
         :return:    Dict representing current gps time.
         """
-        return {
-            'gps_time': int(self.val, 2)
-        }
+        return {"gps_time": int(self.val, 2)}
 
     def _decode_downlink_latency_in_secs(self):
         """
         Decodes DL_LATENCY_IN_SECS tag and turns it into a human-readable dict.
         :return:    Dict representing downlink latency.
         """
-        return {
-            'dl_latency': int(self.val, 2)
-        }
+        return {"dl_latency": int(self.val, 2)}
 
     def _decode_led_on_resp(self):
         """
         Decodes TAG_LED_ON_RESP tag and turns it into a human-readable dict.
         :return:    Dict representing received "LEDs on" response.
         """
-        return {
-            'led_on_resp': [int(id, 2) for id in wrap(self.val, 8)]
-        }
+        return {"led_on_resp": [int(id, 2) for id in wrap(self.val, 8)]}
 
     def _decode_led_off_resp(self):
         """
         Decodes TAG_LED_OFF_RESP tag and turns it into a human-readable dict.
         :return:    Dict representing received "LEDs off" response.
         """
-        return {
-            'led_off_resp': [int(id, 2) for id in wrap(self.val, 8)]
-        }
+        return {"led_off_resp": [int(id, 2) for id in wrap(self.val, 8)]}
 
     def _decode_link_type(self):
         """
         Decodes LINK_TYPE tag and turns it into a human-readable dict.
         :return:    Dict representing link type.
         """
-        return {'link_type': LinkType(self.val).name}
+        return {"link_type": LinkType(self.val).name}
 
     def _decode_number_of_buttons(self):
         """
         Decodes NUMBER_OF_BUTTONS tag and turns it into a human-readable dict.
         :return:    Dict representing number of available buttons.
         """
-        return {
-            'buttons': [int(id, 2) for id in wrap(self.val, 8)]
-        }
+        return {"buttons": [int(id, 2) for id in wrap(self.val, 8)]}
 
     def _decode_number_of_leds(self):
         """
         Decodes NUMBER_OF_LEDS tag and turns it into a human-readable dict.
         :return:    Dict representing number of available LEDs.
         """
-        return {
-            'leds': [int(id, 2) for id in wrap(self.val, 8)]
-        }
+        return {"leds": [int(id, 2) for id in wrap(self.val, 8)]}
 
     def _decode_temp_sensor_available_and_unit_representation(self):
         """
@@ -201,8 +187,8 @@ class Tag:
         :return:    Dict representing temp sensor metadata.
         """
         return {
-            'sensor': True if self.val[-1] == '1' else False,
-            'sensor_units': SensorUnits(self.val[-2]).name
+            "sensor": True if self.val[-1] == "1" else False,
+            "sensor_units": SensorUnits(self.val[-2]).name,
         }
 
     def _decode_temp_sensor_data(self):
@@ -210,9 +196,54 @@ class Tag:
         Decodes TEMP_SENSOR_DATA tag and turns it into a human-readable dict.
         :return:    Dict representing temp sensor data.
         """
+        return {"sensor_data": int(self.val, 2)}
+
+    def _decode_ota_supported(self):
+        """
+        Decodes OTA_SUPPORTED tag and turns it into a human-readable dict.
+        :return: Dict representing ota support
+        """
+        return {"ota_supported": int(self.val, 2)}
+
+    def _decode_ota_firmware_version(self):
+        """
+        Decodes OTA_FIRMWARE_VERSION tag and turns it into a human-readable dict.
+        :return: Dict representing firmware version
+        """
+        vals = wrap(self.val, 16)
+        return {"major": int(vals[0], 2), "minor": int(vals[1], 2)}
+
+    def _decode_ota_trigger_notify(self):
+        """
+        Decodes OTA_TRIGGER_NOTIFY tag and turns it into human-readable dict.
+        :return: Dict representing request for an OTA trigger
+        """
+        return {"ota_trigger": int(self.val, 2)}
+
+    def _decode_ota_progress(self):
+        """
+        Decodes OTA_PROGRESS tag and turns it into human-readable dict.
+        :return: Dict representing OTA Progress
+        """
         return {
-            'sensor_data': int(self.val, 2)
+            "ota_percent": int(self.val[:8], 2),
+            "completed_file_size": int(self.val[8:24], 2),
+            "total_file_size": int(self.val[24:], 2),
         }
+
+    def _decode_ota_file_id(self):
+        """
+        Decodes OTA_FILE_ID tag and turns it into human-readable dict.
+        :return: Dict representing an OTA file id
+        """
+        return {"file_id": int(self.val, 2)}
+
+    def _decode_ota_completion_status(self):
+        """
+        Decodes OTA_COMPLETION_STATUS tag and turns it into human-readable dict.
+        :return: Dict representing OTA completion status
+        """
+        return {"ota_status": OtaCompletionStatus(self.val).name}
 
     DECODERS_MAP = {
         TagType.BUTTON_PRESS: _decode_button_press,
@@ -224,7 +255,13 @@ class Tag:
         TagType.NUMBER_OF_BUTTONS: _decode_number_of_buttons,
         TagType.NUMBER_OF_LEDS: _decode_number_of_leds,
         TagType.TEMP_SENSOR_AVAILABLE_AND_UNIT_REPRESENTATION: _decode_temp_sensor_available_and_unit_representation,
-        TagType.TEMP_SENSOR_DATA: _decode_temp_sensor_data
+        TagType.TEMP_SENSOR_DATA: _decode_temp_sensor_data,
+        TagType.OTA_SUPPORTED: _decode_ota_supported,
+        TagType.OTA_FIRMWARE_VERSION: _decode_ota_firmware_version,
+        TagType.OTA_TRIGGER_NOTIFY: _decode_ota_trigger_notify,
+        TagType.OTA_PROGRESS: _decode_ota_progress,
+        TagType.OTA_COMPLETION_STATUS: _decode_ota_completion_status,
+        TagType.OTA_FILE_ID: _decode_ota_file_id,
     }
 
     # -------------
@@ -236,7 +273,7 @@ class Tag:
         :return:    Tag value (binary string).
         """
         indices = self.json[TagType.BUTTON_PRESSED_RESP]
-        return ''.join([format(idx, '08b') for idx in indices])
+        return "".join([format(idx, "08b") for idx in indices])
 
     def _encode_led_on(self):
         """
@@ -244,7 +281,7 @@ class Tag:
         :return:    Tag value (binary string).
         """
         indices = self.json[TagType.LED_ON]
-        return ''.join([format(idx, '08b') for idx in indices])
+        return "".join([format(idx, "08b") for idx in indices])
 
     def _encode_led_off(self):
         """
@@ -252,7 +289,7 @@ class Tag:
         :return:    Tag value (binary string).
         """
         indices = self.json[TagType.LED_OFF]
-        return ''.join([format(idx, '08b') for idx in indices])
+        return "".join([format(idx, "08b") for idx in indices])
 
     def _encode_current_gps_time_in_secs(self):
         """
@@ -260,11 +297,11 @@ class Tag:
         :return:    Tag value (binary string).
         """
         current_gps_time = self.json[TagType.CURRENT_GPS_TIME_IN_SECS]
-        return format(current_gps_time, '032b')
+        return format(current_gps_time, "032b")
 
     ENCODERS_MAP = {
         TagType.BUTTON_PRESSED_RESP: _encode_button_pressed_resp,
         TagType.LED_ON: _encode_led_on,
         TagType.LED_OFF: _encode_led_off,
-        TagType.CURRENT_GPS_TIME_IN_SECS: _encode_current_gps_time_in_secs
+        TagType.CURRENT_GPS_TIME_IN_SECS: _encode_current_gps_time_in_secs,
     }

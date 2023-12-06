@@ -55,8 +55,11 @@ def create_task(file_name, start_time_utc, device_ids):
     #         print('The file does not exists ',  file_name)
     #         return
         
+    #     if file_size < 1024:
+    #         file_size = 1024
+            
     #     # Call the CreateFUOTATaskAPI
-    #     create_fuota_task_response = iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn)
+    #     create_fuota_task_response = iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn, file_size=file_size)
     #     task_id = create_fuota_task_response.get('Id', '')
     #     print(f'task id ', task_id)
 

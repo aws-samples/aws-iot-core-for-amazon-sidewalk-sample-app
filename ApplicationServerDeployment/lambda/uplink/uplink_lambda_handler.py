@@ -5,6 +5,9 @@
 Handles uplinks coming from the Sidewalk Sensor Monitoring Demo Application.
 """
 
+from ota_notifications_handler import OTANotificationsHandler
+from sidewalk_devices_handler import SidewalkDevicesHandler
+from measurements_handler import MeasurementsHandler
 import base64
 import boto3
 import json
@@ -23,9 +26,8 @@ DEMO_APP_ACTION_RESP: Final = "DEMO_APP_ACTION_RESP"
 DEMO_APP_ACTION_REQ: Final = "DEMO_APP_ACTION_REQ"
 DEMO_APP_ACTION_NOTIFICATION: Final = "DEMO_APP_ACTION_NOTIFICATION"
 
-from measurements_handler import MeasurementsHandler
-from sidewalk_devices_handler import SidewalkDevicesHandler
 
+ota_notifications_handler: Final = OTANotificationsHandler()
 device_handler: Final = SidewalkDevicesHandler()
 measurement_handler: Final = MeasurementsHandler()
 
@@ -71,10 +73,18 @@ def lambda_handler(event, context):
 
         notification = event.get("notification")
         if notification is not None:
-            return {
-                'statusCode': 200,
-                'body': json.dumps('Notification received')
-            }
+            try:
+                ota_notifications_handler.save_fuota_task_notifications(
+                    notification)
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps('Notification received')
+                }
+            except json.JSONDecodeError as e:
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps('Invalid JSON format in the notification field.')
+                }
 
         uplink = event.get("uplink")
         if uplink is None:
@@ -102,7 +112,8 @@ def lambda_handler(event, context):
         ul_latency = 'no latency info'
         datetime_now = datetime.now(timezone.utc)
         if ul_time is not None:
-            ul_latency = str((datetime_now - time_utils.convert_gps_to_utc(ul_time)).total_seconds())
+            ul_latency = str(
+                (datetime_now - time_utils.convert_gps_to_utc(ul_time)).total_seconds())
 
         print(f'WirelessDeviceId: {wireless_device_id} DecodedPayload: {decoded_payload} Seqn: {sidewalk.get("Seq")} '
               f'Uplink latency: {ul_latency}')
@@ -120,6 +131,10 @@ def lambda_handler(event, context):
             sensor = decoded_payload.get("sensor", False)
             sensor_units = decoded_payload.get("sensor_units")
             link_type = decoded_payload.get("link_type")
+            fw_version = decoded_payload.get(
+                "major", "0") + "." + decoded_payload.get("minor", "0")
+            ota_support = decoded_payload.get("ota_supported", False)
+
             button_pressed = []
             seq_n = sidewalk.get("Seq")
             for button in buttons:
@@ -129,10 +144,11 @@ def lambda_handler(event, context):
                             led=led, led_on=[],
                             button=buttons, button_pressed=button_pressed,
                             link_type=link_type,
-                            sensor=sensor, sensor_unit=sensor_units)
+                            sensor=sensor, sensor_unit=sensor_units, ota_support=ota_support, fw_version=fw_version)
             device_handler.add_device(device)
-
-            response_body = send_payload_to_downlink_lambda(DEMO_APP_CAP_DISCOVERY_RESP, wireless_device_id)
+            # call save_device_transfer_notifications
+            response_body = send_payload_to_downlink_lambda(
+                DEMO_APP_CAP_DISCOVERY_RESP, wireless_device_id)
             return {
                 'statusCode': 200,
                 'body': json.dumps('Hello from DEMO_APP_CAP_DISCOVERY_NOTIFICATION! Resp' +
@@ -157,7 +173,9 @@ def lambda_handler(event, context):
                 device.get_led_on()
             )
 
-            print(f'Downlink latency: {dl_latency if dl_latency < 1000 else 0}')  # 'if' introduced in case of edge device time drift
+            # 'if' introduced in case of edge device time drift
+            print(
+                f'Downlink latency: {dl_latency if dl_latency < 1000 else 0}')
             return {
                 'statusCode': 200,
                 'body': json.dumps('Hello from DEMO_APP_ACTION_RESP!')
@@ -204,6 +222,18 @@ def lambda_handler(event, context):
                     'body': json.dumps('Hello from DEMO_APP_ACTION_NOTIFICATION! Resp' +
                                        ' Body: ' + response_body)
                 }
+
+            # TODO: Add handler to trigger OTA
+            if "ota_trigger" in decoded_payload:
+                pass
+
+            # TODO: Add handler to update ota completion
+            if "ota_percent" in decoded_payload:
+                pass
+
+            # TODO: Add handler to check completion of OTA
+            if "ota_status" in decoded_payload:
+                pass
 
             return {
                 'statusCode': 200,

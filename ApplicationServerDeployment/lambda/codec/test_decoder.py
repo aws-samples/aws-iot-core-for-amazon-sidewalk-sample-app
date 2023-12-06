@@ -35,7 +35,8 @@ class TestDecoder(unittest.TestCase):
         cmd = Command().decode('4001014201020B030C01')
         cmd_json = json.loads(cmd.__str__())
         decoded = cmd_json['decoded']
-        self.assertEqual(cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
+        self.assertEqual(
+            cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
         self.assertEqual(decoded['buttons'], [1])
         self.assertEqual(decoded['leds'], [1, 2])
         self.assertEqual(decoded['link_type'], 'BLE')
@@ -46,7 +47,8 @@ class TestDecoder(unittest.TestCase):
         cmd = Command().decode('40C10301020382010203040B010C02')
         cmd_json = json.loads(cmd.__str__())
         decoded = cmd_json['decoded']
-        self.assertEqual(cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
+        self.assertEqual(
+            cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
         self.assertEqual(decoded['buttons'], [1, 2, 3])
         self.assertEqual(decoded['leds'], [1, 2, 3, 4])
         self.assertEqual(decoded['link_type'], 'FSK')
@@ -57,11 +59,22 @@ class TestDecoder(unittest.TestCase):
         cmd = Command().decode('40C1050102030405C2060102030405060B000C04')
         cmd_json = json.loads(cmd.__str__())
         decoded = cmd_json['decoded']
-        self.assertEqual(cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
+        self.assertEqual(
+            cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
         self.assertEqual(decoded['buttons'], [1, 2, 3, 4, 5])
         self.assertEqual(decoded['leds'], [1, 2, 3, 4, 5, 6])
         self.assertEqual(decoded['link_type'], 'LORA')
         self.assertEqual(decoded['sensor'], False)
+
+    def test_decodeCapabilities_Ota_FirmwareVersion_ShouldSuccess(self):
+        cmd = Command().decode('400E018F04D209290C04')
+        cmd_json = json.loads(cmd.__str__())
+        decoded = cmd_json['decoded']
+        self.assertEqual(cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
+        self.assertEqual(decoded['ota_supported'], 1)
+        self.assertEqual(decoded['major'], 1234)
+        self.assertEqual(decoded['minor'], 2345)
+        self.assertEqual(decoded['link_type'], 'LORA')
 
     # ---------------------------------
     # Decode DEMO_APP_ACTION_RESP  msg
@@ -232,6 +245,34 @@ class TestDecoder(unittest.TestCase):
         self.assertEqual(decoded['sensor_data'], 16909060)
         self.assertEqual(decoded['gps_time'], 1)
         self.assertEqual(decoded['link_type'], 'BLE')
+
+    def test_decodeOta_progress(self):
+        cmd = Command().decode('41D105140014006493000000000C01')
+        cmd_json = json.loads(cmd.__str__())
+        decoded = cmd_json['decoded']
+        self.assertEqual(cmd_json['id'], 'DEMO_APP_ACTION_NOTIFICATION')
+        self.assertEqual(decoded['link_type'], 'BLE')
+        self.assertEqual(decoded['ota_percent'], 20)
+        self.assertEqual(decoded['total_file_size'], 100)
+        self.assertEqual(decoded['completed_file_size'], 20)
+        self.assertEqual(decoded['file_id'], 0)
+
+    def test_decodeOta_Completion_Status(self):
+        cmd = Command().decode('41120293000000000C01')
+        cmd_json = json.loads(cmd.__str__())
+        decoded = cmd_json['decoded']
+        self.assertEqual(cmd_json['id'], 'DEMO_APP_ACTION_NOTIFICATION')
+        self.assertEqual(decoded['file_id'], 0)
+        self.assertEqual(decoded['ota_status'], 'FAILED')
+        self.assertEqual(decoded['link_type'], 'BLE')
+
+    def test_decodeOta_Trigger(self):
+        cmd = Command().decode('4110010C01')
+        cmd_json = json.loads(cmd.__str__())
+        decoded = cmd_json['decoded']
+        self.assertEqual(cmd_json['id'], 'DEMO_APP_ACTION_NOTIFICATION')
+        self.assertEqual(decoded['link_type'], 'BLE')
+        self.assertEqual(decoded['ota_trigger'], 1)
 
 
 if __name__ == '__main__':
