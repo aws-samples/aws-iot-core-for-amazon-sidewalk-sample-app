@@ -99,7 +99,7 @@ if sid_dest_already_exists:
 parent = Path(__file__).parent
 lambdas = ['SidewalkUplinkLambda', 'SidewalkDownlinkLambda', 'SidewalkDbHandlerLambda']
 dirs = ['uplink', 'downlink', 'db_handler']
-common_dirs = ['codec', 'database', 'utils']
+common_dirs = ['codec', 'database', 'utils', 'ota']
 lambda_client.upload_lambda_files(parent, lambdas, dirs, common_dirs)
 auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLambda', 'SidewalkTokenGeneratorLambda']
 auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
