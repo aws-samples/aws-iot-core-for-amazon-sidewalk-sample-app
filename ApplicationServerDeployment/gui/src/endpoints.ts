@@ -14,7 +14,8 @@ export const ENDPOINTS = {
   s3Filenames: '/otaGetS3',
   upload: '/otaUpload',
   getDevicesByTaskId: '/otaDevices', // ?fuotaTaskId=val
-  getDeviceById: '/ota/deviceTransfers/:id'
+  getDeviceById: '/ota/deviceTransfers/:id',
+  setCurrentFirmware: '/otaSetCurrentFirmware'
 };
 
 export const interpolateParams = (route: string, params: { [k: string]: string }) => {

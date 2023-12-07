@@ -10,13 +10,15 @@ import { viteMockServe } from "vite-plugin-mock";
 export default ({ mode }: ConfigEnv) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
+  const MOCK_MODE = process.env.VITE_MOCK_MODE === 'true';
+
   return defineConfig({
     plugins: [
       svgr(),
       react(),
       viteMockServe({
         mockPath: "mock",
-        enable: mode === "development",
+        enable: mode === 'production' ? false : MOCK_MODE,
       }),
     ],
     css: {

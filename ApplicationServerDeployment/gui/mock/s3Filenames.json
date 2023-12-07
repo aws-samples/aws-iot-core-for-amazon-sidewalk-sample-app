@@ -1,1 +1,4 @@
-["abc.bin", "cdf.bin", "hjg.bin"]
+{
+  "fileNames": ["abc.bin", "cdf.bin", "hjg.bin"],
+  "currentFirmwareFileName": "folder/abc.bin"
+}

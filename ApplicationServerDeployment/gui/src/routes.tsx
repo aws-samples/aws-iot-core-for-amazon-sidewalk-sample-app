@@ -15,7 +15,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: withAuthProvider(<App />),
-    ErrorBoundary: () => <div className="full-height-with-header flex-abs-center">There was an error, check console</div>,
+    ErrorBoundary: () => <div className="full-height-with-header flex-abs-center">There was an error. Check console.</div>,
     children: [
       {
         path: Routes.auth,

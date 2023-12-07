@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 
 export const Instructions = () => (
-  <>
+  <div>
     <h2 className={classNames('color-black', 'pl-3')}>Instructions</h2>
     <ul className={classNames('color-black', 'mb-3')}>
       <li>
@@ -26,5 +26,5 @@ export const Instructions = () => (
         Clicking <b>Cancel</b> in the Task table will terminate all Transferring tasks that are selected, all devices in the task will be Canceled
       </li>
     </ul>
-  </>
+  </div>
 );

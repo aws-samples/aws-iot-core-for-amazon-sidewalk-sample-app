@@ -5,3 +5,18 @@
 .color-black {
   color: black;
 }
+
+.container-flex {
+  display: flex;
+  justify-content: space-between;
+  background-color: #fafafa;;
+}
+
+.container-instruction {
+  background-color: lightgray;
+}
+
+.title-firmware {
+  font-size: 1rem;
+  font-weight: 500;
+}

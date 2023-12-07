@@ -109,5 +109,12 @@ export default [
       }
     },
     statusCode: 200
+  },
+  {
+    url: '/api/otaSetCurrentFirmware',
+    method: 'post',
+    response: () => undefined,
+    timeout: 3000,
+    statusCode: 200
   }
 ];

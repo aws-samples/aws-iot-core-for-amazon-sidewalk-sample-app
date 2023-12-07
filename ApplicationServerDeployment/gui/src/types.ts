@@ -69,3 +69,12 @@ export interface IStartTransferTask {
 export interface ICancelTask {
   taskIds: Array<string>;
 }
+
+export interface IS3Files {
+  fileNames: Array<string>;
+  currentFirmwareFileName: string;
+}
+
+export interface ISetCurrentFirmware {
+  filename: string;
+}
