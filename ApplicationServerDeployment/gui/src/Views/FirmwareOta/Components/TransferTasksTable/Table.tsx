@@ -29,35 +29,35 @@ export const TranserTasksTable = () => {
   const columns: ColumnsType<ITransferTask> = [
     {
       title: 'Task Id',
-      dataIndex: 'taskId'
+      dataIndex: 'task_id'
     },
     {
       title: 'Status',
-      dataIndex: 'taskStatus',
+      dataIndex: 'task_status',
       render: (value: TransferStatusType) => <TransferStatus type={value} />
     },
     {
       title: 'Creation Time UTC',
-      dataIndex: 'creationTimeUTC',
+      dataIndex: 'creation_time_UTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
       title: 'Start Time UTC',
-      dataIndex: 'taskStartTimeUTC',
+      dataIndex: 'task_start_time_UTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
       title: 'Duration',
       render: (_value: number, record: ITransferTask) =>
-        getDurationString({ start: record.taskStartTimeUTC, end: record.taskEndTimeUTC })
+        getDurationString({ start: record.task_start_time_UTC, end: record.task_end_time_UTC })
     },
     {
       title: 'Filename',
-      dataIndex: 'fileName'
+      dataIndex: 'file_name'
     },
     {
       title: 'File Size',
-      dataIndex: 'fileSizeKB',
+      dataIndex: 'file_size_kb',
       render: (value: number) => getFileSize(value)
     },
     {
@@ -70,7 +70,7 @@ export const TranserTasksTable = () => {
     },
     {
       title: 'Devices',
-      dataIndex: 'deviceIds',
+      dataIndex: 'device_ids',
       render: (list) => (
         <Collapse
           bordered={false}
@@ -100,7 +100,7 @@ export const TranserTasksTable = () => {
   ];
 
   const handleCancelTaskButtonClick = () => {
-    cancelTask({ taskIds: tasksSelected });
+    cancelTask({ task_ids: tasksSelected });
   };
 
   const handleTasksSelected = (selectedRowKeys: React.Key[]) => {
@@ -111,7 +111,7 @@ export const TranserTasksTable = () => {
     if (!transferTaskList) return;
 
     scrollManager.setItemsDisposition(transferTaskList, 'tasks');
-  }, [transferTaskList?.transferTasks.length]);
+  }, [transferTaskList?.transfer_tasks.length]);
 
   return (
     <>
@@ -121,7 +121,7 @@ export const TranserTasksTable = () => {
           <Button
             type="primary"
             size="middle"
-            disabled={cancelingTask || transferTaskList?.transferTasks.length === 0 || tasksSelected.length === 0}
+            disabled={cancelingTask || transferTaskList?.transfer_tasks.length === 0 || tasksSelected.length === 0}
             onClick={handleCancelTaskButtonClick}
             loading={cancelingTask}
           >
@@ -139,8 +139,8 @@ export const TranserTasksTable = () => {
           selectedRowKeys: tasksSelected
         }}
         columns={columns}
-        dataSource={transferTaskList?.transferTasks}
-        rowKey={(item) => item.taskId}
+        dataSource={transferTaskList?.transfer_tasks}
+        rowKey={(item) => item.task_id}
         loading={loadingTransferTasksList}
         pagination={{
           pageSize: scrollManager.tables.tasks.pageSize,

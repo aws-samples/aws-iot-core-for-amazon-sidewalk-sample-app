@@ -21,9 +21,9 @@ export const WirelessDevicesTable = () => {
   const [_, forceRender] = useState({});
 
   const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
-    fileName: '',
-    startTimeUTC: undefined,
-    deviceIds: []
+    file_name: '',
+    start_time_UTC: undefined,
+    device_ids: []
   });
 
   const { data: devicesList, isLoading: isLoadingDevices, refetch: refetchWirelessDevices } = useGetWirelessDevices();
@@ -39,7 +39,7 @@ export const WirelessDevicesTable = () => {
   const { mutate: startTransferTask, isLoading: isTransfering } = useStartTransferTask({
     onSuccess: () => {
       toast.success('Task transferred');
-      setStartTransferTaskPayload({ deviceIds: [], fileName: '', startTimeUTC: undefined });
+      setStartTransferTaskPayload({ device_ids: [], file_name: '', start_time_UTC: undefined });
       refetchWirelessDevices();
     }
   });
@@ -48,69 +48,70 @@ export const WirelessDevicesTable = () => {
   const lastItemUploaded = useRef('');
   const wirelessDevicesIntervalRefs = useRef<{ [key: string]: string | number }>({});
   const mockProgressCounter = useRef<{ [key: string]: number }>({});
-  const canStartTrasnferTask = startTransferTaskPayload.fileName.length > 0 && startTransferTaskPayload.deviceIds.length > 0;
+  const canStartTrasnferTask =
+    startTransferTaskPayload.file_name.length > 0 && startTransferTaskPayload.device_ids.length > 0;
 
   const columns: ColumnsType<IWirelessDevice> = [
     {
       title: 'Device Id',
-      dataIndex: 'deviceId'
+      dataIndex: 'device_id'
     },
     {
       title: 'Transfer Status',
-      dataIndex: 'transferStatus',
+      dataIndex: 'transfer_status',
       render: (value: TransferStatusType) => <TransferStatus type={value} />
     },
     {
       title: 'Transfer Progress',
-      dataIndex: 'transferProgress',
+      dataIndex: 'transfer_progress',
       render: (value: number) => (value ? `${value}%` : `${showValueOrDash(value)}`)
     },
     {
       title: 'Status Updated UTC',
-      dataIndex: 'statusUpdatedTimeUTC',
+      dataIndex: 'status_updated_time_UTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
       title: 'Start Time UTC',
-      dataIndex: 'transferStartTimeUTC',
+      dataIndex: 'transfer_start_time_UTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
       title: 'Duration',
       render: (_value: number, record: IWirelessDevice) => {
         return getDurationString({
-          start: record.transferStartTimeUTC,
-          end: record.transferEndTimeUTC || record.statusUpdatedTimeUTC
+          start: record.transfer_start_time_UTC,
+          end: record.transfer_end_time_UTC || record.status_updated_time_UTC
         });
       }
     },
     {
       title: 'Filename',
-      dataIndex: 'fileName'
+      dataIndex: 'file_name'
     },
     {
       title: 'Size',
-      dataIndex: 'fileSizeKB',
+      dataIndex: 'file_size_kb',
       render: (value: number) => getFileSize(value)
     },
     {
       title: 'Firmware Upgrade Status',
-      dataIndex: 'firmwareUpgradeStatus',
+      dataIndex: 'firmware_upgrade_status',
       render: (value: TransferStatusType) => <TransferStatus type={value} />
     },
     {
       title: 'Firmware Version',
-      dataIndex: 'firmwareVersion'
+      dataIndex: 'firmware_version'
     },
     {
       title: 'Task ID',
-      dataIndex: 'taskId',
+      dataIndex: 'task_id',
       render: (value: string) => <a onClick={() => scrollManager.scrollTo(value, 'tasks')}>{showValueOrDash(value)}</a>
     }
   ];
 
   const handleDatePickerChange = (value: DatePickerProps['value']) => {
-    setStartTransferTaskPayload((prevState) => ({ ...prevState, startTimeUTC: value?.valueOf() }));
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, start_time_UTC: value?.valueOf() }));
   };
 
   const filterOption = (input: string, option?: { label: string; value: string }) =>
@@ -124,12 +125,12 @@ export const WirelessDevicesTable = () => {
     upload(file);
   };
 
-  const handleFilenameSelected = (fileName: string) => {
-    setStartTransferTaskPayload((prevState) => ({ ...prevState, fileName }));
+  const handleFilenameSelected = (file_name: string) => {
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, file_name }));
   };
 
   const handleDeviceSelected = (selectedRowKeys: React.Key[]) => {
-    setStartTransferTaskPayload((prevState) => ({ ...prevState, deviceIds: selectedRowKeys as Array<string> }));
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, device_ids: selectedRowKeys as Array<string> }));
   };
 
   const handleStarTransferTask = () => {
@@ -141,7 +142,9 @@ export const WirelessDevicesTable = () => {
       const result = await apiClient.get<IWirelessDevice>(interpolateParams(ENDPOINTS.getDeviceById, { id }));
       const individualDevice = result.data;
 
-      const deviceToReplace = devicesList?.wirelessDevices.find((device) => device.deviceId === individualDevice.deviceId);
+      const deviceToReplace = devicesList?.wireless_devices.find(
+        (device) => device.device_id === individualDevice.device_id
+      );
 
       // mutate individual wireless data and force render
       Object.keys(deviceToReplace!).forEach((key) => {
@@ -151,7 +154,7 @@ export const WirelessDevicesTable = () => {
       forceRender({});
 
       // should keep fetching while...
-      return individualDevice.transferProgress !== 100;
+      return individualDevice.transfer_progress !== 100;
     } catch (error) {
       verifyAuth((error as AxiosError)?.response?.status || 500);
       toast.error(`Error while getting device by id: ${id}`);
@@ -162,18 +165,18 @@ export const WirelessDevicesTable = () => {
   };
 
   useEffect(() => {
-    const newItemUploaded = s3List?.fileNames.find((filename) => filename === lastItemUploaded.current);
+    const newItemUploaded = s3List?.file_names.find((filename) => filename === lastItemUploaded.current);
 
     if (newItemUploaded) {
       handleFilenameSelected(newItemUploaded);
     }
-  }, [s3List?.fileNames.length]);
+  }, [s3List?.file_names.length]);
 
   // POLLING INDIVIDUAL DEVICE LOGIC
   useEffect(() => {
     if (!devicesList) return;
-    const devicesToPoll = devicesList?.wirelessDevices.filter(
-      (device) => device.transferStatus === 'TRANSFERRING' || device.transferStatus === 'PENDING'
+    const devicesToPoll = devicesList?.wireless_devices.filter(
+      (device) => device.transfer_status === 'TRANSFERRING' || device.transfer_status === 'PENDING'
     );
 
     if (devicesToPoll?.length === 0) return;
@@ -181,30 +184,30 @@ export const WirelessDevicesTable = () => {
     if (MOCK_MODE) {
       // JUST LOGIC FOR MOCKING POLLING
       for (const device of devicesToPoll!) {
-        mockProgressCounter.current[device.deviceId] = 1;
-        wirelessDevicesIntervalRefs.current[device.deviceId] = window.setInterval(async () => {
+        mockProgressCounter.current[device.device_id] = 1;
+        wirelessDevicesIntervalRefs.current[device.device_id] = window.setInterval(async () => {
           // mocklogic
           const shouldKeepFetching = await fetchDeviceByIdAndMutate(
-            `${device.deviceId}_${mockProgressCounter.current[device.deviceId]}`
+            `${device.device_id}_${mockProgressCounter.current[device.device_id]}`
           );
 
           if (!shouldKeepFetching) {
-            window.clearInterval(wirelessDevicesIntervalRefs.current[device.deviceId] as number);
+            window.clearInterval(wirelessDevicesIntervalRefs.current[device.device_id] as number);
             // mocklogic
-            mockProgressCounter.current[device.deviceId] = 1;
+            mockProgressCounter.current[device.device_id] = 1;
           }
 
           // mock logic
-          mockProgressCounter.current[device.deviceId] += 1;
+          mockProgressCounter.current[device.device_id] += 1;
         }, APP_CONFIG.intervals.otaProgressTasks);
       }
     } else {
       for (const device of devicesToPoll!) {
-        wirelessDevicesIntervalRefs.current[device.deviceId] = window.setInterval(async () => {
-          const shouldKeepFetching = await fetchDeviceByIdAndMutate(device.deviceId);
+        wirelessDevicesIntervalRefs.current[device.device_id] = window.setInterval(async () => {
+          const shouldKeepFetching = await fetchDeviceByIdAndMutate(device.device_id);
 
           if (!shouldKeepFetching) {
-            window.clearInterval(wirelessDevicesIntervalRefs.current[device.deviceId] as number);
+            window.clearInterval(wirelessDevicesIntervalRefs.current[device.device_id] as number);
           }
         }, APP_CONFIG.intervals.otaProgressTasks);
       }
@@ -212,7 +215,7 @@ export const WirelessDevicesTable = () => {
 
     return () => {
       devicesToPoll.forEach((device) => {
-        window.clearInterval(wirelessDevicesIntervalRefs.current[device.deviceId] as number);
+        window.clearInterval(wirelessDevicesIntervalRefs.current[device.device_id] as number);
       });
     };
   }, [devicesList]);
@@ -221,7 +224,7 @@ export const WirelessDevicesTable = () => {
     if (!devicesList) return;
 
     scrollManager.setItemsDisposition(devicesList, 'devices');
-  }, [devicesList?.wirelessDevices.length]);
+  }, [devicesList?.wireless_devices.length]);
 
   return (
     <>
@@ -242,10 +245,10 @@ export const WirelessDevicesTable = () => {
             loading={isLoadingFilenames}
             disabled={isLoadingFilenames}
             filterOption={filterOption}
-            options={s3List?.fileNames.map((filename) => ({ label: filename, value: filename }))}
-            value={startTransferTaskPayload.fileName}
+            options={s3List?.file_names.map((filename) => ({ label: filename, value: filename }))}
+            value={startTransferTaskPayload.file_name}
           />
-          <DatePicker dateValue={startTransferTaskPayload.startTimeUTC} onDatePickerChange={handleDatePickerChange} />
+          <DatePicker dateValue={startTransferTaskPayload.start_time_UTC} onDatePickerChange={handleDatePickerChange} />
           <Button
             type="primary"
             size="middle"
@@ -265,11 +268,11 @@ export const WirelessDevicesTable = () => {
         rowSelection={{
           type: 'checkbox',
           onChange: handleDeviceSelected,
-          selectedRowKeys: startTransferTaskPayload.deviceIds
+          selectedRowKeys: startTransferTaskPayload.device_ids
         }}
         columns={columns}
-        dataSource={devicesList?.wirelessDevices}
-        rowKey={(item) => item.deviceId}
+        dataSource={devicesList?.wireless_devices}
+        rowKey={(item) => item.device_id}
         loading={isLoadingDevices}
         pagination={{
           pageSize: scrollManager.tables.devices.pageSize,

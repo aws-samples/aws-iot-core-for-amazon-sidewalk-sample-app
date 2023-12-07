@@ -84,9 +84,9 @@ const useScrollProvider = () => {
 
   const setItemsDisposition = (items: ITransferTasks | IWirelessDevices, tableType: TableType) => {
     if (tableType === 'devices') {
-      tables.current[tableType].idsList = (items as IWirelessDevices).wirelessDevices.map((device) => device.deviceId);
+      tables.current[tableType].idsList = (items as IWirelessDevices).wireless_devices.map((device) => device.device_id);
     } else if (tableType === 'tasks') {
-      tables.current[tableType].idsList = (items as ITransferTasks).transferTasks.map((task) => task.taskId);
+      tables.current[tableType].idsList = (items as ITransferTasks).transfer_tasks.map((task) => task.task_id);
     }
   };
 

@@ -21,58 +21,58 @@ export interface IMeasurement {
 }
 
 export interface IWirelessDevices {
-  wirelessDevices: Array<IWirelessDevice>;
+  wireless_devices: Array<IWirelessDevice>;
 }
 
 export type TransferStatusType = 'PENDING' | 'TRANSFERRING' | 'CANCELLED' | 'FAILED' | 'COMPLETE' | 'COMPLETED' | 'NONE';
 
 export interface IWirelessDevice {
-  deviceId: string;
-  transferStatus: TransferStatusType;
-  statusUpdatedTimeUTC: number;
-  transferStartTimeUTC: number;
-  transferEndTimeUTC: number;
-  transferProgress: number;
-  fileName: string;
-  fileSizeKB: number;
-  firmwareUpgradeStatus: 'Pending' | 'Completed' | 'Failed' | 'None';
-  firmwareVersion: string;
-  taskId: string;
+  device_id: string;
+  transfer_status: TransferStatusType;
+  status_updated_time_UTC: number;
+  transfer_start_time_UTC: number;
+  transfer_end_time_UTC: number;
+  transfer_progress: number;
+  file_name: string;
+  file_size_kb: number;
+  firmware_upgrade_status: 'Pending' | 'Completed' | 'Failed' | 'None';
+  firmware_version: string;
+  task_id: string;
 }
 
 export interface ITransferTask {
-  taskId: string;
-  taskStatus: TransferStatusType;
-  creationTimeUTC: number;
-  taskStartTimeUTC: number;
-  taskEndTimeUTC: number;
-  fileName: string;
-  fileSizeKB: number;
+  task_id: string;
+  task_status: TransferStatusType;
+  creation_time_UTC: number;
+  task_start_time_UTC: number;
+  task_end_time_UTC: number;
+  file_name: string;
+  file_size_kb: number;
   origination: string;
-  deviceIds: Array<string>;
+  device_ids: Array<string>;
 }
 
 export interface ITransferTasks {
-  transferTasks: Array<ITransferTask>;
+  transfer_tasks: Array<ITransferTask>;
 }
 
 export interface IFilenames {
-  fileNames: Array<string>;
+  file_names: Array<string>;
 }
 
 export interface IStartTransferTask {
-  fileName: string;
-  startTimeUTC?: number;
-  deviceIds: Array<string>;
+  file_name: string;
+  start_time_UTC?: number;
+  device_ids: Array<string>;
 }
 
 export interface ICancelTask {
-  taskIds: Array<string>;
+  task_ids: Array<string>;
 }
 
 export interface IS3Files {
-  fileNames: Array<string>;
-  currentFirmwareFileName: string;
+  file_names: Array<string>;
+  current_firmware_file_name: string;
 }
 
 export interface ISetCurrentFirmware {
