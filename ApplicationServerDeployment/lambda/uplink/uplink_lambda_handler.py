@@ -146,7 +146,8 @@ def lambda_handler(event, context):
                             link_type=link_type,
                             sensor=sensor, sensor_unit=sensor_units, ota_support=ota_support, fw_version=fw_version)
             device_handler.add_device(device)
-            # call save_device_transfer_notifications
+            if ota_support is True:
+                ota_notifications_handler.update_device_firmware_version(wireless_device_id, '', fw_version)
             response_body = send_payload_to_downlink_lambda(
                 DEMO_APP_CAP_DISCOVERY_RESP, wireless_device_id)
             return {
@@ -227,13 +228,13 @@ def lambda_handler(event, context):
             if "ota_trigger" in decoded_payload:
                 pass
 
-            # TODO: Add handler to update ota completion
             if "ota_percent" in decoded_payload:
-                pass
+                progress_pct = decoded_payload["ota_percent"]
+                ota_notifications_handler.update_device_progress_pct(wireless_device_id, '', progress_pct)
 
-            # TODO: Add handler to check completion of OTA
             if "ota_status" in decoded_payload:
-                pass
+                firmware_upgrade_status = decoded_payload["ota_status"]
+                ota_notifications_handler.update_device_firmware_upgrade_status(wireless_device_id, '', firmware_upgrade_status)
 
             return {
                 'statusCode': 200,

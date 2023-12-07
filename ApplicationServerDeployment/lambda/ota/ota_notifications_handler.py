@@ -109,17 +109,3 @@ class OTANotificationsHandler:
                     'body': json.dumps('Invalid JSON format in the notification field.')
                 }
 
-    def save_device_transfer_notifications(self, notification):
-            try:
-                # TODO
-
-                return {
-                    'statusCode': 200,
-                    'body': json.dumps('Notification received')
-                }
-            except json.JSONDecodeError as e:
-                return {
-                    'statusCode': 400,
-                    'body': json.dumps('Invalid JSON format in the notification field.')
-                }
-

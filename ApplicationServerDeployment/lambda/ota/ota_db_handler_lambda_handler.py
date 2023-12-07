@@ -25,9 +25,9 @@ def get_all_device_transfers():
     :return:    Response with list of records from DeviceTransfers table.
     """
     device_transfers = device_transfers_handler.get_all_device_transfers()
-    device_transfers_json = {"wirelessDevices": []}
+    device_transfers_json = {"wireless_devices": []}
     for device_transfer in device_transfers:
-        device_transfers_json["wirelessDevices"].append(device_transfer.to_dict())
+        device_transfers_json["wireless_devices"].append(device_transfer.to_dict())
     print(device_transfers_json)
     return _create_response_message(200, device_transfers_json)
 
@@ -38,52 +38,52 @@ def get_all_transfer_tasks():
     :return:    Response with list of records from TransferTasks table.
     """
     transfer_tasks = transfer_tasks_handler.get_all_transfer_tasks()
-    transfer_tasks_json = {"transferTasks": []}
+    transfer_tasks_json = {"transfer_tasks": []}
     for transfer_task in transfer_tasks:
-        transfer_tasks_json["transferTasks"].append(transfer_task.to_dict())
+        transfer_tasks_json["transfer_tasks"].append(transfer_task.to_dict())
     print(transfer_tasks_json)
     return _create_response_message(200, transfer_tasks_json)
 
 
 def mock_transfers_tasks():
     transfer_tasks_mock_json = {
-        "transferTasks": [
+        "transfer_tasks": [
             {
-                "taskId": "TaskId1",
-                "taskStatus": "enum",
-                "creationTimeUTC": 1234567890,
-                "taskStartTimeUTC": 1234567890,
-                "taskEndTimeUTC": 1234567890,
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
+                "task_id": "TaskId1",
+                "task_status": "enum",
+                "creation_time_UTC": 1234567890,
+                "task_start_time_UTC": 1234567890,
+                "task_end_time_UTC": 1234567890,
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
                 "origination": "CLOUD",
-                "deviceIds": [
+                "device_ids": [
                     "DeviceId1","DeviceId2","DeviceId3"
                 ]
             },
             {
-                "taskId": "TaskId2",
-                "taskStatus": "enum",
-                "creationTimeUTC": 1234567890,
-                "taskStartTimeUTC": 1234567890,
-                "taskEndTimeUTC": 1234567890,
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
+                "task_id": "TaskId2",
+                "task_status": "enum",
+                "creation_time_UTC": 1234567890,
+                "task_start_time_UTC": 1234567890,
+                "task_end_time_UTC": 1234567890,
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
                 "origination": "CLOUD",
-                "deviceIds": [
+                "device_ids": [
                     "DeviceId4","DeviceId5","DeviceId6"
                 ]
             },
             {
-                "taskId": "TaskId13",
-                "taskStatus": "enum",
-                "creationTimeUTC": 1234567890,
-                "taskStartTimeUTC": 1234567890,
-                "taskEndTimeUTC": 1234567890,
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
+                "task_id": "TaskId3",
+                "task_status": "enum",
+                "creation_time_UTC": 1234567890,
+                "task_start_time_UTC": 1234567890,
+                "task_end_time_UTC": 1234567890,
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
                 "origination": "CLOUD",
-                "deviceIds": [
+                "device_ids": [
                     "DeviceId7","DeviceId8","DeviceId9"
                 ]
             }
@@ -94,123 +94,123 @@ def mock_transfers_tasks():
 
 def mock_device_transfers():
     wireless_devices_mock_json = {
-        "wirelessDevices": [
+        "wireless_devices": [
             {
-                "deviceId": "DeviceId1",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId1",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 50,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId1"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "TaskId1"
             },
             {
-                "deviceId": "DeviceId2",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId2",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 30,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId1"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "TaskId1"
             },
             {
-                "deviceId": "DeviceId3",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId3",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 80,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId1"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "TaskId1"
             },
             {
-                "deviceId": "DeviceId4",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId4",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 90,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId2"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "TaskId2"
             },
             {
-                "deviceId": "DeviceId5",
-                "transferStatus": "COMPLETE",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId5",
+                "transfer_status": "COMPLETE",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 100,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId2"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "TaskId2"
             },
             {
-                "deviceId": "DeviceId6",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId6",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 50,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId2"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "TaskId2"
             },
             {
-                "deviceId": "DeviceId7",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId7",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 10,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId3"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "3",
+                "task_id": "TaskId1"
             },
             {
-                "deviceId": "DeviceId8",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId8",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 20,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId3"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "3"
             },
             {
-                "deviceId": "DeviceId9",
-                "transferStatus": "PENDING",  # Replace "enum" with an actual transfer status value
+                "device_id": "DeviceId9",
+                "transfer_status": "PENDING",  # Replace "enum" with an actual transfer status value
                 "progress_pct": 24,
-                "statusUpdatedTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferStartTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "transferEndTimeUTC": 1234567890,  # Replace with an actual timestamp
-                "fileName": "abcd.txt",
-                "fileSizeKB": 1024,  # Replace with an actual file size in kilobytes
-                "firmwareUpgradeStatus": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
-                "firmwareVersion": "5",
-                "taskId": "TaskId3"
+                "status_updated_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_start_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "transfer_end_time_UTC": 1234567890,  # Replace with an actual timestamp
+                "file_name": "abcd.txt",
+                "file_size_kb": 1024,  # Replace with an actual file size in kilobytes
+                "firmware_upgrade_status": "PENDING",  # Replace "enum" with an actual firmware upgrade status value
+                "firmware_version": "5",
+                "task_id": "TaskId3"
             }
         ]
     }
@@ -275,7 +275,7 @@ def lambda_handler(event, context):
                 if mock:
                     return mock_transfers_tasks()
                 else:
-                    return get_all_device_transfers()
+                    return get_all_transfer_tasks()
 
         return _create_response_message(400, "Invalid path or method.")
 
