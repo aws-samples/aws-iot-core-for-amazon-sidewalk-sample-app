@@ -172,6 +172,7 @@ Resources:
                 Resource:
                   - !GetAtt SidewalkDevices.Arn
                   - !GetAtt SidewalkMeasurements.Arn
+                  - !GetAtt DeviceTransfers.Arn
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:

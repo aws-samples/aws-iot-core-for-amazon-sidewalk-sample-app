@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 import boto3
 import logging
+from datetime import datetime, timezone
 
 from botocore.exceptions import ClientError
 from decimal import Decimal
@@ -102,12 +103,18 @@ class DeviceTransfersHandler:
         else:
             return device_transfer
 
+    # -----------------
+    # Update operations
+    # -----------------
+
     def update_device_transfer_start_details(self, device_transfer: DeviceTransfer):
         """
         Updates deviceTransfer object in the DeviceTransfers table.
 
         param deviceTransfer: Updated DeviceTransfer object.
+
         """
+        print(device_transfer.to_dict())
         try:
             self._table.update_item(
                 Key={
@@ -124,30 +131,7 @@ class DeviceTransfersHandler:
                 },
                 ReturnValues="ALL_NEW"  # You can adjust the return values as needed
             )
-        except Exception as e:
-            # Handle the exception according to your requirements
-            print(f"Error updating item: {e}")
-
-    def update_device_transfer_fimware_upgrade_status(self, device_transfer: DeviceTransfer):
-        """
-        Updates deviceTransfer object in the DeviceTransfers table.
-
-        param deviceTransfer: Updated DeviceTransfer object.
-        """
-        try:
-            self._table.update_item(
-                Key={
-                    'device_id': device_transfer.get_device_id(),
-                    'task_id': device_transfer.get_task_id()
-                },
-                UpdateExpression="SET firmware_upgrade_status = :upgrade_status, "
-                                 "status_updated_time_UTC = :status_time ",
-                ExpressionAttributeValues={
-                    ':upgrade_status': device_transfer.get_firmware_upgrade_status(),
-                    ':status_time': device_transfer.get_status_updated_time_UTC()
-                },
-                ReturnValues="ALL_NEW"  # You can adjust the return values as needed
-            )
+            print("print")
         except Exception as e:
             # Handle the exception according to your requirements
             print(f"Error updating item: {e}")
@@ -165,12 +149,10 @@ class DeviceTransfersHandler:
                     'task_id': device_transfer.get_task_id()
                 },
                 UpdateExpression="SET transfer_status = :status, "
-                                 "firmware_upgrade_status = :upgrade_status, "
                                  "status_updated_time_UTC = :status_time ,"
                                  "transfer_end_time_UTC = :end_time ",
                 ExpressionAttributeValues={
                     ':status': device_transfer.get_transfer_status(),
-                    ':upgrade_status': device_transfer.get_firmware_upgrade_status(),
                     ':end_time': device_transfer.get_transfer_end_time_UTC(),
                     ':status_time': device_transfer.get_status_updated_time_UTC()
                 },
@@ -180,27 +162,64 @@ class DeviceTransfersHandler:
             # Handle the exception according to your requirements
             print(f"Error updating item: {e}")
 
-    def update_device_transfer_progress_pct(self, device_transfer: DeviceTransfer):
+    def _fetch_task_id(self, device_id):
+        """
+        Fetches the task_id based on device_id and transfer_status.
+
+        param device_id: Device ID.
+        param transfer_status: Transfer status to filter records.
+        return: task_id if a matching record is found, else None.
+        """
+        try:
+            # Query for the record with the given deviceId and transfer state
+            response = self._table.query(
+                KeyConditionExpression=Key('device_id').eq(device_id),
+                FilterExpression=Attr('transfer_status').eq('pending') | Attr('transfer_status').eq('transferring'),
+                Limit=1  # We expect only one record, so limit the result to 1
+            )
+
+            # Check if there's a matching record
+            if response.get('Items'):
+                # Extract task_id from the retrieved record
+                return response['Items'][0]['task_id']
+            else:
+                print("No matching record found for the specified conditions.")
+                return None
+        except Exception as e:
+            # Handle the exception according to your requirements
+            print(f"Error fetching task_id: {e}")
+            return None
+
+
+    def update_device_transfer_firmware_upgrade_status(self, device_transfer: DeviceTransfer):
         """
         Updates deviceTransfer object in the DeviceTransfers table.
 
         param deviceTransfer: Updated DeviceTransfer object.
         """
         try:
-            self._table.update_item(
-                Key={
-                    'device_id': device_transfer.get_device_id(),
-                    'task_id': device_transfer.get_task_id()
-                },
-                UpdateExpression="SET progress_pct = :progress_pct ",
-                ExpressionAttributeValues={
-                    ':progress_pct': device_transfer.get_progress_pct()
-                },
-                ReturnValues="ALL_NEW"  # You can adjust the return values as needed
-            )
+            # Fetch the task_id using the common method
+            task_id = self._fetch_task_id(device_transfer.get_device_id())
+
+            if task_id is not None:
+                # Update firmware upgrade status using the retrieved task_id
+                self._table.update_item(
+                    Key={
+                        'device_id': device_transfer.get_device_id(),
+                        'task_id': task_id
+                    },
+                    UpdateExpression="SET firmware_upgrade_status = :upgrade_status, "
+                                     "status_updated_time_UTC = :status_time ",
+                    ExpressionAttributeValues={
+                        ':upgrade_status': device_transfer.get_firmware_upgrade_status(),
+                        ':status_time': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                    },
+                    ReturnValues="ALL_NEW"  # You can adjust the return values as needed
+                )
         except Exception as e:
             # Handle the exception according to your requirements
-            print(f"Error updating item: {e}")
+            print(f"Error updating firmware upgrade status: {e}")
+
 
     def update_device_transfer_firmware_version(self, device_transfer: DeviceTransfer):
         """
@@ -209,24 +228,61 @@ class DeviceTransfersHandler:
         param deviceTransfer: Updated DeviceTransfer object.
         """
         try:
-            self._table.update_item(
-                Key={
-                    'device_id': device_transfer.get_device_id(),
-                    'task_id': device_transfer.get_task_id()
-                },
-                UpdateExpression="SET firmware_version = :firmware_version ",
-                ExpressionAttributeValues={
-                    ':firmware_version': device_transfer.get_firmware_version()
-                },
-                ReturnValues="ALL_NEW"  # You can adjust the return values as needed
-            )
+            # Fetch the task_id using the common method
+            task_id = self._fetch_task_id(device_transfer.get_device_id(), 'transferring')
+
+            if task_id is not None:
+                # Update firmware version using the retrieved task_id
+                self._table.update_item(
+                    Key={
+                        'device_id': device_transfer.get_device_id(),
+                        'task_id': task_id
+                    },
+                    UpdateExpression="SET firmware_version = :firmware_version, "
+                                     "status_updated_time_UTC = :status_time ",
+                    ExpressionAttributeValues={
+                        ':firmware_version': device_transfer.get_firmware_version(),
+                        ':status_time': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                    },
+                    ReturnValues="ALL_NEW"  # You can adjust the return values as needed
+                )
+        except Exception as e:
+            # Handle the exception according to your requirements
+            print(f"Error updating firmware version: {e}")
+
+
+
+    def update_device_transfer_progress_pct(self, device_transfer: DeviceTransfer):
+        """
+        Updates deviceTransfer object in the DeviceTransfers table.
+
+        param deviceTransfer: Updated DeviceTransfer object.
+        """
+        try:
+            # Fetch the task_id using the common method
+            task_id = self._fetch_task_id(device_transfer.get_device_id())
+
+            # Update the transfer progress using the retrieved task_id
+            if task_id is not None:
+                self._table.update_item(
+                    Key={
+                        'device_id': device_transfer.get_device_id(),
+                        'task_id': task_id
+                    },
+                    UpdateExpression="SET transfer_progress = :transfer_progress, "
+                                     "status_updated_time_UTC = :status_time ",
+                    ExpressionAttributeValues={
+                        ':transfer_progress': device_transfer.get_transfer_progress(),
+                        ':status_time': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                    },
+                    ReturnValues="ALL_NEW"  # You can adjust the return values as needed
+                )
+            else:
+                print("No matching record found for the specified conditions.")
         except Exception as e:
             # Handle the exception according to your requirements
             print(f"Error updating item: {e}")
 
-    # -----------------
-    # Update operations
-    # -----------------
     def update_device_transfer(self, device_transfer: DeviceTransfer):
         """
         Updates deviceTransfer object to the DeviceTransfer table.

@@ -74,8 +74,7 @@ def lambda_handler(event, context):
         notification = event.get("notification")
         if notification is not None:
             try:
-                ota_notifications_handler.save_fuota_task_notifications(
-                    notification)
+                ota_notifications_handler.save_fuota_task_notifications(notification)
                 return {
                     'statusCode': 200,
                     'body': json.dumps('Notification received')
@@ -147,7 +146,7 @@ def lambda_handler(event, context):
                             sensor=sensor, sensor_unit=sensor_units, ota_support=ota_support, fw_version=fw_version)
             device_handler.add_device(device)
             if ota_support is True:
-                ota_notifications_handler.update_device_firmware_version(wireless_device_id, '', fw_version)
+                ota_notifications_handler.update_device_firmware_version(wireless_device_id, fw_version)
             response_body = send_payload_to_downlink_lambda(
                 DEMO_APP_CAP_DISCOVERY_RESP, wireless_device_id)
             return {
@@ -230,11 +229,11 @@ def lambda_handler(event, context):
 
             if "ota_percent" in decoded_payload:
                 progress_pct = decoded_payload["ota_percent"]
-                ota_notifications_handler.update_device_progress_pct(wireless_device_id, '', progress_pct)
+                ota_notifications_handler.update_device_progress_pct(wireless_device_id, progress_pct)
 
             if "ota_status" in decoded_payload:
                 firmware_upgrade_status = decoded_payload["ota_status"]
-                ota_notifications_handler.update_device_firmware_upgrade_status(wireless_device_id, '', firmware_upgrade_status)
+                ota_notifications_handler.update_device_firmware_upgrade_status(wireless_device_id, firmware_upgrade_status)
 
             return {
                 'statusCode': 200,
