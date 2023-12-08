@@ -1,4 +1,4 @@
 {
-  "fileNames": ["abc.bin", "cdf.bin", "hjg.bin"],
-  "currentFirmwareFileName": "folder/abc.bin"
+  "file_names": ["abc.bin", "cdf.bin", "hjg.bin"],
+  "current_firmware_file_name": "folder/abc.bin"
 }

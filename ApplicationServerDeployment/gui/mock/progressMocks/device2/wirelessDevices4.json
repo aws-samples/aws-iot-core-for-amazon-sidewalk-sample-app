@@ -1,13 +1,13 @@
 {
-  "deviceId": "6540562b9a43699094046e4c",
-  "transferStatus": "TRANSFERRING",
-  "statusUpdatedTimeUTC": 1698715357655,
-  "transferEndTimeUTC": null,
-  "transferStartTimeUTC": 1701487625960,
-  "transferProgress": 85,
-  "fileName": "sunt.png",
-  "fileSizeKB": 651,
-  "firmwareUpgradeStatus": "FAILED",
-  "firmwareVersion": "tempor",
-  "taskId": null
+  "device_id": "6540562b9a43699094046e4c",
+  "transfer_status": "TRANSFERRING",
+  "status_updated_time_UTC": 1698715357655,
+  "transfer_end_time_UTC": null,
+  "transfer_start_time_UTC": 1701487625960,
+  "transfer_progress": 85,
+  "file_name": "sunt.png",
+  "file_size_kb": 651,
+  "firmware_upgrade_status": "FAILED",
+  "firmware_version": "tempor",
+  "task_id": null
 }

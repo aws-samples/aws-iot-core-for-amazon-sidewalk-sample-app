@@ -22,6 +22,7 @@ const statusMap: { [K in TransferStatusType]: React.ReactNode } = {
 };
 
 export const TransferStatus = ({ type }: Props) => {
+  if (!type) return <></>;
   const Icon = statusMap[type] || <></>;
   const colorClass = styles[`status-${type.toLowerCase()}`];
 

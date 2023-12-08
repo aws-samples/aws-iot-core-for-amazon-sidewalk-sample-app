@@ -36,7 +36,6 @@ export const useGetTransferTasks = () =>
     ['getTransferTasks'],
     () => apiClient.get(ENDPOINTS.otaTasks).then((res) => res.data),
     {
-      cacheTime: Infinity,
       refetchOnWindowFocus: false,
       onError: (error) => {
         verifyAuth(error.status!);

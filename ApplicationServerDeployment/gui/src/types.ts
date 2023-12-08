@@ -78,3 +78,8 @@ export interface IS3Files {
 export interface ISetCurrentFirmware {
   filename: string;
 }
+
+export interface IWirelessDeviceStatus {
+  device_id: string;
+  status: TransferStatusType;
+}

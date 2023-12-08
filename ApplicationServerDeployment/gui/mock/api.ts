@@ -116,5 +116,21 @@ export default [
     response: () => undefined,
     timeout: 3000,
     statusCode: 200
+  },
+  {
+    url: '/api/otaDevices',
+    method: 'get',
+    response: ({ query }) => {
+      const statuses = ['PENDING', 'TRANSFERRING', 'CANCELLED', 'FAILED', 'COMPLETED', 'NONE'];
+      let status = statuses[Math.floor(Math.random() * (statuses.length - 0) + 0)];
+
+      // if (query.fuotaTaskId === '6540562b20d2ed23212f08ad') {
+      //   status = 'PENDING';
+      // }
+
+      return { device_id: query.fuotaTaskId, status };
+    },
+    timeout: 1000,
+    statusCode: 200
   }
 ];

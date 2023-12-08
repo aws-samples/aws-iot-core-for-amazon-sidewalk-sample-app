@@ -16,6 +16,7 @@ import { DatePicker } from './DatePicker';
 import { useRowScroller } from '../ScrollManager';
 import { APP_CONFIG } from '../../../../appConfig';
 import { MOCK_MODE } from '../../../../constants';
+import { ReloadOutlined } from '@ant-design/icons';
 
 export const WirelessDevicesTable = () => {
   const [_, forceRender] = useState({});
@@ -231,6 +232,9 @@ export const WirelessDevicesTable = () => {
       <Flex gap="small" wrap="wrap" justify="space-between">
         <h2>Devices</h2>
         <Flex gap="small" align="center">
+          <Button onClick={() => refetchWirelessDevices()} loading={isLoadingDevices} disabled={isLoadingDevices}>
+            <ReloadOutlined />
+          </Button>
           <Upload beforeUpload={handleUpload} showUploadList={false} disabled={isUploading} accept=".bin,.hex,.nvm3,.s37">
             <Button loading={isUploading} icon={<UploadOutlined />}>
               {isUploading ? 'Uploading' : 'Upload file'}

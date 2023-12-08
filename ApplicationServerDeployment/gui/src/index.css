@@ -187,3 +187,7 @@ body {
     background-color: white;
   }
 }
+
+/* .ant-table-tbody > tr.ant-table-row:hover > td {
+  background: none !important;
+} */

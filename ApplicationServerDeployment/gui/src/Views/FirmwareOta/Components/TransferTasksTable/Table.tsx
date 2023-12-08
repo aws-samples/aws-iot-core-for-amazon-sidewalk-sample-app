@@ -1,14 +1,15 @@
-import { Collapse, Table, Button, Flex } from 'antd';
+import { Table, Button, Flex } from 'antd';
 import { ITransferTask, TransferStatusType } from '../../../../types';
 import { useCancelTask, useGetTransferTasks } from '../../../../hooks/api/api';
 import { TransferStatus } from '../../../../components/TransferStatus/TransferStatus';
 import { format } from 'date-fns';
-import { CaretRightOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { getDurationString, getFileSize } from '../../../../utils';
 import { ColumnsType } from 'antd/es/table/interface';
 import { useRowScroller } from '../ScrollManager';
+import { DevicesStatutes } from './DevicesStatuses';
+import { ReloadOutlined } from '@ant-design/icons';
 
 export const TranserTasksTable = () => {
   const {
@@ -71,31 +72,7 @@ export const TranserTasksTable = () => {
     {
       title: 'Devices',
       dataIndex: 'device_ids',
-      render: (list) => (
-        <Collapse
-          bordered={false}
-          expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-          style={{ background: 'light-gray' }}
-          items={[
-            {
-              key: '1',
-              label: 'Completed: 0, Failed: 1, Transfering: 1',
-              children: (
-                <ul style={{ margin: 0 }}>
-                  {list.map((value: string) => (
-                    <li key={value}>
-                      <a onClick={() => scrollManager.scrollTo(value, 'devices')}>{value}</a>
-                    </li>
-                  ))}
-                </ul>
-              ),
-              style: {
-                padding: 0
-              }
-            }
-          ]}
-        />
-      )
+      render: (list) => <DevicesStatutes devices={list} />
     }
   ];
 
@@ -118,6 +95,14 @@ export const TranserTasksTable = () => {
       <Flex gap="small" wrap="wrap" justify="space-between">
         <h2>Tasks</h2>
         <Flex gap="small" align="center">
+          <Button
+            onClick={() => refetchTransferTasks()}
+            loading={loadingTransferTasksList}
+            disabled={loadingTransferTasksList}
+            aria-label='reload table'
+          >
+            <ReloadOutlined />
+          </Button>
           <Button
             type="primary"
             size="middle"
