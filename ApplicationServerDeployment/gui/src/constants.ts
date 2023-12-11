@@ -21,3 +21,4 @@ export const LED_STATE = {
 export const ACCESS_TOKEN = 'access_token';
 export const UNAUTHORIZE = 'Unauthorize_error';
 export const MOCK_MODE = import.meta.env.MODE === 'production' ? false : import.meta.env.VITE_MOCK_MODE === 'true';
+export const ANTD_TABLE_HOVER_COLOR_VAR_NAME = '--antd-table-hover-color';

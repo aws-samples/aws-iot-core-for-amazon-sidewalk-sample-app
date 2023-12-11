@@ -20,6 +20,7 @@
   --font-color: #838691;
   --main-gray: #ebebed;
   --header: 65px;
+  --antd-table-hover-color: #fafafa;
 }
 
 * {
@@ -188,6 +189,6 @@ body {
   }
 }
 
-/* .ant-table-tbody > tr.ant-table-row:hover > td {
-  background: none !important;
-} */
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  background: var(--antd-table-hover-color) !important;
+}

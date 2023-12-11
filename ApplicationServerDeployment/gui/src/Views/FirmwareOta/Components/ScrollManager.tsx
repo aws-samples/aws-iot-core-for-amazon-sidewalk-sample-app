@@ -2,6 +2,7 @@ import { ReactNode, createContext, useContext, useRef, useState } from 'react';
 import { APP_CONFIG } from '../../../appConfig';
 import { ITransferTasks, IWirelessDevices } from '../../../types';
 import scrollIntoView from 'scroll-into-view';
+import { ANTD_TABLE_HOVER_COLOR_VAR_NAME } from '../../../constants';
 
 type TableType = 'tasks' | 'devices';
 
@@ -63,6 +64,8 @@ const useScrollProvider = () => {
 
       if (!element) return;
 
+      const rootElement = document.querySelector(':root') as HTMLElement;
+
       scrollIntoView(
         element,
         {
@@ -72,9 +75,14 @@ const useScrollProvider = () => {
         },
         (type) => {
           if (type === 'complete') {
+            // forcing antd table style to disable hover color for a while because 
+            // it interferes with highlight-row class effect
+            rootElement?.style.setProperty(ANTD_TABLE_HOVER_COLOR_VAR_NAME, 'none');
             element?.classList.add('highlight-row');
             setTimeout(() => {
               element?.classList.remove('highlight-row');
+              // puttinh back hover color to antd table after removing highlight
+              rootElement?.style.setProperty(ANTD_TABLE_HOVER_COLOR_VAR_NAME, '#fafafa');
             }, 1000);
           }
         }
