@@ -10,13 +10,16 @@ import { verifyAuth } from '../../../../utils';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { useRowScroller } from '../ScrollManager';
 import { TransferStatus } from '../../../../components/TransferStatus/TransferStatus';
+import { useEffect, useRef } from 'react';
 
 interface Props {
   devices: Array<string>;
+  taskId: string;
 }
 
-export const DevicesStatutes = ({ devices }: Props) => {
+export const DevicesStatutes = ({ devices, taskId }: Props) => {
   const scrollManager = useRowScroller();
+  const progressCellElement = useRef<HTMLElement>();
 
   const results = useQueries(
     devices.map(
@@ -40,11 +43,33 @@ export const DevicesStatutes = ({ devices }: Props) => {
     )
   );
 
+  // const getProgressElement = () =>
+
   const isError = results.some((result) => result.isError);
   const isLoading = results.some((result) => result.isLoading);
 
+  useEffect(() => {
+    progressCellElement.current = document.querySelector(`[data-row-key="${taskId}"] > .progress-task-id`) as HTMLElement;
+  }, []);
+
+  // progress column logic
+  useEffect(() => {
+    if (!progressCellElement.current) return;
+
+    const count = results.reduce((acc: number, item) => {
+      if (item.data?.status !== 'PENDING' && item.data?.status !== 'TRANSFERRING') {
+        acc += 1;
+      }
+
+      return acc;
+    }, 0);
+
+    // we are manipulating the DOM directly for better efficiency
+    progressCellElement.current.innerHTML = `${count}/${results.length}`;
+  }, [results]);
+
   if (isError) {
-    return <>Devices</>;
+    return <>-</>;
   }
 
   if (isLoading) {
@@ -56,7 +81,7 @@ export const DevicesStatutes = ({ devices }: Props) => {
   }
 
   const Label = () => (
-    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', maxWidth: '200px' }}>
+    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', maxWidth: '200px', justifyContent: 'space-between' }}>
       {Object.entries(
         results.reduce<{ [key: string]: number }>((acc, { data }) => {
           if (data?.status! in acc) {
@@ -69,7 +94,7 @@ export const DevicesStatutes = ({ devices }: Props) => {
         }, {})
       ).map(([status, count], index, arr) => (
         <span key={`${index}${status}`}>
-          {status}: {count} {arr.length !== index + 1 && '|'}
+          • {status}: {count}
         </span>
       ))}
     </div>

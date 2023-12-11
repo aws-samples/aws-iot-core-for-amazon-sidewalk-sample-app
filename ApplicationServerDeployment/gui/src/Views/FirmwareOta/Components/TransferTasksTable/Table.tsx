@@ -67,12 +67,13 @@ export const TranserTasksTable = () => {
       render: (value: TransferStatusType) => <TransferStatus type={value} />
     },
     {
-      title: 'Progress'
+      title: 'Progress',
+      className: 'progress-task-id'
     },
     {
       title: 'Devices',
       dataIndex: 'device_ids',
-      render: (list) => <DevicesStatutes devices={list} />
+      render: (list, record: ITransferTask) => <DevicesStatutes devices={list} taskId={record.task_id} />
     }
   ];
 
@@ -99,7 +100,7 @@ export const TranserTasksTable = () => {
             onClick={() => refetchTransferTasks()}
             loading={loadingTransferTasksList}
             disabled={loadingTransferTasksList}
-            aria-label='reload table'
+            aria-label="reload table"
           >
             <ReloadOutlined />
           </Button>
