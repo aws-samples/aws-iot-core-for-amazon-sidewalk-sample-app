@@ -1,6 +1,7 @@
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import { DatePicker as AntdDatePicker, DatePickerProps } from 'antd';
-import { useState } from 'react';
-import { IStartTransferTask } from '../../../../types';
 import dayjs from 'dayjs';
 
 interface Props {

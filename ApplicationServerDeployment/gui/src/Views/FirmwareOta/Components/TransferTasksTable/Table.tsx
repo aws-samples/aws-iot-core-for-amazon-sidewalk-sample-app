@@ -1,3 +1,6 @@
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import { Table, Button, Flex } from 'antd';
 import { ITransferTask, TransferStatusType } from '../../../../types';
 import { useCancelTask, useGetTransferTasks } from '../../../../hooks/api/api';

@@ -1,4 +1,7 @@
-import { useMutation, useQuery, UseMutationOptions, QueryFunctionContext, QueryFunction } from 'react-query';
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
+import { useMutation, useQuery, UseMutationOptions } from 'react-query';
 import { apiClient } from '../../apiClient';
 import { ENDPOINTS } from '../../endpoints';
 import {
@@ -7,7 +10,6 @@ import {
   ISetCurrentFirmware,
   IStartTransferTask,
   ITransferTasks,
-  IWirelessDevice,
   IWirelessDevices
 } from '../../types';
 import { RcFile } from 'antd/es/upload/interface';

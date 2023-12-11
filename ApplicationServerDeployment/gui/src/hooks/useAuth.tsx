@@ -1,4 +1,7 @@
-import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 import { apiClient, setAuthHeader, setUsernameHeader } from '../apiClient';
 import { ENDPOINTS } from '../endpoints';
 import { logger } from '../utils/logger';

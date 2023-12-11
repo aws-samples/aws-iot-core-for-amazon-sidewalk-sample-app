@@ -1,3 +1,6 @@
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import { Button, Card, Flex, Select } from 'antd';
 import { useGetFileNames, useSetCurrentFirmware } from '../../../hooks/api/api';
 import { useEffect, useState } from 'react';

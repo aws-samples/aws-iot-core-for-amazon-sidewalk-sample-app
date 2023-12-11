@@ -1,3 +1,6 @@
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import { ReactNode, createContext, useContext, useRef, useState } from 'react';
 import { APP_CONFIG } from '../../../appConfig';
 import { ITransferTasks, IWirelessDevices } from '../../../types';

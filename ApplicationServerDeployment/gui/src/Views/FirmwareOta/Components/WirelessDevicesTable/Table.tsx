@@ -1,3 +1,6 @@
+// Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 import { Select, Table, Upload, Button, Flex, DatePickerProps } from 'antd';
 import { IStartTransferTask, IWirelessDevice, TransferStatusType } from '../../../../types';
 import { ColumnsType } from 'antd/es/table';
