@@ -34,8 +34,8 @@ class OTAStartTransferHandler:
         self._device_transfers_handler = DeviceTransfersHandler()
         self._transfer_tasks_handler = TransferTasksHandler()
         self._iot_handler = IOTWirelessAPIHandler()
-        self._s3 = boto3.client('s3')
         # TODO - Replace with S3_Client
+        self._s3 = boto3.client('s3')
 
     def create_task(self, file_name, start_time_utc, device_ids, is_device_trigger):
 
@@ -45,7 +45,7 @@ class OTAStartTransferHandler:
         creation_time_utc = start_time_utc
         task_end_time_utc = None
         file_size_kb = 1024
-        origination = 'App'
+        origination = 'DEVICE' if is_device_trigger else 'CLOUD'
 
         
         # Uncomment the code below for the actual implementation
@@ -81,6 +81,7 @@ class OTAStartTransferHandler:
         #                 fuota_task_id=task_id,
         #                 wireless_device_id=device
         #             )
+        #             print("Associate device to Fuota task response ", associate_wireless_devices_with_fuota_task)
         #         except e:
         #             print(f'Error in AssociateWirelessDeviceWithFuotaTask ', e)
         #             errored_devices.append(device)
@@ -89,13 +90,14 @@ class OTAStartTransferHandler:
         #     now = datetime.now()
         #     now_plus_5 = now + timedelta(minutes=5)
         #     # Call StartTransferTask API
-        #     iot_handler.start_fuota_task(
+        #     start_fuota_task_response = iot_handler.start_fuota_task(
         #         fuota_task_id=task_id,
         #         start_time = now_plus_5
         #     )
+        #     print('Start FUOTA task API response, ', start_fuota_task_response)
 
         #     # Add the entry to the tables
-        #     self.add_record_to_the_table(device_ids, task_id, now, file_name, file_size)
+        #     self.add_record_to_the_table(device_ids, task_id, now, file_name, file_size, origination)
 
         # except Exception as e:
         #     print(f'Exception ', e)
@@ -179,10 +181,10 @@ class OTAStartTransferHandler:
             print('Exception in checking the s3 file, {e}')
             return False
 
-    def add_record_to_the_table(self, device_ids, task_id, start_time, file_name, file_size):
+    def add_record_to_the_table(self, device_ids, task_id, start_time, file_name, file_size, origination):
         # Add all to the Transfer task table
         transfer_task = TransferTask(task_id=task_id, task_status='PENDING', creation_time_UTC=self.datetime_to_int(start_time), 
-                                    file_name=file_name, file_size_kb=file_size, origination='CLOUD',
+                                    file_name=file_name, file_size_kb=file_size, origination=origination,
                                     device_ids=device_ids, task_end_time_UTC=0, task_start_time_UTC=0)
         transfer_tasks_handler.add_transfer_task(transferTask = transfer_task)
 

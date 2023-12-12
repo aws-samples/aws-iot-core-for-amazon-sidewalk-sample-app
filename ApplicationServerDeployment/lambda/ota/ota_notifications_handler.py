@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from typing import Final
 import logging
 from device_transfers_handler import DeviceTransfersHandler
+from ota_wireless_api_handler import IOTWirelessAPIHandler
 from transfer_tasks_handler import TransferTasksHandler
 from transfer import DeviceTransfer
 from task import TransferTask
@@ -28,6 +29,7 @@ class OTANotificationsHandler:
     def __init__(self):
         self._device_transfers_handler = DeviceTransfersHandler()
         self._transfer_tasks_handler = TransferTasksHandler()
+        self._iot_handler = IOTWirelessAPIHandler()
 
     def update_device_firmware_upgrade_status(self, wireless_device_id: str, firmware_upgrade_status: str):
         device_transfer = DeviceTransfer(
@@ -59,6 +61,7 @@ class OTANotificationsHandler:
             status_updated_time_UTC=str(timestamp),
             transfer_status=status
         )
+        self.update_transfer_task_status(fuota_task_id)
         return self._device_transfers_handler.update_device_transfer_start_details(device_transfer)
 
     def update_transfer_finish_details(self, wireless_device_id: str, fuota_task_id: str, timestamp: int, status: str):
@@ -72,8 +75,18 @@ class OTANotificationsHandler:
             status_updated_time_UTC=str(timestamp),
             transfer_status=status
         )
+        self.update_transfer_task_status(fuota_task_id)
         return self._device_transfers_handler.update_device_transfer_finish_details(device_transfer)
 
+    def update_transfer_task_status(self, task_id):
+        # Call the sailboat API
+        task_response = self._iot_handler.get_fuota_task(task_id=task_id)
+        print('IOT getFuotaTask response ', task_response)
+        task = self._transfer_tasks_handler.get_transfer_task_details(task_id=task_id)
+        task._task_status = task_response.get('Status')
+        self._transfer_tasks_handler.update_transfer_task(transfer_task=task)
+        print('Updated the task ', task)
+        
     def save_fuota_task_notifications(self, payload):
         if payload is not None:
             try:
