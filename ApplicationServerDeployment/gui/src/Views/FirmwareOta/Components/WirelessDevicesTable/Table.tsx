@@ -267,7 +267,7 @@ export const WirelessDevicesTable = () => {
 
       <Table
         locale={{
-          emptyText: <div className="m-3 black">No Wireless devices detected</div>
+          emptyText: <div className="m-3 black">No Wireless Devices Detected</div>
         }}
         rowSelection={{
           type: 'checkbox',
