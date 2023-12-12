@@ -6,6 +6,7 @@ Handles uplinks coming from the Sidewalk Sensor Monitoring Demo Application.
 """
 
 from ota_notifications_handler import OTANotificationsHandler
+from ota_start_transfer_lambda_handler import OTAStartTransferHandler
 from sidewalk_devices_handler import SidewalkDevicesHandler
 from measurements_handler import MeasurementsHandler
 import base64
@@ -30,6 +31,7 @@ DEMO_APP_ACTION_NOTIFICATION: Final = "DEMO_APP_ACTION_NOTIFICATION"
 ota_notifications_handler: Final = OTANotificationsHandler()
 device_handler: Final = SidewalkDevicesHandler()
 measurement_handler: Final = MeasurementsHandler()
+ota_start_transfer_handler: Final = OTAStartTransferHandler()
 
 
 def send_payload_to_downlink_lambda(command: str, wireless_device_id: str, button_pressed=None):
@@ -107,7 +109,7 @@ def lambda_handler(event, context):
         decoder = Command()
         decoded_payload = decoder.decode(decoded_data).decoded_cmd
 
-        ul_time = decoded_payload.get("gps_time")
+        ul_time = decoded_payload.get("gps_time", 0)
         ul_latency = 'no latency info'
         datetime_now = datetime.now(timezone.utc)
         if ul_time is not None:
@@ -225,7 +227,11 @@ def lambda_handler(event, context):
 
             # TODO: Add handler to trigger OTA
             if "ota_trigger" in decoded_payload:
-                pass
+                start_transfer_event = {}
+                start_transfer_event['body'] = {'startTimeUTC': int(datetime_now.timestamp()), 'deviceIds':[wireless_device_id]}
+                print('ota trigerred with event ', start_transfer_event)
+                start_ota_resp = ota_start_transfer_handler.lambda_handler(start_transfer_event, None, True)
+                print('Start ota response ', start_ota_resp)
 
             if "ota_percent" in decoded_payload:
                 progress_pct = decoded_payload["ota_percent"]

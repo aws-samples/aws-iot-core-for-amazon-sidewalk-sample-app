@@ -173,6 +173,17 @@ Resources:
                   - !GetAtt SidewalkDevices.Arn
                   - !GetAtt SidewalkMeasurements.Arn
                   - !GetAtt DeviceTransfers.Arn
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                  - 's3:PutObjectAcl'
+                  - 's3:GetObjectAcl'
+                Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                Resource: !GetAtt SidewalkOTASourceBucket.Arn
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
@@ -636,6 +647,16 @@ Resources:
       PackageType: Zip
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
+      Environment:
+        Variables:
+          GUI_BUCKET_URL:
+            Fn::Join:
+              - ''
+              - - https://
+                - !GetAtt CloudFrontDistribution.DomainName
+          OTA_S3_BUCKET_NAME: !Ref SidewalkOTASourceBucket
+          S3_FUOTA_ROLE_ARN: !Sub arn:aws:iam::${AWS::AccountId}:role/${SidewalkOTAFuotaS3Role}
+
 
   # SidewalkDownlinkLambda function. Handles downlink messages
   SidewalkDownlinkLambda:
