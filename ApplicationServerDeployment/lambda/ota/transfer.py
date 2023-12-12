@@ -11,12 +11,12 @@ class DeviceTransfer(object):
     A class that represents the DeviceTransfer table record.
     """
 
-    def __init__(self, device_id, transfer_status: str = None, progress_pct: int = None, status_updated_time_UTC: int = None, transfer_start_time_UTC: int = None,
-                 transfer_end_time_UTC: int = None, file_name: str = None, file_size_kb: Decimal = None, firmware_upgrade_status: str = None,
+    def __init__(self, device_id, transfer_status: str = None, transfer_progress: int = None, status_updated_time_UTC: str = None, transfer_start_time_UTC: str = None,
+                 transfer_end_time_UTC: str = None, file_name: str = None, file_size_kb: Decimal = None, firmware_upgrade_status: str = None,
                  firmware_version: str = None, task_id: str = None):
         self._device_id = device_id
         self._transfer_status = transfer_status
-        self._progress_pct = progress_pct
+        self._transfer_progress = transfer_progress
         self._status_updated_time_UTC = status_updated_time_UTC
         self._transfer_start_time_UTC = transfer_start_time_UTC
         self._transfer_end_time_UTC = transfer_end_time_UTC
@@ -32,17 +32,17 @@ class DeviceTransfer(object):
     def get_transfer_status(self) -> str:
         return self._transfer_status
 
-    def get_progress_pct(self) -> int:
-        return int(self._progress_pct)
+    def get_transfer_progress(self) -> int:
+        return int(self._transfer_progress)
 
-    def get_status_updated_time_UTC(self) -> int:
-        return int(self._status_updated_time_UTC)
+    def get_status_updated_time_UTC(self) -> str:
+        return self._status_updated_time_UTC
 
-    def get_transfer_start_time_UTC(self) -> int:
-        return int(self._transfer_start_time_UTC)
+    def get_transfer_start_time_UTC(self) -> str:
+        return self._transfer_start_time_UTC
 
-    def get_transfer_end_time_UTC(self) -> int:
-        return int(self._transfer_end_time_UTC)
+    def get_transfer_end_time_UTC(self) -> str:
+        return self._transfer_end_time_UTC
 
     def get_file_name(self) -> str:
         return self._file_name
@@ -69,7 +69,7 @@ class DeviceTransfer(object):
             'device_id': self._device_id,
             'task_id': self._task_id,
             'transfer_status': self._transfer_status,
-            'progress_pct': self._progress_pct,
+            'transfer_progress': self._transfer_progress,
             'status_updated_time_UTC': self._status_updated_time_UTC,
             'transfer_start_time_UTC': self._transfer_start_time_UTC,
             'transfer_end_time_UTC': self._transfer_end_time_UTC,

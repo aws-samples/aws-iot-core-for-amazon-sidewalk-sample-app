@@ -6,6 +6,7 @@ Handles uplinks coming from the Sidewalk Sensor Monitoring Demo Application.
 """
 
 from ota_notifications_handler import OTANotificationsHandler
+from ota_start_transfer_lambda_handler import OTAStartTransferHandler
 from sidewalk_devices_handler import SidewalkDevicesHandler
 from measurements_handler import MeasurementsHandler
 import base64
@@ -30,6 +31,7 @@ DEMO_APP_ACTION_NOTIFICATION: Final = "DEMO_APP_ACTION_NOTIFICATION"
 ota_notifications_handler: Final = OTANotificationsHandler()
 device_handler: Final = SidewalkDevicesHandler()
 measurement_handler: Final = MeasurementsHandler()
+ota_start_transfer_handler: Final = OTAStartTransferHandler()
 
 
 def send_payload_to_downlink_lambda(command: str, wireless_device_id: str, button_pressed=None):
@@ -74,8 +76,7 @@ def lambda_handler(event, context):
         notification = event.get("notification")
         if notification is not None:
             try:
-                ota_notifications_handler.save_fuota_task_notifications(
-                    notification)
+                ota_notifications_handler.save_fuota_task_notifications(notification)
                 return {
                     'statusCode': 200,
                     'body': json.dumps('Notification received')
@@ -108,7 +109,7 @@ def lambda_handler(event, context):
         decoder = Command()
         decoded_payload = decoder.decode(decoded_data).decoded_cmd
 
-        ul_time = decoded_payload.get("gps_time")
+        ul_time = decoded_payload.get("gps_time", 0)
         ul_latency = 'no latency info'
         datetime_now = datetime.now(timezone.utc)
         if ul_time is not None:
@@ -146,7 +147,8 @@ def lambda_handler(event, context):
                             link_type=link_type,
                             sensor=sensor, sensor_unit=sensor_units, ota_support=ota_support, fw_version=fw_version)
             device_handler.add_device(device)
-            # call save_device_transfer_notifications
+            if ota_support is True:
+                ota_notifications_handler.update_device_firmware_version(wireless_device_id, fw_version)
             response_body = send_payload_to_downlink_lambda(
                 DEMO_APP_CAP_DISCOVERY_RESP, wireless_device_id)
             return {
@@ -225,15 +227,19 @@ def lambda_handler(event, context):
 
             # TODO: Add handler to trigger OTA
             if "ota_trigger" in decoded_payload:
-                pass
+                start_transfer_event = {}
+                start_transfer_event['body'] = {'startTimeUTC': int(datetime_now.timestamp()), 'deviceIds':[wireless_device_id]}
+                print('ota trigerred with event ', start_transfer_event)
+                start_ota_resp = ota_start_transfer_handler.lambda_handler(start_transfer_event, None, True)
+                print('Start ota response ', start_ota_resp)
 
-            # TODO: Add handler to update ota completion
             if "ota_percent" in decoded_payload:
-                pass
+                progress_pct = decoded_payload["ota_percent"]
+                ota_notifications_handler.update_device_progress_pct(wireless_device_id, progress_pct)
 
-            # TODO: Add handler to check completion of OTA
             if "ota_status" in decoded_payload:
-                pass
+                firmware_upgrade_status = decoded_payload["ota_status"]
+                ota_notifications_handler.update_device_firmware_upgrade_status(wireless_device_id, firmware_upgrade_status)
 
             return {
                 'statusCode': 200,
