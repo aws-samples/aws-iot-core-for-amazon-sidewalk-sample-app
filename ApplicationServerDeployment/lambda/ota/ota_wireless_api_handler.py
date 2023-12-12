@@ -55,3 +55,6 @@ class IOTWirelessAPIHandler:
                 'StartTime': start_time
             }
         )
+    
+    def get_fuota_task(self, task_id: str):
+        return self._wireless_client.get_fuota_task(Id=task_id)

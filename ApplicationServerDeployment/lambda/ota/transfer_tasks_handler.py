@@ -149,6 +149,7 @@ class TransferTasksHandler:
         except Exception as e:
             # Handle the exception according to your requirements
             print(f"Error updating item: {e}")
+   
     # -----------------
     # Update operations
     # -----------------

@@ -173,6 +173,7 @@ Resources:
                   - !GetAtt SidewalkDevices.Arn
                   - !GetAtt SidewalkMeasurements.Arn
                   - !GetAtt DeviceTransfers.Arn
+                  - !GetAtt TransferTasks.Arn
               - Effect: Allow
                 Action:
                   - 's3:GetObject'
@@ -184,6 +185,10 @@ Resources:
                 Action:
                   - 's3:ListBucket'
                 Resource: !GetAtt SidewalkOTASourceBucket.Arn
+              - Effect: Allow
+                Action:
+                  - 'iotwireless:GetFuotaTask'
+                Resource: !Sub 'arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:FuotaTask/*'
 
   # Downlink Lambda's execution role with CloudWatch write access and iot device access
   SidewalkDownlinkLambdaExecutionRole:
