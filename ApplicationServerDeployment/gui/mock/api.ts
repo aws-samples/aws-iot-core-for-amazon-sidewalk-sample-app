@@ -36,7 +36,8 @@ export default [
   {
     url: '/api/ota/deviceTransfers',
     method: 'get',
-    response: ({ query }) => wirelessDevicesData
+    response: ({ query }) => wirelessDevicesData,
+    statusCode: 200
   },
   {
     url: '/api/ota/transferTasks',

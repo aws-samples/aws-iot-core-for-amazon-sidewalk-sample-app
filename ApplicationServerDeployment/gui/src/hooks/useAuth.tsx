@@ -28,11 +28,11 @@ export const useAuthProvider = () => {
     setIsLogginIn(true);
     try {
       setUsernameHeader(username);
-      const response = await apiClient.post<string>(ENDPOINTS.login, {
+      const response: string = await apiClient.post(ENDPOINTS.login, {
         username,
         password
       });
-      setAuthHeader(response.data);
+      setAuthHeader(response);
       setIsAuthorized(true);
       setShouldRedirect(true);
     } catch (error) {

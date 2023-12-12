@@ -1,11 +1,12 @@
 // Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import axios from "axios";
-import { ACCESS_TOKEN, API_URL } from "./constants";
+import axios, { AxiosError, AxiosInstance } from 'axios';
+import { ACCESS_TOKEN, API_URL } from './constants';
+import { verifyAuth } from './utils';
 
 // @ts-ignore
-let instance;
+let instance: AxiosInstance;
 
 const gateway = () => {
   const accessToken = localStorage.getItem(ACCESS_TOKEN);
@@ -14,32 +15,34 @@ const gateway = () => {
     ...(accessToken
       ? {
           headers: {
-            authorizationtoken: `Basic ${accessToken}`,
-          },
+            authorizationtoken: `Basic ${accessToken}`
+          }
         }
-      : {}),
+      : {})
   };
 
   instance = axios.create(options);
+
+  // interceptors config
+  instance.interceptors.response.use(
+    (response) => response.data,
+    (error: AxiosError) => {
+      verifyAuth(error.response?.status);
+      return Promise.reject(error);
+    }
+  );
 
   return instance;
 };
 
 export const setAuthHeader = (token: string) => {
-  // @ts-ignore
-  instance.defaults.headers = {
-    authorizationtoken: `Basic ${token}`,
-  };
+  instance.defaults.headers['authorizationtoken'] = `Basic ${token}`;
 
   localStorage.setItem(ACCESS_TOKEN, token);
 };
 
 export const setUsernameHeader = (username: string) => {
-    // @ts-ignore
-    instance.defaults.headers = {
-        Username: `${username}`,
-    };
+  instance.defaults.headers['Username'] = `${username}`;
 };
-
 
 export const apiClient = gateway();

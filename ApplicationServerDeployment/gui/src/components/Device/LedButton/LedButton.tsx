@@ -10,7 +10,6 @@ import { ReactComponent as ToogleOn } from "../../../assets/icons/toggle-large-o
 import { LED_STATE } from "../../../constants";
 import { ENDPOINTS, interpolateParams } from "../../../endpoints";
 import { IDevice } from "../../../types";
-import { verifyAuth } from "../../../utils";
 import { logger } from "../../../utils/logger";
 import "./styles.css";
 
@@ -47,14 +46,14 @@ export const LedButton = ({
     }, TIME);
 
     while (hasValueBeenSet === false && hasTimeouted === false) {
-      const deviceStateFromDb = await apiClient.get<IDevice>(
+      const deviceStateFromDb: IDevice = await apiClient.get(
         interpolateParams(ENDPOINTS.device, { id: deviceId })
       );
 
       hasValueBeenSet =
         nextState === LED_STATE.ON
-          ? deviceStateFromDb.data.led_on.includes(ledId)
-          : !deviceStateFromDb.data.led_on.includes(ledId);
+          ? deviceStateFromDb.led_on.includes(ledId)
+          : !deviceStateFromDb.led_on.includes(ledId);
     }
 
     clearTimeout(timeoutId);
@@ -67,7 +66,7 @@ export const LedButton = ({
     const nextLedState = isToogleOn ? LED_STATE.OFF : LED_STATE.ON;
 
     try {
-      const response = await apiClient.post(ENDPOINTS.led, {
+      await apiClient.post(ENDPOINTS.led, {
         command: "DEMO_APP_ACTION_REQ",
         deviceId,
         ledId,
@@ -84,8 +83,6 @@ export const LedButton = ({
         setIsToggleOn((prevValue) => !prevValue);
       }
     } catch (error) {
-      // @ts-ignore
-      verifyAuth(error.status);
       logger.log("error notifying led", error);
       toast("Error notifying led, try again later");
     } finally {

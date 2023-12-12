@@ -1,16 +1,15 @@
 // Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { useEffect, useRef, useState } from "react";
-import { apiClient } from "../../apiClient";
-import { APP_CONFIG } from "../../appConfig";
-import { ENDPOINTS } from "../../endpoints";
-import { IDevice } from "../../types";
-import { verifyAuth } from "../../utils";
-import { logger } from "../../utils/logger";
-import { Device } from "../../components/Device/Device";
-import { Spinner } from "../../components/Spinner/Spinner";
-import "./styles.css";
+import { useEffect, useRef, useState } from 'react';
+import { apiClient } from '../../apiClient';
+import { APP_CONFIG } from '../../appConfig';
+import { ENDPOINTS } from '../../endpoints';
+import { IDevice } from '../../types';
+import { logger } from '../../utils/logger';
+import { Device } from '../../components/Device/Device';
+import { Spinner } from '../../components/Spinner/Spinner';
+import './styles.css';
 
 export const SensorMonitoring = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
@@ -21,14 +20,12 @@ export const SensorMonitoring = () => {
 
   const fetchDevices = async () => {
     try {
-      const response = await apiClient.get<IDevice[]>(ENDPOINTS.devices);
+      const response: IDevice[] = await apiClient.get(ENDPOINTS.devices);
       setHasError(false);
-      setDevicesData(response.data);
-      logger.log("Devices", { response: response.data });
+      setDevicesData(response);
+      logger.log('Devices', { response });
     } catch (error) {
-      // @ts-ignore
-      verifyAuth(error.status);
-      logger.log("error fetching devices:", error);
+      logger.log('error fetching devices:', error);
       setHasError(true);
     }
   };
@@ -48,10 +45,7 @@ export const SensorMonitoring = () => {
   useEffect(() => {
     if (isFirstLoad) return;
 
-    intervalDevicesFetchId.current = window.setInterval(
-      fetchDevices,
-      APP_CONFIG.intervals.devices
-    );
+    intervalDevicesFetchId.current = window.setInterval(fetchDevices, APP_CONFIG.intervals.devices);
 
     return () => clearInterval(intervalDevicesFetchId.current);
   }, [isFirstLoad]);
@@ -67,12 +61,8 @@ export const SensorMonitoring = () => {
   if (hasError) {
     return (
       <div className="full-height-with-header flex-abs-center">
-        Error loading devices information,{" "}
-        <div
-          role="button"
-          className="device-wrapper-link"
-          onClick={fetchDevicesWithLoading}
-        >
+        Error loading devices information,{' '}
+        <div role="button" className="device-wrapper-link" onClick={fetchDevicesWithLoading}>
           try again
         </div>
       </div>
@@ -89,11 +79,7 @@ export const SensorMonitoring = () => {
   }
 
   if (devicesData.length === 0) {
-    return (
-      <div className="full-height-with-header flex-abs-center">
-        No devices detected
-      </div>
-    );
+    return <div className="full-height-with-header flex-abs-center">No devices detected</div>;
   }
 
   return (

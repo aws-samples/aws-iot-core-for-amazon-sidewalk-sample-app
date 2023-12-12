@@ -7,7 +7,7 @@ import { formatDuration, intervalToDuration } from 'date-fns';
 import { ProvideAuth } from './hooks/useAuth';
 import { ReactNode } from 'react';
 
-export const verifyAuth = (statusCode: number) => {
+export const verifyAuth = (statusCode: number = 500) => {
   if (statusCode === 401 || statusCode === 403) {
     localStorage.removeItem(ACCESS_TOKEN);
     localStorage.setItem(UNAUTHORIZE, 'true');

@@ -10,11 +10,10 @@ import { TransferStatus } from '../../../../components/TransferStatus/TransferSt
 import { format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getDurationString, getFileSize, showValueOrDash, verifyAuth } from '../../../../utils';
+import { getDurationString, getFileSize, showValueOrDash } from '../../../../utils';
 import { RcFile } from 'antd/es/upload/interface';
 import { apiClient } from '../../../../apiClient';
 import { ENDPOINTS, interpolateParams } from '../../../../endpoints';
-import { AxiosError } from 'axios';
 import { DatePicker } from './DatePicker';
 import { useRowScroller } from '../ScrollManager';
 import { APP_CONFIG } from '../../../../appConfig';
@@ -143,8 +142,7 @@ export const WirelessDevicesTable = () => {
 
   const fetchDeviceByIdAndMutate = async (id: string) => {
     try {
-      const result = await apiClient.get<IWirelessDevice>(interpolateParams(ENDPOINTS.getDeviceById, { id }));
-      const individualDevice = result.data;
+      const individualDevice: IWirelessDevice = await apiClient.get(interpolateParams(ENDPOINTS.getDeviceById, { id }));
 
       const deviceToReplace = devicesList?.wireless_devices.find(
         (device) => device.device_id === individualDevice.device_id
@@ -159,8 +157,7 @@ export const WirelessDevicesTable = () => {
 
       // should keep fetching while...
       return individualDevice.transfer_progress !== 100;
-    } catch (error) {
-      verifyAuth((error as AxiosError)?.response?.status || 500);
+    } catch {
       toast.error(`Error while getting device by id: ${id}`);
 
       // polling stops...

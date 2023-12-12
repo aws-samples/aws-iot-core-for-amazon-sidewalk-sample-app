@@ -9,11 +9,11 @@ import { AxiosError } from 'axios';
 import { APP_CONFIG } from '../../../../appConfig';
 import { Collapse, Spin } from 'antd';
 import toast from 'react-hot-toast';
-import { verifyAuth } from '../../../../utils';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { useRowScroller } from '../ScrollManager';
 import { TransferStatus } from '../../../../components/TransferStatus/TransferStatus';
 import { useEffect, useRef } from 'react';
+import { logger } from '../../../../utils/logger';
 
 interface Props {
   devices: Array<string>;
@@ -28,7 +28,7 @@ export const DevicesStatutes = ({ devices, taskId }: Props) => {
     devices.map(
       (deviceId): UseQueryOptions<IWirelessDeviceStatus, AxiosError> => ({
         queryKey: ['deviceById', deviceId],
-        queryFn: () => apiClient.get(`${ENDPOINTS.getDevicesByTaskId}?fuotaTaskId=${deviceId}`).then((res) => res.data),
+        queryFn: () => apiClient.get(`${ENDPOINTS.getDevicesByTaskId}?fuotaTaskId=${deviceId}`),
         refetchOnWindowFocus: false,
         retry: false,
         refetchInterval: (data) => {
@@ -39,14 +39,12 @@ export const DevicesStatutes = ({ devices, taskId }: Props) => {
           return false;
         },
         onError: (error) => {
-          verifyAuth(error.response?.status!);
+          logger.log('error fetching', error);
           toast.error('Error while getting device status');
         }
       })
     )
   );
-
-  // const getProgressElement = () =>
 
   const isError = results.some((result) => result.isError);
   const isLoading = results.some((result) => result.isLoading);
