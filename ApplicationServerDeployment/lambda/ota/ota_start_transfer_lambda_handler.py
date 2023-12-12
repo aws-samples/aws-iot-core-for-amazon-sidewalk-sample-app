@@ -225,3 +225,6 @@ class OTAStartTransferHandler:
             print(f"Error fetching file size: {e}")
             return None
 
+def lambda_handler(event, context):
+    handler = OTAStartTransferHandler()
+    return handler.lambda_handler(event, context, is_device_trigger=False)
