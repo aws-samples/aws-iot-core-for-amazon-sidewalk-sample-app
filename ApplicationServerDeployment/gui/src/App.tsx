@@ -10,7 +10,13 @@ import { Routes } from './routes';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import './App.css';
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false
+    }
+  }
+});
 
 function App() {
   const { isAuthorized } = useAuth();

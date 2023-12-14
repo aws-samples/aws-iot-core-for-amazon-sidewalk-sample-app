@@ -22,7 +22,7 @@ type ConfigMutation = Omit<UseMutationOptions<{}, AxiosError, {}, {}>, 'mutation
 
 export const useGetWirelessDevices = () =>
   useQuery<IWirelessDevices, AxiosError>(['getWirelessDevices'], () => apiClient.get(ENDPOINTS.otaDevices), {
-    refetchOnWindowFocus: false,
+    cacheTime: 0,
     onError: (error) => {
       logger.log('error fetching', error);
       toast.error('Error fetching Wireless Devices');
@@ -31,7 +31,7 @@ export const useGetWirelessDevices = () =>
 
 export const useGetTransferTasks = () =>
   useQuery<ITransferTasks, AxiosError>(['getTransferTasks'], () => apiClient.get(ENDPOINTS.otaTasks), {
-    refetchOnWindowFocus: false,
+    cacheTime: 0,
     onError: (error) => {
       logger.log('error fetching', error);
       toast.error('Error fetching Transfer Tasks');
@@ -64,7 +64,6 @@ export const useS3Upload = (config?: ConfigMutation) =>
 export const useGetFileNames = () =>
   useQuery<IS3Files, AxiosError>(['getFilenames'], () => apiClient.get(ENDPOINTS.s3Filenames), {
     retry: false,
-    refetchOnWindowFocus: false,
     onError: (error) => {
       logger.log('error fetching', error);
       toast.error('Error getting filenames');

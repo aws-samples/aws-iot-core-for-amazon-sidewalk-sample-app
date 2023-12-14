@@ -1,7 +1,7 @@
 // Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { UseQueryOptions, useQueries } from 'react-query';
+import { UseQueryOptions } from 'react-query';
 import { apiClient } from '../../../../apiClient';
 import { ENDPOINTS } from '../../../../endpoints';
 import { IWirelessDeviceStatus } from '../../../../types';
@@ -14,22 +14,26 @@ import { useRowScroller } from '../ScrollManager';
 import { TransferStatus } from '../../../../components/TransferStatus/TransferStatus';
 import { useEffect, useRef } from 'react';
 import { logger } from '../../../../utils/logger';
+import { useQueriesWithRefetch } from '../../../../utils';
+import { queryClient } from '../../../../App';
 
 interface Props {
   devices: Array<string>;
   taskId: string;
+  forceRefetching: boolean;
 }
 
-export const DevicesStatutes = ({ devices, taskId }: Props) => {
+export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => {
   const scrollManager = useRowScroller();
   const progressCellElement = useRef<HTMLElement>();
 
-  const results = useQueries(
+  let { results, refetchAll } = useQueriesWithRefetch(
     devices.map(
       (deviceId): UseQueryOptions<IWirelessDeviceStatus, AxiosError> => ({
         queryKey: ['deviceById', deviceId],
         queryFn: () => apiClient.get(`${ENDPOINTS.getDevicesByTaskId}?fuotaTaskId=${deviceId}`),
         refetchOnWindowFocus: false,
+        cacheTime: 0,
         retry: false,
         refetchInterval: (data) => {
           if (data?.status === 'PENDING' || data?.status === 'TRANSFERRING') {
@@ -46,7 +50,7 @@ export const DevicesStatutes = ({ devices, taskId }: Props) => {
     )
   );
 
-  const isError = results.some((result) => result.isError);
+  const isError = results.some((result) => result.isError || result.isRefetchError);
   const isLoading = results.some((result) => result.isLoading);
 
   useEffect(() => {
@@ -55,7 +59,7 @@ export const DevicesStatutes = ({ devices, taskId }: Props) => {
 
   // progress column logic
   useEffect(() => {
-    if (!progressCellElement.current) return;
+    if (!progressCellElement.current || isLoading) return;
 
     const count = results.reduce((acc: number, item) => {
       if (item.data?.status !== 'PENDING' && item.data?.status !== 'TRANSFERRING') {
@@ -67,7 +71,27 @@ export const DevicesStatutes = ({ devices, taskId }: Props) => {
 
     // we are manipulating the DOM directly for better efficiency
     progressCellElement.current.innerHTML = `${count}/${results.length}`;
-  }, [results]);
+
+    () => {
+      if (progressCellElement.current) {
+        progressCellElement.current.innerHTML = '';
+      }
+    };
+  }, [results, isLoading]);
+
+  useEffect(() => {
+    if (!forceRefetching) return;
+
+    if (progressCellElement.current) {
+      progressCellElement.current.innerHTML = '';
+    }
+
+    const promises = devices.map((deviceId) => queryClient.resetQueries({ queryKey: ['deviceById', deviceId] }));
+
+    Promise.all(promises).then(() => {
+      refetchAll();
+    });
+  }, [forceRefetching]);
 
   if (isError) {
     return <>-</>;

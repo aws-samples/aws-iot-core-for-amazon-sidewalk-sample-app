@@ -17,7 +17,8 @@ import { ReloadOutlined } from '@ant-design/icons';
 export const TranserTasksTable = () => {
   const {
     data: transferTaskList,
-    isLoading: loadingTransferTasksList,
+    isLoading: isLoadingTransferTasksList,
+    isRefetching: isRefetchingTransferTasksList,
     refetch: refetchTransferTasks
   } = useGetTransferTasks();
   const { mutate: cancelTask, isLoading: cancelingTask } = useCancelTask({
@@ -76,7 +77,9 @@ export const TranserTasksTable = () => {
     {
       title: 'Devices',
       dataIndex: 'device_ids',
-      render: (list, record: ITransferTask) => <DevicesStatutes devices={list} taskId={record.task_id} />
+      render: (list, record: ITransferTask) => (
+        <DevicesStatutes devices={list} taskId={record.task_id} forceRefetching={isRefetchingTransferTasksList} />
+      )
     }
   ];
 
@@ -101,8 +104,8 @@ export const TranserTasksTable = () => {
         <Flex gap="small" align="center">
           <Button
             onClick={() => refetchTransferTasks()}
-            loading={loadingTransferTasksList}
-            disabled={loadingTransferTasksList}
+            loading={isLoadingTransferTasksList}
+            disabled={isLoadingTransferTasksList}
             aria-label="reload table"
           >
             <ReloadOutlined />
@@ -130,7 +133,7 @@ export const TranserTasksTable = () => {
         columns={columns}
         dataSource={transferTaskList?.transfer_tasks}
         rowKey={(item) => item.task_id}
-        loading={loadingTransferTasksList}
+        loading={isRefetchingTransferTasksList || isLoadingTransferTasksList}
         pagination={{
           pageSize: scrollManager.tables.tasks.pageSize,
           current: scrollManager.pageIndex.tasks,

@@ -5,7 +5,8 @@ import { RcFile } from 'antd/es/upload';
 import { ACCESS_TOKEN, UNAUTHORIZE } from './constants';
 import { formatDuration, intervalToDuration } from 'date-fns';
 import { ProvideAuth } from './hooks/useAuth';
-import { ReactNode } from 'react';
+import { ReactNode, useCallback } from 'react';
+import { QueriesOptions, useQueries } from 'react-query';
 
 export const verifyAuth = (statusCode: number = 500) => {
   if (statusCode === 401 || statusCode === 403) {
@@ -63,3 +64,16 @@ export const getDurationString = ({ start, end }: { start: number | Date; end: n
 };
 
 export const withAuthProvider = (Component: ReactNode) => <ProvideAuth>{Component}</ProvideAuth>;
+
+export const useQueriesWithRefetch = <T extends any[]>(queries: readonly [...QueriesOptions<T>]) => {
+  const results = useQueries(queries);
+
+  const refetchAll = useCallback(() => {
+    results.forEach((result) => result.refetch());
+  }, [results]);
+
+  return {
+    results,
+    refetchAll
+  };
+};

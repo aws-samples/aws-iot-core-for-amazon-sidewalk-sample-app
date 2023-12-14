@@ -29,7 +29,12 @@ export const WirelessDevicesTable = () => {
     device_ids: []
   });
 
-  const { data: devicesList, isLoading: isLoadingDevices, refetch: refetchWirelessDevices } = useGetWirelessDevices();
+  const {
+    data: devicesList,
+    isLoading: isLoadingDevices,
+    refetch: refetchWirelessDevices,
+    isRefetching: isRefetchingWirelessDevices
+  } = useGetWirelessDevices();
   const { mutate: upload, isLoading: isUploading } = useS3Upload({
     onSuccess: (_, file: {}) => {
       toast.success('File Uploaded');
@@ -277,7 +282,7 @@ export const WirelessDevicesTable = () => {
         columns={columns}
         dataSource={devicesList?.wireless_devices}
         rowKey={(item) => item.device_id}
-        loading={isLoadingDevices}
+        loading={isRefetchingWirelessDevices || isLoadingDevices}
         pagination={{
           pageSize: scrollManager.tables.devices.pageSize,
           current: scrollManager.pageIndex.devices,

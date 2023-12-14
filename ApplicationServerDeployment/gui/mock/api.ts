@@ -37,12 +37,14 @@ export default [
     url: '/api/ota/deviceTransfers',
     method: 'get',
     response: ({ query }) => wirelessDevicesData,
-    statusCode: 200
+    statusCode: 200,
+    timeout: 1500
   },
   {
     url: '/api/ota/transferTasks',
     method: 'get',
-    response: ({ query }) => transferTasks
+    response: ({ query }) => transferTasks,
+    timeout: 1500
   },
   {
     url: '/api/otaStart',
@@ -109,7 +111,8 @@ export default [
           break;
       }
     },
-    statusCode: 200
+    statusCode: 200,
+    timeout: 3000
   },
   {
     url: '/api/otaSetCurrentFirmware',
@@ -133,5 +136,18 @@ export default [
     },
     timeout: 1000,
     statusCode: 200
+  },
+  {
+    url: '/api/auth',
+    method: 'post',
+    response: ({ query }) => 'access-token-value',
+    timeout: 1000,
+    statusCode: 200
+  },
+  {
+    url: '/api/devices',
+    method: 'get',
+    response: () => 'forced-error',
+    statusCode: 500
   }
 ];
