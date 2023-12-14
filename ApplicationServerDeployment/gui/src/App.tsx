@@ -4,7 +4,7 @@
 import { Header } from './components/Header/Header';
 import { Suspense, useEffect, useState } from 'react';
 import { Spinner } from './components/Spinner/Spinner';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { Routes } from './routes';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -20,13 +20,20 @@ export const queryClient = new QueryClient({
 
 function App() {
   const { isAuthorized } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   useEffect(() => {
     setIsFirstLoad(false);
-    if (isAuthorized) return;
-    navigate(Routes.auth);
+
+    if (!isAuthorized) {
+      return navigate(Routes.auth);
+    }
+
+    if (location.pathname === '/') {
+      navigate(Routes.sensorMonitoring);
+    }
   }, [isAuthorized]);
 
   // added to avoid flickering while checking for the auth
