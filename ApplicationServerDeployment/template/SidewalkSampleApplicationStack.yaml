@@ -126,6 +126,7 @@ Resources:
   SidewalkUplinkLambdaExecutionRole:
     Type: AWS::IAM::Role
     DependsOn:
+      - SidewalkOTASourceBucket
       - SidewalkDownlinkLambda
       - SidewalkDevices
       - SidewalkMeasurements
@@ -375,6 +376,8 @@ Resources:
   # Token authenticator Lambda's execution role with basic lambda permissions.
   SidewalkOTAStartTransferLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkOTASourceBucket
     Properties:
       RoleName: SidewalkOTAStartTransferLambdaExecutionRole
       Description: Allows SidewalkOTAStartTransferLambdaExecutionRole to call AWS services
@@ -486,6 +489,8 @@ Resources:
   # Token authenticator Lambda's execution role with basic lambda permissions.
   SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkOTASourceBucket
     Properties:
       RoleName: SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole
       Description: Allows SidewalkOTAGetDevicesByTaskIdLambdaExecutionRole to call AWS services
@@ -506,6 +511,8 @@ Resources:
   # Token authenticator Lambda's execution role with basic lambda permissions.
   SidewalkOTAUploadFileLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkOTASourceBucket
     Properties:
       RoleName: SidewalkOTAUploadFileLambdaExecutionRole
       Description: Allows SidewalkOTAUploadFileLambdaExecutionRole to call AWS services
@@ -538,6 +545,8 @@ Resources:
 
   SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkOTASourceBucket
     Properties:
       RoleName: SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole
       Description: Allows SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole to call AWS services
@@ -575,6 +584,8 @@ Resources:
 
   SidewalkOTAGetS3FilesLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkOTASourceBucket
     Properties:
       RoleName: SidewalkOTAGetS3FilesLambdaExecutionRole
       Description: Allows SidewalkOTAGetS3FilesLambdaExecutionRole to call AWS services
@@ -692,6 +703,7 @@ Resources:
   SidewalkOTAStartTransferLambda:
     Type: AWS::Lambda::Function
     DependsOn:
+      - SidewalkOTASourceBucket
       - SidewalkOTAStartTransferLambdaExecutionRole
       - SidewalkOTAFuotaS3Role
       - CloudFrontDistribution
@@ -720,6 +732,7 @@ Resources:
   SidewalkOTAUploadFileLambda:
     Type: AWS::Lambda::Function
     DependsOn:
+      - SidewalkOTASourceBucket
       - SidewalkOTAUploadFileLambdaExecutionRole
       - CloudFrontDistribution
     Properties:
@@ -796,6 +809,7 @@ Resources:
   SidewalkOTAGetS3FilesLambda:
     Type: AWS::Lambda::Function
     DependsOn:
+      - SidewalkOTASourceBucket
       - SidewalkOTAGetS3FilesLambdaExecutionRole
       - CloudFrontDistribution
     Properties:
@@ -872,6 +886,7 @@ Resources:
   SidewalkOTASetCurrentFirmwareHandlerLambda:
     Type: AWS::Lambda::Function
     DependsOn:
+      - SidewalkOTASourceBucket 
       - SidewalkOTASetCurrentFirmwareHandlerLambdaExecutionRole
       - CloudFrontDistribution
     Properties:
@@ -2073,6 +2088,10 @@ Outputs:
   SidewalkWebAppBucketName:
     Value: !Ref SidewalkWebAppBucket
     Description: SidewalkWebAppBucketName
+
+  SidewalkOTASourceBucketName:
+    Value: !Ref SidewalkOTASourceBucket
+    Description: SidewalkOTASourceBucketName
 
   CloudFrontDistribution:
     Description: CloudFront distribution
