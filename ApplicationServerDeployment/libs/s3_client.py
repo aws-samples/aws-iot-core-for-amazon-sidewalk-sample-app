@@ -25,6 +25,25 @@ class S3Client:
         self._client = session.client(service_name='s3')
         self.region_name = session.region_name
 
+    def delete_bucket(self, bucket_name):
+        """
+        Deletes the bucket
+        :param bucket_name: name of bucket to delete
+        """
+
+        try:
+            s3 = boto3.client('s3')
+            log_info(f'Deleting bucket {bucket_name} ...')
+            # Delete the S3 bucket
+            s3.delete_bucket(Bucket=bucket_name)
+            log_success('Bucket deleted')
+        except ClientError as e:
+            if e.response['Error']['Code'] in ['ValidationError', 'NoSuchBucket']:
+                log_success(f'{bucket_name} doesn\'t exist, skipping.')
+            else:
+                terminate(f'Unable to delete the bucket: {e}.', ErrCode.EXCEPTION)
+
+
     def delete_bucket_content(self, bucket_name):
         """
         Deletes contents of buckets
@@ -89,15 +108,8 @@ class S3Client:
             terminate(f'Unable to upload files: {e}.', ErrCode.EXCEPTION)
 
     def upload_template_to_s3(self, template_path, s3_bucket_name, s3_key):
-        # # Create S3 bucket if it does not exists
-        # try:
-        #     self._client.head_bucket(Bucket=s3_bucket_name)
-        # except self._client.exceptions.NoSuchBucket:
-        print(f"S3 bucket '{s3_bucket_name}' does not exist. Creating...")
         self._client.create_bucket(Bucket=s3_bucket_name)
         print(f"S3 bucket '{s3_bucket_name}' created.")
-        # else:
-        #     print(f"S3 bucket '{s3_bucket_name}' already exists.")
 
         # Upload CloudFormation template to S3
         with open(template_path, 'rb') as template_file:
