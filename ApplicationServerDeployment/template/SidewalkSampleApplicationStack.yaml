@@ -622,6 +622,8 @@ Resources:
   # Role which IoT Wireless service assumes to create to get the file from s3.
   SidewalkOTAFuotaS3Role:
     Type: AWS::IAM::Role
+    DependsOn:
+      - SidewalkOTASourceBucket
     Properties:
       RoleName: SidewalkOTAFuotaS3Role
       Description: Allows IoT Wireless to access the OTA S3
@@ -651,7 +653,9 @@ Resources:
   # SidewalkUplinkLambda function. Handles uplink messages
   SidewalkUplinkLambda:
     Type: AWS::Lambda::Function
-    DependsOn: SidewalkUplinkLambdaExecutionRole
+    DependsOn: 
+      - SidewalkUplinkLambdaExecutionRole
+      - SidewalkOTASourceBucket
     Properties:
       FunctionName: SidewalkUplinkLambda
       Description: Receives uplink messages and logs them in the CloudWatch log group.

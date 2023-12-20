@@ -4,3 +4,4 @@
 STACK_NAME = 'SidewalkSampleApplicationStack'
 DESTINATION_ROLE = 'SidewalkDestinationRole'
 TAG = 'SidewalkSampleApplication'
+CFN_BUCKET_NAME = 'sidewalk-sample-app-stack-00012'

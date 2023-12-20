@@ -56,6 +56,10 @@ ota_bucket = cf_client.get_output_var(SSA_STACK, "SidewalkOTASourceBucketName")
 if ota_bucket:
     s3_client.delete_bucket_content(ota_bucket)
 
+if CFN_BUCKET_NAME:
+    s3_client.delete_bucket_content(CFN_BUCKET_NAME)
+    s3_client.delete_bucket(CFN_BUCKET_NAME)
+
 # --------------------------------------
 # Delete CloudFormation stack
 # --------------------------------------
