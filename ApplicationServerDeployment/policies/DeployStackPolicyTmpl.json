@@ -20,14 +20,7 @@
                 "iam:Update*"
             ],
             "Resource": [
-                "arn:aws:iam::<account_ID>:role/SidewalkDestinationRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkRuleRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkUplinkLambdaExecutionRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkDownlinkLambdaExecutionRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkDbHandlerLambdaExecutionRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkTokenAuthenticatorLambdaExecutionRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkTokenGeneratorLambdaExecutionRole",
-                "arn:aws:iam::<account_ID>:role/SidewalkUserAuthenticatorLambdaExecutionRole"
+                "arn:aws:iam::<account_ID>:role/Sidewalk*"
             ]
         },
         {
@@ -103,12 +96,7 @@
                 "lambda:Update*"
             ],
             "Resource": [
-                "arn:aws:lambda:*:<account_ID>:function:SidewalkUplinkLambda",
-                "arn:aws:lambda:*:<account_ID>:function:SidewalkDownlinkLambda",
-                "arn:aws:lambda:*:<account_ID>:function:SidewalkDbHandlerLambda",
-                "arn:aws:lambda:*:<account_ID>:function:SidewalkTokenAuthenticatorLambda",
-                "arn:aws:lambda:*:<account_ID>:function:SidewalkTokenGeneratorLambda",
-                "arn:aws:lambda:*:<account_ID>:function:SidewalkUserAuthenticatorLambda"
+                "arn:aws:lambda:*:<account_ID>:function:Sidewalk*"
             ]
         },
         {
@@ -130,7 +118,9 @@
             ],
             "Resource": [
                 "arn:aws:dynamodb:*:<account_ID>:table/SidewalkDevices",
-                "arn:aws:dynamodb:*:<account_ID>:table/SidewalkMeasurements"
+                "arn:aws:dynamodb:*:<account_ID>:table/SidewalkMeasurements",
+                "arn:aws:dynamodb:*:<account_ID>:table/TransferTasks",
+                "arn:aws:dynamodb:*:<account_ID>:table/DeviceTransfers"
             ]
         },
         {
@@ -149,7 +139,6 @@
                 "cloudfront:DeleteCloudFrontOriginAccessIdentity",
                 "cloudfront:GetCloudFrontOriginAccessIdentity",
                 "cloudfront:UpdateCloudFrontOriginAccessIdentity",
-                "cloudfront:ListCloudFrontOriginAccessIdentities",
                 "cloudfront:List*",
                 "cloudfront:Update*"
             ],
@@ -160,35 +149,19 @@
         {
             "Effect": "Allow",
             "Action": [
-                "cloudfront:CreateOriginRequestPolicy",
-                "cloudfront:DeleteOriginRequestPolicy",
-                "cloudfront:GetOriginRequestPolicy",
-                "cloudfront:UpdateOriginRequestPolicy",
-                "cloudfront:List*",
-                "cloudfront:Update*"
-            ],
-            "Resource": [
-                "arn:aws:cloudfront::<account_ID>:origin-request-policy/*"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
                 "cloudfront:CreateDistribution",
                 "cloudfront:DeleteDistribution",
                 "cloudfront:GetDistribution",
                 "cloudfront:GetOriginRequestPolicy",
-                "cloudfront:ListDistributions",
-                "cloudfront:UpdateDistribution",
                 "cloudfront:TagResource",
                 "cloudfront:CreateOriginRequestPolicy",
                 "cloudfront:DeleteOriginRequestPolicy",
-                "cloudfront:UpdateOriginRequestPolicy",
                 "cloudfront:List*",
                 "cloudfront:Update*"
             ],
             "Resource": [
-                "arn:aws:cloudfront::<account_ID>:distribution/*"
+                "arn:aws:cloudfront::<account_ID>:distribution/*",
+                "arn:aws:cloudfront::<account_ID>:origin-request-policy/*"
             ]
         },
         {
@@ -242,12 +215,7 @@
                 "logs:Update*"
             ],
             "Resource":[
-                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkUplinkLambda*",
-                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkDbHandlerLambda*",
-                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkDownlinkLambda*",
-                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkTokenAuthenticatorLambda*",
-                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkTokenGeneratorLambda*",
-                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/SidewalkUserAuthenticatorLambda*",
+                "arn:aws:logs:*:<account_ID>:log-group:/aws/lambda/Sidewalk*",
                 "arn:aws:logs:*:<account_ID>:log-group:SidewalkRuleErrors*"
             ]
         }

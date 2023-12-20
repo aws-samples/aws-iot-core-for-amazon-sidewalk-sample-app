@@ -77,7 +77,7 @@ class CloudFormationClient:
                     response = self._client.update_stack(
                         StackName=stack_name,
                         UsePreviousTemplate=False,
-                        TemplateBody=template,
+                        TemplateURL=templateUrl,
                         Parameters=parameters,
                         Capabilities=['CAPABILITY_NAMED_IAM'],
                         Tags=tags,
