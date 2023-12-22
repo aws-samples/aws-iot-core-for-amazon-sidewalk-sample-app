@@ -432,7 +432,11 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'iotwireless:CreateFuotaTask'
-                Resource: !Sub 'arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:FuotaTask/*'
+                  - 'iotwireless:AssociateWirelessDeviceWithFuotaTask'
+                  - 'iotwireless:StartFuotaTask'
+                Resource: 
+                  - !Sub 'arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:FuotaTask/*'
+                  - !Sub 'arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:WirelessDevice/*'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
     DeletionPolicy: Delete
@@ -647,7 +651,14 @@ Resources:
                   - 's3:GetObject'
                   - 's3:ListBucketVersions'
                   - 's3:ListBucket'
-                Resource: !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
+                Resource: 
+                  - !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}/*'
+                  - !Sub 'arn:aws:s3:::${SidewalkOTASourceBucket}'
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource: 
+                  - '*'
     DeletionPolicy: Delete
 
   # SidewalkUplinkLambda function. Handles uplink messages
@@ -663,7 +674,7 @@ Resources:
       MemorySize: 128
       Role: !GetAtt SidewalkUplinkLambdaExecutionRole.Arn
       Runtime: python3.9
-      Timeout: 3
+      Timeout: 10
       PackageType: Zip
       Code:
         ZipFile: "Please run deploy_stack.py script to upload the code."
@@ -718,7 +729,7 @@ Resources:
       MemorySize: 128
       Role: !GetAtt SidewalkOTAStartTransferLambdaExecutionRole.Arn
       Runtime: python3.9
-      Timeout: 3
+      Timeout: 10
       PackageType: Zip
       Code:
         ZipFile:  "Please run deploy_stack.py script to upload the code."

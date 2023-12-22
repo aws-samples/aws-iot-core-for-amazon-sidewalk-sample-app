@@ -14,7 +14,7 @@ class IOTWirelessAPIHandler:
 
     def __init__(self):
         self._session = boto3.Session()
-        self._wireless_client = self._session.client(service_name='iotwireless', endpoint_url= 'https://api.gamma.us-east-1.iotwireless.iot.aws.dev')
+        self._wireless_client = self._session.client(service_name='iotwireless')
 
     def delete_fuota_task(self, fuota_task_id: str):
         return self._wireless_client.delete_fuota_task(
