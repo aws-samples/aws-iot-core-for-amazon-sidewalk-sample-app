@@ -432,6 +432,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'iotwireless:CreateFuotaTask'
+                  - 'iotwireless:AssociateWirelessDeviceWithFuotaTask'
+                  - 'iotwireless:StartFuotaTask'
                 Resource: !Sub 'arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:FuotaTask/*'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'

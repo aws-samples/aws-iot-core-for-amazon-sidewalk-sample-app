@@ -21,18 +21,18 @@ iot_handler: Final = IOTWirelessAPIHandler()
 transfer_tasks_handler: Final = TransferTasksHandler()
 
 def cancel_tasks(task_ids):
-    print('Cancelling tasks: {task_ids}')
+    print('Cancelling tasks: ', task_ids)
     error_response = []
-    # for task in task_ids: 
-    #     try: 
-    #         response = iot_handler.delete_fuota_task(task)
-    #         print(response)
-    #     except Exception as e:
-    #         error_response.append({'task': task, 'error': str(e)})
-    #         print('task {task} error: %s',e)
+    for task in task_ids: 
+        try: 
+            response = iot_handler.delete_fuota_task(task)
+            print(response)
+        except Exception as e:
+            error_response.append({'task': task, 'error': str(e)})
+            print('task {task} error: %s',e)
 
-    # # Update the database
-    # update_transfer_tasks_and_device_transfers(task_ids)
+    # Update the database
+    update_transfer_tasks_and_device_transfers(task_ids)
     return error_response
 
 
@@ -74,7 +74,9 @@ def update_transfer_tasks_and_device_transfers(task_ids):
     current_timestamp = int(datetime.utcnow().timestamp())
     # Update tasks
     for task_id in task_ids:
-        task = transfer_tasks_handler.get_transfer_task_details(taskId=task_id)
+        print('Task Id to update ',task_id)
+        task = transfer_tasks_handler.get_transfer_task_details(task_id=task_id)
+        print('The db task: ', task)
         task._task_status = 'Canceled'
         task._task_end_time_UTC = current_timestamp
         transfer_tasks_handler.update_transfer_task(task)
@@ -83,7 +85,8 @@ def update_transfer_tasks_and_device_transfers(task_ids):
 
     # Update device
     for device_id in device_ids:
-        device_response = device_transfers_handler.get_device_transfer_details(deviceId=device_id)
+        device_response = device_transfers_handler.get_device_transfer_details(device_id=device_id)
+        print('The db device: ', device_response)
         device_response._transfer_status = 'Canceled'
         device_response._firmware_upgrade_status = 'None'
         device_response._status_updated_time_UTC = current_timestamp

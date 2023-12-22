@@ -30,7 +30,7 @@ def lambda_handler(event, context):
         
         # call the IoTWireless API
         # Uncomment this after integration is completed for all IoTWireless API
-        # deviceList = getDeviceList(fuota_task_id)
+        deviceList = getDeviceList(fuota_task_id)
 
         # Remove this after integration is completed for all IoTWireless API
         deviceList = []
