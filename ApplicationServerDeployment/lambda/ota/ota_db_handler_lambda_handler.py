@@ -7,7 +7,6 @@ Handles read request to SidewalkDevices and Measurements tables.
 
 import json
 import traceback
-import cors_utils
 from typing import Final
 from decimal import Decimal
 
