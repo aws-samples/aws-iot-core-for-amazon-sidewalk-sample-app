@@ -1,0 +1,70 @@
+diff --git a/.changes/1.28.80.json b/.changes/1.28.80.json
+new file mode 100644
+index 00000000..54c45172
+--- /dev/null
++++ b/.changes/1.28.80.json
+@@ -0,0 +1,7 @@
++[
++  {
++    "category": "``iotwireless``",
++    "description": "[``botocore``] Update iotwireless client to latest version",
++    "type": "api-change"
++  }
++]
+\ No newline at end of file
+diff --git a/CHANGELOG.rst b/CHANGELOG.rst
+index 20e4a435..c70d2b6a 100644
+--- a/CHANGELOG.rst
++++ b/CHANGELOG.rst
+@@ -2,6 +2,12 @@
+ CHANGELOG
+ =========
+ 
++1.28.80
++=======
++
++* api-change:``iotwireless``: [``botocore``] Update iotwireless client to latest version
++
++
+ 1.28.79
+ =======
+ 
+diff --git a/boto3/__init__.py b/boto3/__init__.py
+index d6f672a1..ff74b186 100644
+--- a/boto3/__init__.py
++++ b/boto3/__init__.py
+@@ -17,7 +17,7 @@ from boto3.compat import _warn_deprecated_python
+ from boto3.session import Session
+ 
+ __author__ = 'Amazon Web Services'
+-__version__ = '1.28.79'
++__version__ = '1.28.80'
+ 
+ 
+ # The default Boto3 session; autoloaded when needed.
+diff --git a/setup.cfg b/setup.cfg
+index d35f90f0..7fefae04 100644
+--- a/setup.cfg
++++ b/setup.cfg
+@@ -3,7 +3,7 @@ universal = 0
+ 
+ [metadata]
+ requires_dist =
+-    botocore>=1.31.79,<1.32.0
++    botocore>=1.31.80,<1.32.0
+     jmespath>=0.7.1,<2.0.0
+     s3transfer>=0.7.0,<0.8.0
+ 
+diff --git a/setup.py b/setup.py
+index d8558a06..4518f2fd 100644
+--- a/setup.py
++++ b/setup.py
+@@ -13,7 +13,7 @@ VERSION_RE = re.compile(r'''__version__ = ['"]([0-9.]+)['"]''')
+ 
+ 
+ requires = [
+-    'botocore>=1.31.79,<1.32.0',
++    'botocore>=1.31.80,<1.32.0',
+     'jmespath>=0.7.1,<2.0.0',
+     's3transfer>=0.7.0,<0.8.0',
+ ]

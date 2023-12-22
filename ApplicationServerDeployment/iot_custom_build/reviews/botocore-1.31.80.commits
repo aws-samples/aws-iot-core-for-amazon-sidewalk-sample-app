@@ -1,0 +1,47 @@
+This is a review of all the changes from the last release to the current (staged) release. Below is a summary of the commits:
+
+commit a0b2292accbad2e38563205a59d1c477c56a0920
+Merge: 1a43456ec df848f0ac
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:36 2023 +0000
+
+    Merge branch 'release-1.31.80'
+    
+    * release-1.31.80:
+      Bumping version to 1.31.80
+      Update to latest models
+
+commit df848f0acc418840b2ba2cd776bcc90c5fa30a34
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:35 2023 +0000
+
+    Bumping version to 1.31.80
+
+ .changes/1.31.80.json                                   | 7 +++++++
+ .changes/next-release/api-change-iotwireless-73113.json | 5 -----
+ CHANGELOG.rst                                           | 6 ++++++
+ botocore/__init__.py                                    | 2 +-
+ docs/source/conf.py                                     | 2 +-
+ 5 files changed, 15 insertions(+), 7 deletions(-)
+
+commit f101942c9dc4d92470aace39a898e04ec9649ee7
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:26 2023 +0000
+
+    Update to latest models
+
+ .../next-release/api-change-iotwireless-73113.json |   5 +
+ .../data/iotwireless/2020-11-22/service-2.json     | 135 +++++++++++++++++++--
+ 2 files changed, 128 insertions(+), 12 deletions(-)
+
+commit 4d3a7176cceb0b4706b1567eaf277207151820ca
+Merge: 447c22494 aa7f4983b
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 19:14:17 2023 +0000
+
+    Merge branch 'release-1.31.79' into develop
+    
+    * release-1.31.79:
+      Bumping version to 1.31.79
+      Update to latest partitions and endpoints
+      Update to latest models

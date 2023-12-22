@@ -97,18 +97,26 @@ if sid_dest_already_exists:
 # Update lambdas code
 # --------------------
 parent = Path(__file__).parent
-lambdas = ['SidewalkUplinkLambda', 'SidewalkDownlinkLambda', 'SidewalkDbHandlerLambda']
-dirs = ['uplink', 'downlink', 'db_handler']
+lambdas = ['SidewalkDownlinkLambda', 'SidewalkDbHandlerLambda']
+dirs = ['downlink', 'db_handler']
 common_dirs = ['codec', 'database', 'utils', 'ota']
 lambda_client.upload_lambda_files(parent, lambdas, dirs, common_dirs)
 auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLambda', 'SidewalkTokenGeneratorLambda']
 auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
 auth_library_dirs = ['authLibs']
 lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
-ota_lambdas = ['SidewalkOTAStartTransferLambda', 'SidewalkOTACancelTransferLambda', 'SidewalkOTAGetS3FilesLambda', 'SidewalkOTAUploadFileLambda', 'SidewalkOTADbHandlerLambda', 'SidewalkOTAGetDevicesByTaskIdLambda', 'SidewalkOTASetCurrentFirmwareHandlerLambda']
-ota_dirs = ['ota', 'ota', 'ota', 'ota', 'ota', 'ota', 'ota']
-ota_lib_dirs = ['utils', 'utils', 'utils', 'utils','utils', 'utils', 'utils']
+ota_lambdas = ['SidewalkOTACancelTransferLambda', 'SidewalkOTAGetS3FilesLambda', 'SidewalkOTAUploadFileLambda', 'SidewalkOTADbHandlerLambda', 'SidewalkOTAGetDevicesByTaskIdLambda', 'SidewalkOTASetCurrentFirmwareHandlerLambda']
+ota_dirs = ['ota', 'ota', 'ota', 'ota', 'ota', 'ota']
+ota_lib_dirs = ['utils', 'utils', 'utils','utils', 'utils', 'utils']
 lambda_client.upload_lambda_files(parent, ota_lambdas, ota_dirs, ota_lib_dirs)
+ota_start_lambda = ['SidewalkOTAStartTransferLambda']
+ota_start_dirs = ['ota']
+ota_start_lib_dirs = ['iotWirelessLib']
+lambda_client.upload_lambda_files(parent, ota_start_lambda, ota_start_dirs, ota_start_lib_dirs)
+uplink_lambda = ['SidewalkUplinkLambda']
+uplink_dirs = ['uplink', 'downlink', 'db_handler']
+uplink_common_dirs = ['codec', 'database', 'utils', 'ota', 'iotWirelessLib']
+lambda_client.upload_lambda_files(parent, uplink_lambda, uplink_dirs, uplink_common_dirs)
 auth_string = config.get_username_and_password_as_base64()
 env_variables = {"CREDENTIALS": auth_string}
 lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)

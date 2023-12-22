@@ -1,0 +1,46 @@
+This is a review of all the changes from the last release to the current (staged) release. Below is a summary of the commits:
+
+commit 6d57e5f493e74232bc05ff2de2ab0b7ca63a43fb
+Merge: 18fc144a 42c1a568
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:47 2023 +0000
+
+    Merge branch 'release-1.28.80'
+    
+    * release-1.28.80:
+      Bumping version to 1.28.80
+      Add changelog entries from botocore
+
+commit 42c1a56817efc49679a202d6fb78662b77c6bc92
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:47 2023 +0000
+
+    Bumping version to 1.28.80
+
+ .changes/1.28.80.json                                   | 7 +++++++
+ .changes/next-release/api-change-iotwireless-73113.json | 5 -----
+ CHANGELOG.rst                                           | 6 ++++++
+ boto3/__init__.py                                       | 2 +-
+ setup.cfg                                               | 2 +-
+ setup.py                                                | 2 +-
+ 6 files changed, 16 insertions(+), 8 deletions(-)
+
+commit 678c2e20bec54f981352d083402dc4881a74caf5
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:26 2023 +0000
+
+    Add changelog entries from botocore
+
+ .changes/next-release/api-change-iotwireless-73113.json | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+commit 5f075dbba0835541e182130e8bfa98a03c67e674
+Merge: bae6340b 1175dff9
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 19:14:38 2023 +0000
+
+    Merge branch 'release-1.28.79' into develop
+    
+    * release-1.28.79:
+      Bumping version to 1.28.79
+      Add changelog entries from botocore

@@ -1,0 +1,336 @@
+diff --git a/.changes/1.31.80.json b/.changes/1.31.80.json
+new file mode 100644
+index 000000000..9baa05640
+--- /dev/null
++++ b/.changes/1.31.80.json
+@@ -0,0 +1,7 @@
++[
++  {
++    "category": "``iotwireless``",
++    "description": "Update iotwireless client to latest version",
++    "type": "api-change"
++  }
++]
+\ No newline at end of file
+diff --git a/CHANGELOG.rst b/CHANGELOG.rst
+index ea8c95dcf..fb86b30af 100644
+--- a/CHANGELOG.rst
++++ b/CHANGELOG.rst
+@@ -2,6 +2,12 @@
+ CHANGELOG
+ =========
+ 
++1.31.80
++=======
++
++* api-change:``iotwireless``: Update iotwireless client to latest version
++
++
+ 1.31.79
+ =======
+ 
+diff --git a/botocore/__init__.py b/botocore/__init__.py
+index 690440328..59e13e836 100644
+--- a/botocore/__init__.py
++++ b/botocore/__init__.py
+@@ -16,7 +16,7 @@ import logging
+ import os
+ import re
+ 
+-__version__ = '1.31.79'
++__version__ = '1.31.80'
+ 
+ 
+ class NullHandler(logging.Handler):
+diff --git a/botocore/data/iotwireless/2020-11-22/service-2.json b/botocore/data/iotwireless/2020-11-22/service-2.json
+index 4276cf7aa..d0e738ee1 100644
+--- a/botocore/data/iotwireless/2020-11-22/service-2.json
++++ b/botocore/data/iotwireless/2020-11-22/service-2.json
+@@ -2596,8 +2596,7 @@
+       "required":[
+         "Name",
+         "ExpressionType",
+-        "Expression",
+-        "RoleArn"
++        "Expression"
+       ],
+       "members":{
+         "Name":{
+@@ -2702,7 +2701,15 @@
+         "Tags":{"shape":"TagList"},
+         "RedundancyPercent":{"shape":"RedundancyPercent"},
+         "FragmentSizeBytes":{"shape":"FragmentSizeBytes"},
+-        "FragmentIntervalMS":{"shape":"FragmentIntervalMS"}
++        "FragmentIntervalMS":{"shape":"FragmentIntervalMS"},
++        "ProtocolType":{
++          "shape":"ProtocolType",
++          "documentation":"<p>The procotol type, which can be <code>LoRaWAN</code> or <code>Sidewalk</code>.</p>"
++        },
++        "FileDescriptor":{
++          "shape":"FileDescriptor",
++          "documentation":"<p>Description of the file being transferred over the network, encoded in base 64.</p>"
++        }
+       }
+     },
+     "CreateFuotaTaskResponse":{
+@@ -3722,6 +3729,10 @@
+         "MessageDeliveryStatus":{
+           "shape":"MessageDeliveryStatusEventConfiguration",
+           "documentation":"<p>Message delivery status event configuration for an event configuration item.</p>"
++        },
++        "FuotaDeviceStatus":{
++          "shape":"FuotaDeviceStatusEventConfiguration",
++          "documentation":"<p>FUOTA device status event configuration for an event configuration item.</p>"
+         }
+       },
+       "documentation":"<p>Object of all event configurations and the status of the event topics.</p>"
+@@ -3753,7 +3764,8 @@
+       "type":"string",
+       "enum":[
+         "RuleName",
+-        "MqttTopic"
++        "MqttTopic",
++        "SnsTopic"
+       ]
+     },
+     "FCntStart":{
+@@ -3796,6 +3808,11 @@
+       "min":0
+     },
+     "FactorySupport":{"type":"boolean"},
++    "FileDescriptor":{
++      "type":"string",
++      "max":332,
++      "pattern":"^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
++    },
+     "Fingerprint":{
+       "type":"string",
+       "max":64,
+@@ -3839,9 +3856,35 @@
+         "MissingFrag",
+         "MemoryError",
+         "MICError",
+-        "Successful"
++        "Successful",
++        "InProgress",
++        "Low_battery",
++        "Security_error",
++        "File_system_error",
++        "Restart_transfer",
++        "Already_available",
++        "Link_not_supported",
++        "Internal_error",
++        "Time_out"
+       ]
+     },
++    "FuotaDeviceStatusEventConfiguration":{
++      "type":"structure",
++      "members":{
++        "WirelessDeviceIdEventTopic":{
++          "shape":"EventNotificationTopicStatus",
++          "documentation":"<p>Denotes whether the wireless device ID FUOTA device status event topic is enabled or disabled.</p>"
++        }
++      },
++      "documentation":"<p>FUOTA device status event configuration object for enabling and disabling relevant topics.</p>"
++    },
++    "FuotaDeviceStatusResourceTypeEventConfiguration":{
++      "type":"structure",
++      "members":{
++        "Sidewalk":{"shape":"SidewalkResourceTypeEventConfiguration"}
++      },
++      "documentation":"<p>FUOTA devuce status resource type event configuration object for enabling or disabling relevant topic.</p>"
++    },
+     "FuotaTask":{
+       "type":"structure",
+       "members":{
+@@ -4029,6 +4072,10 @@
+         "MessageDeliveryStatus":{
+           "shape":"MessageDeliveryStatusResourceTypeEventConfiguration",
+           "documentation":"<p>Resource type event configuration object for the message delivery status event.</p>"
++        },
++        "FuotaDeviceStatus":{
++          "shape":"FuotaDeviceStatusResourceTypeEventConfiguration",
++          "documentation":"<p>Resource type event configuration for the FUOTA device status event.</p>"
+         }
+       }
+     },
+@@ -4052,12 +4099,24 @@
+         "Name":{"shape":"FuotaTaskName"},
+         "Description":{"shape":"Description"},
+         "LoRaWAN":{"shape":"LoRaWANFuotaTaskGetInfo"},
++        "Sidewalk":{
++          "shape":"SidewalkFuotaTaskGetInfo",
++          "documentation":"<p>The Sidewalk information returned from getting a FUOTA task.</p>"
++        },
+         "FirmwareUpdateImage":{"shape":"FirmwareUpdateImage"},
+         "FirmwareUpdateRole":{"shape":"FirmwareUpdateRole"},
+         "CreatedAt":{"shape":"CreatedAt"},
+         "RedundancyPercent":{"shape":"RedundancyPercent"},
+         "FragmentSizeBytes":{"shape":"FragmentSizeBytes"},
+-        "FragmentIntervalMS":{"shape":"FragmentIntervalMS"}
++        "FragmentIntervalMS":{"shape":"FragmentIntervalMS"},
++        "ProtocolType":{
++          "shape":"ProtocolType",
++          "documentation":"<p>The procotol type, which can be <code>LoRaWAN</code> or <code>Sidewalk</code>.</p>"
++        },
++        "FileDescriptor":{
++          "shape":"FileDescriptor",
++          "documentation":"<p>Description of the file being transferred over the network, encoded in base 64.</p>"
++        }
+       }
+     },
+     "GetLogLevelsByResourceTypesRequest":{
+@@ -4358,6 +4417,10 @@
+         "MessageDeliveryStatus":{
+           "shape":"MessageDeliveryStatusEventConfiguration",
+           "documentation":"<p>Event configuration for the message delivery status event.</p>"
++        },
++        "FuotaDeviceStatus":{
++          "shape":"FuotaDeviceStatusEventConfiguration",
++          "documentation":"<p>Event configuration for the FUOTA device status event.</p>"
+         }
+       }
+     },
+@@ -6214,6 +6277,10 @@
+         "FPorts":{
+           "shape":"UpdateFPorts",
+           "documentation":"<p>FPorts object for the positioning information of the device.</p>"
++        },
++        "OtaaV1_0_x":{
++          "shape":"UpdateOtaaV1_0_x",
++          "documentation":"<p>OTAA device object for update APIs for v1.0.x</p>"
+         }
+       },
+       "documentation":"<p>LoRaWAN object for update functions.</p>"
+@@ -6632,10 +6699,7 @@
+           "shape":"AppEui",
+           "documentation":"<p>The AppEUI value.</p>"
+         },
+-        "JoinEui":{
+-          "shape":"JoinEui",
+-          "documentation":"<p>The JoinEUI value.</p>"
+-        },
++        "JoinEui":{"shape":"JoinEui"},
+         "GenAppKey":{
+           "shape":"GenAppKey",
+           "documentation":"<p>The GenAppKey value.</p>"
+@@ -6859,6 +6923,13 @@
+       "type":"list",
+       "member":{"shape":"CertificateList"}
+     },
++    "ProtocolType":{
++      "type":"string",
++      "enum":[
++        "Sidewalk",
++        "LoRaWAN"
++      ]
++    },
+     "ProximityEventConfiguration":{
+       "type":"structure",
+       "members":{
+@@ -7397,6 +7468,13 @@
+       },
+       "documentation":"<p> <code>SidewalkEventNotificationConfigurations</code> object, which is the event configuration object for Sidewalk-related event topics.</p>"
+     },
++    "SidewalkFuotaTaskGetInfo":{
++      "type":"structure",
++      "members":{
++        "StartTime":{"shape":"StartTime"}
++      },
++      "documentation":"<p>Get Sidewalk-related information about the FUOTA task.</p>"
++    },
+     "SidewalkGetDeviceProfile":{
+       "type":"structure",
+       "members":{
+@@ -7503,6 +7581,13 @@
+       },
+       "documentation":"<p>Information about an import task created for an individual Sidewalk device.</p>"
+     },
++    "SidewalkStartFuotaTask":{
++      "type":"structure",
++      "members":{
++        "StartTime":{"shape":"StartTime"}
++      },
++      "documentation":"<p>The Sidewalk information used to start a FUOTA task.</p>"
++    },
+     "SidewalkStartImportInfo":{
+       "type":"structure",
+       "members":{
+@@ -7590,7 +7675,11 @@
+           "location":"uri",
+           "locationName":"Id"
+         },
+-        "LoRaWAN":{"shape":"LoRaWANStartFuotaTask"}
++        "LoRaWAN":{"shape":"LoRaWANStartFuotaTask"},
++        "Sidewalk":{
++          "shape":"SidewalkStartFuotaTask",
++          "documentation":"<p>The Sidewalk information used to start a FUOTA task.</p>"
++        }
+       }
+     },
+     "StartFuotaTaskResponse":{
+@@ -8125,6 +8214,10 @@
+         "MessageDeliveryStatus":{
+           "shape":"MessageDeliveryStatusResourceTypeEventConfiguration",
+           "documentation":"<p>Message delivery status resource type event configuration object for enabling and disabling wireless device topic.</p>"
++        },
++        "FuotaDeviceStatus":{
++          "shape":"FuotaDeviceStatusResourceTypeEventConfiguration",
++          "documentation":"<p>FUOTA device status resource type event configuration object for enabling and disabling wireless device topic.</p>"
+         }
+       }
+     },
+@@ -8163,7 +8256,11 @@
+         "FirmwareUpdateRole":{"shape":"FirmwareUpdateRole"},
+         "RedundancyPercent":{"shape":"RedundancyPercent"},
+         "FragmentSizeBytes":{"shape":"FragmentSizeBytes"},
+-        "FragmentIntervalMS":{"shape":"FragmentIntervalMS"}
++        "FragmentIntervalMS":{"shape":"FragmentIntervalMS"},
++        "FileDescriptor":{
++          "shape":"FileDescriptor",
++          "documentation":"<p>Description of the file being transferred over the network, encoded in base 64.</p>"
++        }
+       }
+     },
+     "UpdateFuotaTaskResponse":{
+@@ -8245,6 +8342,16 @@
+       "members":{
+       }
+     },
++    "UpdateOtaaV1_0_x":{
++      "type":"structure",
++      "members":{
++        "GenAppKey":{
++          "shape":"GenAppKey",
++          "documentation":"<p>The GenAppKey value.</p>"
++        }
++      },
++      "documentation":"<p>OTAA device object for LoRaWAN specification v1.0.x</p>"
++    },
+     "UpdatePartnerAccountRequest":{
+       "type":"structure",
+       "required":[
+@@ -8355,6 +8462,10 @@
+         "MessageDeliveryStatus":{
+           "shape":"MessageDeliveryStatusEventConfiguration",
+           "documentation":"<p>Event configuration for the message delivery status event.</p>"
++        },
++        "FuotaDeviceStatus":{
++          "shape":"FuotaDeviceStatusEventConfiguration",
++          "documentation":"<p>Event configuration for the FUOTA device status event.</p>"
+         }
+       }
+     },
+diff --git a/docs/source/conf.py b/docs/source/conf.py
+index 5e2cbc36a..e5a369c37 100644
+--- a/docs/source/conf.py
++++ b/docs/source/conf.py
+@@ -59,7 +59,7 @@ copyright = f'{current_year}, Amazon Web Services, Inc'
+ # The short X.Y version.
+ version = '1.31.'
+ # The full version, including alpha/beta/rc tags.
+-release = '1.31.79'
++release = '1.31.80'
+ 
+ # The language for content autogenerated by Sphinx. Refer to documentation
+ # for a list of supported languages.

@@ -1,0 +1,86 @@
+This is a review of all the changes from the last release to the current (staged) release. Below is a summary of the commits:
+
+commit 0fe99f1894f1f884d0a2feb2ff30030fe96cd756
+Merge: daa2b2abc 8aac8c833
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:27 2023 +0000
+
+    Merge branch 'release-1.29.80'
+    
+    * release-1.29.80:
+      Bumping version to 1.29.80
+      Update changelog based on model updates
+      Extend docutils line length limit
+
+commit 8aac8c8335a0e23da0fbbf923bb6b7677e236f0d
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:27 2023 +0000
+
+    Bumping version to 1.29.80
+
+ .changes/1.29.80.json                                   | 12 ++++++++++++
+ .changes/next-release/api-change-iotwireless-47841.json |  5 -----
+ .changes/next-release/bugfix-help-587.json              |  5 -----
+ CHANGELOG.rst                                           |  7 +++++++
+ awscli/__init__.py                                      |  2 +-
+ doc/source/conf.py                                      |  2 +-
+ setup.cfg                                               |  2 +-
+ setup.py                                                |  2 +-
+ 8 files changed, 23 insertions(+), 14 deletions(-)
+
+commit 530fbf40338b9536c073a235fabb42707c484e3a
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 21:07:26 2023 +0000
+
+    Update changelog based on model updates
+
+ .changes/next-release/api-change-iotwireless-47841.json | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+commit 567a85cce894239a7fb457ecd81bbb13c4ab952b
+Merge: 7a49dbc36 9b3b86c58
+Author: Kyle Knapp <kyleknap@amazon.com>
+Date:   Mon Nov 6 12:57:12 2023 -0800
+
+    Merge pull request #8304 from kyleknap/fix-line-lengths-v1
+    
+    Extend docutils line length limit
+
+commit 9b3b86c58eadb96023698f84f86fefc01b70c171
+Author: kyleknap <kyknapp1@gmail.com>
+Date:   Mon Nov 6 10:08:33 2023 -0800
+
+    Extend docutils line length limit
+    
+    This is a temporary fix to handle JSON snippets in the man pages
+    that are longer than the default docutils line limit of 10,000
+    and cause the man pages for some EC2 examples to not render.
+    
+    Long term, we should consider breaking up the enums to multiple
+    lines or potentially not enumerate all enums in the JSON snippets.
+    
+    The value 50,000 was chosen based on the line length for
+    InstanceType enums for the ec2 create-launch-template-version
+    command. Currently, the line length for the InstanceType enums
+    is just over 10,000. Assuming each enum is 10 characters long,
+    a line length of 50,000 would give us the runway for roughly
+    4000 more instance types. The line length was not made magnitudes
+    higher (i.e. to avoid hitting this issue ever again) because
+    lines of this length are already not ideal and we should make sure
+    to implement a more long term solution.
+
+ .changes/next-release/bugfix-help-587.json |  5 +++++
+ awscli/help.py                             | 21 ++++++++++++++++++---
+ tests/functional/docs/test_help_output.py  |  9 +++++++++
+ 3 files changed, 32 insertions(+), 3 deletions(-)
+
+commit 7a49dbc3615266dffc7616fd14c7f5471ba93f59
+Merge: 4f35a6666 8152c069b
+Author: aws-sdk-python-automation <github-aws-sdk-python-automation@amazon.com>
+Date:   Mon Nov 6 19:14:29 2023 +0000
+
+    Merge branch 'release-1.29.79' into develop
+    
+    * release-1.29.79:
+      Bumping version to 1.29.79
+      Update changelog based on model updates
