@@ -131,7 +131,7 @@ def zip_top_level_files(path, buf):
     :param path:    Path to the folder to be zipped.
     :param buf:     Buffer into which the content will be inserted.
     """
-    with zipfile.ZipFile(buf, 'a') as buffer_zip:
+    with zipfile.ZipFile(buf, 'a', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as buffer_zip:
         for item in os.listdir(path):
             filepath = os.path.join(path, item)
             if os.path.isfile(filepath) and not item.startswith("test_"):
@@ -147,7 +147,7 @@ def zip_dir(path: Path, base_dir_name: str, buf):
     :param base_dir_name:   Name of directory which will be zipped root directory.
     :param buf:             Buffer into which the content will be inserted.
     """
-    with zipfile.ZipFile(buf, 'a') as buffer_zip:
+    with zipfile.ZipFile(buf, 'a', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as buffer_zip:
         for root, dirs, files in os.walk(path):
             root_split = root.split(base_dir_name)
             if len(root_split) > 1:

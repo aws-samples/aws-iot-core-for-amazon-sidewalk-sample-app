@@ -1,0 +1,103 @@
+{
+    "details": {
+        "iotwireless:2020-11-22:service": {
+            "errors": {},
+            "md5": "b1058db6df4275d067782384a9d3d14b",
+            "signoffs": {
+                "S0003:*:*": {
+                    "S0003:iotwireless:2020-11-22:service:shapes.OtaaV1_0_x.members.JoinEui.documentation": "Documentation for JoinEui in OtaaV1_0_x was removed."
+                }
+            },
+            "validators": {
+                "S0001": "Ensures no operations are removed from a service model",
+                "S0002": "Ensures no structure members get removed",
+                "S0003": "Ensures no documentation is removed from a structure member",
+                "S0004": "Ensures no new required members are introduced",
+                "S0005": "Ensures no internal shape reference types change",
+                "S0006": "Ensures no minimum value constraint is raised, or added",
+                "S0007": "Ensures no operation documentation is removed",
+                "S0008": "Ensures no error shapes are removed",
+                "S0010": "Ensures metadata fields uid does not get removed",
+                "S0011": "Ensures metadata fields serviceFullName and serviceAbbreviation do not get changed",
+                "S0012": "Ensures no shapes change type",
+                "S0013": "Ensures serviceId metadata does not change",
+                "S0014": "Ensures serviceId metadata does not get removed",
+                "S0015": "Ensures serviceId is of the expected value",
+                "S0016": "Ensures idempotencyToken trait is not changed",
+                "S0017": "Ensures no internal structure names change",
+                "S0018": "Ensures box trait is not added nor removed",
+                "S0020": "Ensures no string enums get removed",
+                "S0021": "Ensures endpointPrefix trait is not changed",
+                "S0022": "Ensures no operation hostPrefix is changed"
+            }
+        }
+    },
+    "fail": [],
+    "parameters": {
+        "cmd": "validate-patch",
+        "patch": "/tmp/tmpt5c1e7tl",
+        "report": "/codebuild/output/src1791/src/s3/00/stage/artifacts/models-starfort-report.json",
+        "sign_off": [
+            "S0001:*:*",
+            "S0002:*:*",
+            "S0003:*:*",
+            "S0004:*:*",
+            "S0005:*:*",
+            "S0006:*:*",
+            "S0007:*:*",
+            "S0008:*:*",
+            "S0009:*:*",
+            "S0010:*:*",
+            "S0011:*:*",
+            "S0012:*:*",
+            "S0013:*:*",
+            "S0014:*:*",
+            "S0015:*:*",
+            "S0016:*:*",
+            "S0017:*:*",
+            "S0018:*:*",
+            "S0019:*:*",
+            "S0020:*:*",
+            "S0021:*:*",
+            "S0022:*:*",
+            "E0001:*:*",
+            "E0002:*:*",
+            "E0003:*:*",
+            "E0004:*:*"
+        ],
+        "source_dir": "/codebuild/output/src1791/src/s3/00/stage/repos/botocore",
+        "use_previous_api_versions": true,
+        "verbose": true
+    },
+    "skipped": {},
+    "success": [
+        "iotwireless:2020-11-22:service"
+    ],
+    "unused_suppression_rules": [
+        "S0001:*:*",
+        "E0004:*:*",
+        "S0022:*:*",
+        "S0021:*:*",
+        "S0010:*:*",
+        "S0005:*:*",
+        "S0012:*:*",
+        "S0020:*:*",
+        "S0011:*:*",
+        "S0019:*:*",
+        "S0002:*:*",
+        "S0007:*:*",
+        "S0006:*:*",
+        "S0009:*:*",
+        "S0018:*:*",
+        "E0003:*:*",
+        "S0008:*:*",
+        "S0016:*:*",
+        "E0002:*:*",
+        "S0013:*:*",
+        "S0017:*:*",
+        "S0004:*:*",
+        "E0001:*:*",
+        "S0014:*:*",
+        "S0015:*:*"
+    ]
+}
