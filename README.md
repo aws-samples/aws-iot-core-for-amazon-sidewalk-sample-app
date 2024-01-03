@@ -34,6 +34,13 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
         
       Refer to the [IAM tutorial: Create and attach your first customer managed policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_managed-policies.html) for further guidance.
 
+- This step adds the AWS IoT build to the OTA FileTransfer Lambda's.
+
+  - We need to go to the custom build directory from the root
+    `cd ApplicationServerDeployment/iot_custom_build`
+  - Install the library
+    `python3 -m pip install --target ../lambda/iotWirelessLib boto3-1.28.80-py3-none-any.whl botocore-1.31.80-py3-none-any.whl awscli-1.29.80-py3-none-any.whl`
+
 - Install MCU-specific tools for building and flashing:
   - Nordic
     - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
@@ -174,7 +181,6 @@ Programming devices depends on used hardware platform. Find dedicated how-tos un
 
 For detailed instructions on programming the boards, refer to official documentation of given hardware platform.
 
-
 ### 6. Enjoy the application
 
 The edge device will transmit a welcome message to application server, thus informing the application server of its presence.
@@ -305,6 +311,13 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkTokenAuthenticatorLambda
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkTokenGeneratorLambda
 | AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkUserAuthenticatorLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkOTAUploadFileLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkOTAStartTransferLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkOTACancelTransferLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkOTAGetDevicesByTaskIdLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkOTAGetS3FilesLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkOTASetCurrentFirmwareHandlerLambda
+| AWS::Lambda::Function                             | Lambda -> Functions                               | SidewalkOTAGetS3FilesLambda
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkDbHandlerLambda    | SidewalkDbHandlerLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkDownlinkLambda     | SidewalkDownlinkLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkUplinkLambdaPermissionsForNotifications
@@ -312,6 +325,14 @@ python3 ApplicationServerDeployment/delete_stack.py
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkTokenAuthenticatorLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkTokenGeneratorLambdaPermissionsForApiGateway
 | AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkUplinkLambda       | SidewalkUserAuthenticatorLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTAStartTransferLambda       | SidewalkOTAStartTransferLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTADbHandlerLambda       | SidewalkOTADbHandlerLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTAUploadFileLambda       | SidewalkOTAUploadFileLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTASetCurrentFirmwareHandlerLambda       | SidewalkOTASetCurrentFirmwareHandlerLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTAGetS3FilesLambda       | SidewalkOTAGetS3FilesLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTAGetDevicesByTaskIdLambda       | SidewalkOTAGetDevicesByTaskIdLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTAStartTransferLambda       | SidewalkOTAStartTransferLambdaPermissionsForApiGateway
+| AWS::Lambda::Permission                           | Lambda -> Functions -> SidewalkOTACancelTransferLambda       | SidewalkOTACancelTransferLambdaPermissionsForApiGateway
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkDbHandlerLambdaLogGroup
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkDownlinkLambdaLogGroup
 | AWS::Logs::LogGroup                               | CloudWatch -> Log groups                          | SidewalkRuleErrorsLogGroup
