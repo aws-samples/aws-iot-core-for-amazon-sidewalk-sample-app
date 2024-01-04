@@ -257,6 +257,8 @@ class TestDecoder(unittest.TestCase):
         self.assertEqual(decoded['completed_file_size'], 20)
         self.assertEqual(decoded['file_id'], 0)
 
+        cmd = Command().decode('41D105480400058C93000000000C01')
+
     def test_decodeOta_Completion_Status(self):
         cmd = Command().decode('41120293000000000C01')
         cmd_json = json.loads(cmd.__str__())

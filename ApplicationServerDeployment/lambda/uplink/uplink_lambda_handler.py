@@ -132,8 +132,8 @@ def lambda_handler(event, context):
             sensor = decoded_payload.get("sensor", False)
             sensor_units = decoded_payload.get("sensor_units")
             link_type = decoded_payload.get("link_type")
-            fw_version = decoded_payload.get(
-                "major", "0") + "." + decoded_payload.get("minor", "0")
+            fw_version = str(decoded_payload.get(
+                "major", "0")) + "." + str(decoded_payload.get("minor", "0"))
             ota_support = decoded_payload.get("ota_supported", False)
 
             button_pressed = []
