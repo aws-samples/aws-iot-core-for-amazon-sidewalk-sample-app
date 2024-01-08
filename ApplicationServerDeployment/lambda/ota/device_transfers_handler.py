@@ -229,7 +229,7 @@ class DeviceTransfersHandler:
         """
         try:
             # Fetch the task_id using the common method
-            task_id = self._fetch_task_id(device_transfer.get_device_id(), 'transferring')
+            task_id = self._fetch_task_id(device_transfer.get_device_id())
 
             if task_id is not None:
                 # Update firmware version using the retrieved task_id

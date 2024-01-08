@@ -134,7 +134,7 @@ def lambda_handler(event, context):
             link_type = decoded_payload.get("link_type")
             fw_version = str(decoded_payload.get(
                 "major", "0")) + "." + str(decoded_payload.get("minor", "0"))
-            ota_support = decoded_payload.get("ota_supported", False)
+            ota_support = decoded_payload.get("ota_supported", 0)
 
             button_pressed = []
             seq_n = sidewalk.get("Seq")
@@ -147,7 +147,7 @@ def lambda_handler(event, context):
                             link_type=link_type,
                             sensor=sensor, sensor_unit=sensor_units, ota_support=ota_support, fw_version=fw_version)
             device_handler.add_device(device)
-            if ota_support is True:
+            if ota_support:
                 ota_notifications_handler.update_device_firmware_version(wireless_device_id, fw_version)
             response_body = send_payload_to_downlink_lambda(
                 DEMO_APP_CAP_DISCOVERY_RESP, wireless_device_id)
