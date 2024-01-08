@@ -58,13 +58,13 @@ class TransferTask(object):
         :return:    Dict representation of the TransferTask.
         """
         return {
-            'task_id': self._task_id,
-            'task_status': self._task_status,
-            'creation_time_UTC': self._creation_time_UTC,
-            'task_start_time_UTC': self._task_start_time_UTC,
-            'task_end_time_UTC': self._task_end_time_UTC,
-            'file_name': self._file_name,
-            'file_size_kb': self._file_size_kb,
+            'taskId': self._task_id,
+            'taskStatus': self._task_status,
+            'creationTimeUTC': self._creation_time_UTC,
+            'taskStartTimeUTC': self._task_start_time_UTC,
+            'taskEndTimeUTC': self._task_end_time_UTC,
+            'fileName': self._file_name,
+            'fileSizeKb': self._file_size_kb,
             'origination': self._origination,
-            'device_ids': self._device_ids
+            'deviceIds': self._device_ids
         }
