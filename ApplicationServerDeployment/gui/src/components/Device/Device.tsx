@@ -34,7 +34,7 @@ export const Device = ({ data }: Props) => {
 
   if (hasNoCapabilities) {
     return (
-      <div className="full-height-with-header container-offline">
+      <div className="container-offline">
         <section className="title">
           <Status
             name={data.wireless_device_id}
