@@ -49,8 +49,8 @@ def lambda_handler(event, context):
 
         # Prepare the output
         output = {
-            'file_names': all_filenames,
-            'current_firmware_file_name': current_firmware_filename
+            'fileNames': all_filenames,
+            'currentFirmwareFilename': current_firmware_filename
         }
 
         return {
