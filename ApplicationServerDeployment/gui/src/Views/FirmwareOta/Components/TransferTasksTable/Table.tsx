@@ -34,35 +34,35 @@ export const TranserTasksTable = () => {
   const columns: ColumnsType<ITransferTask> = [
     {
       title: 'Task Id',
-      dataIndex: 'task_id'
+      dataIndex: 'taskId'
     },
     {
       title: 'Status',
-      dataIndex: 'task_status',
+      dataIndex: 'taskStatus',
       render: (value: TransferStatusType) => <TransferStatus type={value} />
     },
     {
       title: 'Creation Time UTC',
-      dataIndex: 'creation_time_UTC',
+      dataIndex: 'creationTimeUTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
       title: 'Start Time UTC',
-      dataIndex: 'task_start_time_UTC',
+      dataIndex: 'taskStartTimeUTC',
       render: (value: number) => <>{format(new Date(value), 'MM/dd/yyyy HH:mm:ss')}</>
     },
     {
       title: 'Duration',
       render: (_value: number, record: ITransferTask) =>
-        getDurationString({ start: record.task_start_time_UTC, end: record.task_end_time_UTC })
+        getDurationString({ start: record.taskStartTimeUTC, end: record.taskEndTimeUTC })
     },
     {
       title: 'Filename',
-      dataIndex: 'file_name'
+      dataIndex: 'fileName'
     },
     {
       title: 'File Size',
-      dataIndex: 'file_size_kb',
+      dataIndex: 'fileSizeKb',
       render: (value: number) => getFileSize(value)
     },
     {
@@ -76,9 +76,9 @@ export const TranserTasksTable = () => {
     },
     {
       title: 'Devices',
-      dataIndex: 'device_ids',
+      dataIndex: 'deviceIds',
       render: (list, record: ITransferTask) => (
-        <DevicesStatutes devices={list} taskId={record.task_id} forceRefetching={isRefetchingTransferTasksList} />
+        <DevicesStatutes devices={list} taskId={record.taskId} forceRefetching={isRefetchingTransferTasksList} />
       )
     }
   ];
@@ -95,7 +95,7 @@ export const TranserTasksTable = () => {
     if (!transferTaskList) return;
 
     scrollManager.setItemsDisposition(transferTaskList, 'tasks');
-  }, [transferTaskList?.transfer_tasks.length]);
+  }, [transferTaskList?.transferTasks.length]);
 
   return (
     <>
@@ -113,7 +113,7 @@ export const TranserTasksTable = () => {
           <Button
             type="primary"
             size="middle"
-            disabled={cancelingTask || transferTaskList?.transfer_tasks.length === 0 || tasksSelected.length === 0}
+            disabled={cancelingTask || transferTaskList?.transferTasks.length === 0 || tasksSelected.length === 0}
             onClick={handleCancelTaskButtonClick}
             loading={cancelingTask}
           >
@@ -131,8 +131,8 @@ export const TranserTasksTable = () => {
           selectedRowKeys: tasksSelected
         }}
         columns={columns}
-        dataSource={transferTaskList?.transfer_tasks}
-        rowKey={(item) => item.task_id}
+        dataSource={transferTaskList?.transferTasks}
+        rowKey={(item) => item.taskId}
         loading={isRefetchingTransferTasksList || isLoadingTransferTasksList}
         pagination={{
           pageSize: scrollManager.tables.tasks.pageSize,

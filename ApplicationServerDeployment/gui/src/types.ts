@@ -21,39 +21,39 @@ export interface IMeasurement {
 }
 
 export interface IWirelessDevices {
-  wireless_devices: Array<IWirelessDevice>;
+  wirelessDevices: Array<IWirelessDevice>;
 }
 
 export type TransferStatusType = 'PENDING' | 'TRANSFERRING' | 'CANCELLED' | 'FAILED' | 'COMPLETE' | 'COMPLETED' | 'NONE';
 
 export interface IWirelessDevice {
-  device_id: string;
-  transfer_status: TransferStatusType;
-  status_updated_time_UTC: number;
-  transfer_start_time_UTC: number;
-  transfer_end_time_UTC: number;
-  transfer_progress: number;
-  file_name: string;
-  file_size_kb: number;
-  firmware_upgrade_status: 'Pending' | 'Completed' | 'Failed' | 'None';
-  firmware_version: string;
-  task_id: string;
+  deviceId: string;
+  transferStatus: TransferStatusType;
+  statusUpdatedTimeUTC: number;
+  transferStartTimeUTC: number;
+  transferEndTimeUTC: number;
+  transferProgress: number;
+  fileName: string;
+  fileSizeKb: number;
+  firmwareUpgradeStatus: 'Pending' | 'Completed' | 'Failed' | 'None';
+  firmwareVersion: string;
+  taskId: string;
 }
 
 export interface ITransferTask {
-  task_id: string;
-  task_status: TransferStatusType;
-  creation_time_UTC: number;
-  task_start_time_UTC: number;
-  task_end_time_UTC: number;
-  file_name: string;
-  file_size_kb: number;
+  taskId: string;
+  taskStatus: TransferStatusType;
+  creationTimeUTC: number;
+  taskStartTimeUTC: number;
+  taskEndTimeUTC: number;
+  fileName: string;
+  fileSizeKb: number;
   origination: string;
-  device_ids: Array<string>;
+  deviceIds: Array<string>;
 }
 
 export interface ITransferTasks {
-  transfer_tasks: Array<ITransferTask>;
+  transferTasks: Array<ITransferTask>;
 }
 
 export interface IFilenames {
@@ -71,8 +71,8 @@ export interface ICancelTask {
 }
 
 export interface IS3Files {
-  file_names: Array<string>;
-  current_firmware_file_name: string;
+  fileNames: Array<string>;
+  currentFirmwareFilename: string;
 }
 
 export interface ISetCurrentFirmware {

@@ -31,9 +31,9 @@ export const FirmwareConfig = () => {
   };
 
   useEffect(() => {
-    const currentFirmare = s3List?.current_firmware_file_name?.split('/')[1];
+    const currentFirmare = s3List?.currentFirmwareFilename?.split('/')[1];
     setFilenameToDisplay(currentFirmare!);
-  }, [s3List?.current_firmware_file_name]);
+  }, [s3List?.currentFirmwareFilename]);
 
   useEffect(() => {
     if (!sendingCurrentFirmware) return;
@@ -56,7 +56,7 @@ export const FirmwareConfig = () => {
           loading={isLoadingFilenames}
           disabled={isLoadingFilenames}
           filterOption={filterOption}
-          options={s3List?.file_names.map((filename) => ({ label: filename, value: filename }))}
+          options={s3List?.fileNames.map((filename) => ({ label: filename, value: filename }))}
           value={payload.fileName || filenameToDisplay}
         />
         <Button

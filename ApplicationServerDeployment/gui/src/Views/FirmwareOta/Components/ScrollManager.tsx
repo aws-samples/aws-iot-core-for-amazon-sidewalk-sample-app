@@ -78,7 +78,7 @@ const useScrollProvider = () => {
         },
         (type) => {
           if (type === 'complete') {
-            // forcing antd table style to disable hover color for a while because 
+            // forcing antd table style to disable hover color for a while because
             // it interferes with highlight-row class effect
             rootElement?.style.setProperty(ANTD_TABLE_HOVER_COLOR_VAR_NAME, 'none');
             element?.classList.add('highlight-row');
@@ -95,9 +95,9 @@ const useScrollProvider = () => {
 
   const setItemsDisposition = (items: ITransferTasks | IWirelessDevices, tableType: TableType) => {
     if (tableType === 'devices') {
-      tables.current[tableType].idsList = (items as IWirelessDevices).wireless_devices.map((device) => device.device_id);
+      tables.current[tableType].idsList = (items as IWirelessDevices).wirelessDevices.map((device) => device.deviceId);
     } else if (tableType === 'tasks') {
-      tables.current[tableType].idsList = (items as ITransferTasks).transfer_tasks.map((task) => task.task_id);
+      tables.current[tableType].idsList = (items as ITransferTasks).transferTasks.map((task) => task.taskId);
     }
   };
 
