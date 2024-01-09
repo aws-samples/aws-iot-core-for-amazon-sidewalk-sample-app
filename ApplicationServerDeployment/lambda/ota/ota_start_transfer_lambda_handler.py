@@ -62,10 +62,6 @@ class OTAStartTransferHandler:
             if file_size < 0:
                 print('The file does not exists ',  file_name)
                 return
-            
-            if file_size < 1024:
-                print('The file less than 1024 ',  file_name)
-                file_size = 1024
                 
             # Call the CreateFUOTATaskAPI
             create_fuota_task_response = self._iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn, file_size=file_size)
