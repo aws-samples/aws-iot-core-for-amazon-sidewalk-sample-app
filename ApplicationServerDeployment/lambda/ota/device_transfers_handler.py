@@ -67,7 +67,7 @@ class DeviceTransfersHandler:
             logger.error(f'Error while calling get_device_transfer_details: {err}')
             raise
         else:
-            return DeviceTransfer(**items[0])
+            return DeviceTransfer(**items[0]) if items else None
 
     # -----------------
     # Write operations
@@ -103,6 +103,27 @@ class DeviceTransfersHandler:
         else:
             return device_transfer
 
+    # -----------------
+    # Write operations
+    # -----------------
+    def add_device_transfer_record(self, device_transfer_obj):
+        """
+        Adds device_transfer_obj object of the DeviceTransfers table.
+
+        param device_transfer_obj:  Device record.
+        :return:               Updated DeviceTransfer object.
+        """
+        try:
+            self._table.put_item(
+                Item=device_transfer_obj,
+                ReturnValues="ALL_OLD"
+            )
+        except ClientError as err:
+            logger.error(
+                f'Error while calling add_device_transfer for wireless_device_id: {device_transfer_obj.get_device_id()}: {err}'
+            )
+            raise
+    
     # -----------------
     # Update operations
     # -----------------
@@ -167,7 +188,6 @@ class DeviceTransfersHandler:
         Fetches the task_id based on device_id and transfer_status.
 
         param device_id: Device ID.
-        param transfer_status: Transfer status to filter records.
         return: task_id if a matching record is found, else None.
         """
         try:
@@ -229,8 +249,9 @@ class DeviceTransfersHandler:
         """
         try:
             # Fetch the task_id using the common method
-            task_id = self._fetch_task_id(device_transfer.get_device_id())
-
+            device_transfer_record = self.get_device_transfer_details(device_id=device_transfer.get_device_id())
+            task_id = device_transfer_record.get_task_id()
+            print('Task details: ', task_id)
             if task_id is not None:
                 # Update firmware version using the retrieved task_id
                 self._table.update_item(

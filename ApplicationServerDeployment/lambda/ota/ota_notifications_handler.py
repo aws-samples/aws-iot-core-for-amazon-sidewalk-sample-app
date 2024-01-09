@@ -42,6 +42,12 @@ class OTANotificationsHandler:
             device_id=wireless_device_id,
             firmware_version=firmware_version
         )
+
+        # If the record in DeviceTransfer table does not exist, create it. Otherwise update the existing record
+        if not self._device_transfers_handler.get_device_transfer_details(wireless_device_id):
+            print('Record for device does not exist hence creating it, ', wireless_device_id)
+            device_transfer_record = {'device_id':wireless_device_id, 'firmware_version':firmware_version, 'task_id':'-'}
+            return self._device_transfers_handler.add_device_transfer_record(device_transfer_record)
         return self._device_transfers_handler.update_device_transfer_firmware_version(device_transfer)
 
     def update_device_progress_pct(self, wireless_device_id: str, progress_pct: str):
