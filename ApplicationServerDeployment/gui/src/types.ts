@@ -56,18 +56,14 @@ export interface ITransferTasks {
   transferTasks: Array<ITransferTask>;
 }
 
-export interface IFilenames {
-  file_names: Array<string>;
-}
-
 export interface IStartTransferTask {
-  file_name: string;
-  start_time_UTC?: number;
-  device_ids: Array<string>;
+  fileName: string;
+  startTimeUTC?: number;
+  deviceIds: Array<string>;
 }
 
 export interface ICancelTask {
-  task_ids: Array<string>;
+  taskIds: Array<string>;
 }
 
 export interface IS3Files {
@@ -80,6 +76,6 @@ export interface ISetCurrentFirmware {
 }
 
 export interface IWirelessDeviceStatus {
-  device_id: string;
+  deviceId: string;
   status: TransferStatusType;
 }

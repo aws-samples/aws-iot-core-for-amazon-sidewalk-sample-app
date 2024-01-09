@@ -24,9 +24,9 @@ export const WirelessDevicesTable = () => {
   const [_, forceRender] = useState({});
 
   const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
-    file_name: '',
-    start_time_UTC: undefined,
-    device_ids: []
+    fileName: '',
+    startTimeUTC: undefined,
+    deviceIds: []
   });
 
   const {
@@ -47,7 +47,7 @@ export const WirelessDevicesTable = () => {
   const { mutate: startTransferTask, isLoading: isTransfering } = useStartTransferTask({
     onSuccess: () => {
       toast.success('Task transferred');
-      setStartTransferTaskPayload({ device_ids: [], file_name: '', start_time_UTC: undefined });
+      setStartTransferTaskPayload({ deviceIds: [], fileName: '', startTimeUTC: undefined });
       refetchWirelessDevices();
     }
   });
@@ -56,8 +56,7 @@ export const WirelessDevicesTable = () => {
   const lastItemUploaded = useRef('');
   const wirelessDevicesIntervalRefs = useRef<{ [key: string]: string | number }>({});
   const mockProgressCounter = useRef<{ [key: string]: number }>({});
-  const canStartTrasnferTask =
-    startTransferTaskPayload.file_name.length > 0 && startTransferTaskPayload.device_ids.length > 0;
+  const canStartTrasnferTask = startTransferTaskPayload.fileName.length > 0 && startTransferTaskPayload.deviceIds.length > 0;
 
   const columns: ColumnsType<IWirelessDevice> = [
     {
@@ -119,7 +118,7 @@ export const WirelessDevicesTable = () => {
   ];
 
   const handleDatePickerChange = (value: DatePickerProps['value']) => {
-    setStartTransferTaskPayload((prevState) => ({ ...prevState, start_time_UTC: value?.valueOf() }));
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, startTimeUTC: value?.valueOf() }));
   };
 
   const filterOption = (input: string, option?: { label: string; value: string }) =>
@@ -133,12 +132,12 @@ export const WirelessDevicesTable = () => {
     upload(file);
   };
 
-  const handleFilenameSelected = (file_name: string) => {
-    setStartTransferTaskPayload((prevState) => ({ ...prevState, file_name }));
+  const handleFilenameSelected = (fileName: string) => {
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, fileName }));
   };
 
   const handleDeviceSelected = (selectedRowKeys: React.Key[]) => {
-    setStartTransferTaskPayload((prevState) => ({ ...prevState, device_ids: selectedRowKeys as Array<string> }));
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, deviceIds: selectedRowKeys as Array<string> }));
   };
 
   const handleStarTransferTask = () => {
@@ -253,9 +252,9 @@ export const WirelessDevicesTable = () => {
             disabled={isLoadingFilenames}
             filterOption={filterOption}
             options={s3List?.fileNames.map((filename) => ({ label: filename, value: filename }))}
-            value={startTransferTaskPayload.file_name}
+            value={startTransferTaskPayload.fileName}
           />
-          <DatePicker dateValue={startTransferTaskPayload.start_time_UTC} onDatePickerChange={handleDatePickerChange} />
+          <DatePicker dateValue={startTransferTaskPayload.startTimeUTC} onDatePickerChange={handleDatePickerChange} />
           <Button
             type="primary"
             size="middle"
@@ -275,7 +274,7 @@ export const WirelessDevicesTable = () => {
         rowSelection={{
           type: 'checkbox',
           onChange: handleDeviceSelected,
-          selectedRowKeys: startTransferTaskPayload.device_ids
+          selectedRowKeys: startTransferTaskPayload.deviceIds
         }}
         columns={columns}
         dataSource={devicesList?.wirelessDevices}

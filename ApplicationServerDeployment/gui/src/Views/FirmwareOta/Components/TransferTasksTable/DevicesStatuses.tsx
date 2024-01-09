@@ -137,8 +137,8 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
           children: (
             <ul style={{ margin: 0 }}>
               {results.map(({ data }) => (
-                <li key={data?.device_id} style={{ display: 'flex', gap: '5px' }}>
-                  <a onClick={() => scrollManager.scrollTo(data?.device_id!, 'devices')}>{data?.device_id}</a>
+                <li key={data?.deviceId} style={{ display: 'flex', gap: '5px' }}>
+                  <a onClick={() => scrollManager.scrollTo(data?.deviceId!, 'devices')}>{data?.deviceId}</a>
                   : <TransferStatus type={data?.status!} />
                 </li>
               ))}

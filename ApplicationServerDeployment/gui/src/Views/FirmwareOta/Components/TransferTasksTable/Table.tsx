@@ -84,7 +84,7 @@ export const TranserTasksTable = () => {
   ];
 
   const handleCancelTaskButtonClick = () => {
-    cancelTask({ task_ids: tasksSelected });
+    cancelTask({ taskIds: tasksSelected });
   };
 
   const handleTasksSelected = (selectedRowKeys: React.Key[]) => {
