@@ -227,8 +227,8 @@ class Tag:
         """
         return {
             "ota_percent": int(self.val[:8], 2),
-            "completed_file_size": int(self.val[8:24], 2),
-            "total_file_size": int(self.val[24:], 2),
+            "completed_file_size": int(self.val[8:40], 2),
+            "total_file_size": int(self.val[40:], 2),
         }
 
     def _decode_ota_file_id(self):

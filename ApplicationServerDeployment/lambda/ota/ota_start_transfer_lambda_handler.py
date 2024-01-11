@@ -37,7 +37,7 @@ class OTAStartTransferHandler:
         # TODO - Replace with S3_Client
         self._s3 = boto3.client('s3')
 
-    def create_task(self, file_name, start_time_utc, device_ids, is_device_trigger):
+    def create_task(self, file_name, start_time_utc, device_ids, fragment_size, is_device_trigger):
 
         # Mocked output values
         task_id = 'TaskId'
@@ -59,12 +59,12 @@ class OTAStartTransferHandler:
             # Check if it the file is present in the s3 bucket & return the size of the file
             file_size = self.get_file_size(s3_bucket_name, file_name) if not is_device_trigger else self.get_current_file_size(s3_bucket_name, 'current-firmware/')
             print(f'file_size ', file_size)
-            if file_size < 0:
+            if file_size and file_size < 0:
                 print('The file does not exists ',  file_name)
                 return
                 
             # Call the CreateFUOTATaskAPI
-            create_fuota_task_response = self._iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn, file_size=file_size)
+            create_fuota_task_response = self._iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn, fragment_size=fragment_size)
             task_id = create_fuota_task_response.get('Id', '')
             print(f'task id ', task_id)
             print('task id ', create_fuota_task_response.get('Id', ''))
@@ -148,9 +148,10 @@ class OTAStartTransferHandler:
                 file_name = json_body.get("fileName", "DefaultFileName")
             start_time_utc = json_body.get("startTimeUTC", 123456789)
             device_ids = json_body.get("deviceIds", ["DefaultDeviceId"])
+            fragment_size = json_body.get("fragmentSize", 1024)
 
             try:
-                output = self.create_task(file_name, start_time_utc, device_ids, is_device_trigger)
+                output = self.create_task(file_name, start_time_utc, device_ids, fragment_size, is_device_trigger)
                 return {
                     'statusCode': 200,
                     'body': json.dumps(output)
