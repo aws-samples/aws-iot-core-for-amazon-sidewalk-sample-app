@@ -26,7 +26,8 @@ export const WirelessDevicesTable = () => {
   const [startTransferTaskPayload, setStartTransferTaskPayload] = useState<IStartTransferTask>({
     fileName: '',
     startTimeUTC: undefined,
-    deviceIds: []
+    deviceIds: [],
+    fragmentSize: null
   });
 
   const {
@@ -47,7 +48,7 @@ export const WirelessDevicesTable = () => {
   const { mutate: startTransferTask, isLoading: isTransfering } = useStartTransferTask({
     onSuccess: () => {
       toast.success('Task transferred');
-      setStartTransferTaskPayload({ deviceIds: [], fileName: '', startTimeUTC: undefined });
+      setStartTransferTaskPayload({ deviceIds: [], fileName: '', startTimeUTC: undefined, fragmentSize: null });
       refetchWirelessDevices();
     }
   });
@@ -134,6 +135,10 @@ export const WirelessDevicesTable = () => {
 
   const handleFilenameSelected = (fileName: string) => {
     setStartTransferTaskPayload((prevState) => ({ ...prevState, fileName }));
+  };
+
+  const handleFragmentSizeSelected = (fragmentSize: number) => {
+    setStartTransferTaskPayload((prevState) => ({ ...prevState, fragmentSize }));
   };
 
   const handleDeviceSelected = (selectedRowKeys: React.Key[]) => {
@@ -252,9 +257,16 @@ export const WirelessDevicesTable = () => {
             disabled={isLoadingFilenames}
             filterOption={filterOption}
             options={s3List?.fileNames.map((filename) => ({ label: filename, value: filename }))}
-            value={startTransferTaskPayload.fileName}
+            value={startTransferTaskPayload.fileName || null}
           />
           <DatePicker dateValue={startTransferTaskPayload.startTimeUTC} onDatePickerChange={handleDatePickerChange} />
+          <Select
+            placeholder="Select a fragment size"
+            onChange={handleFragmentSizeSelected}
+            style={{ minWidth: '200px' }}
+            options={[1024, 2048, 3072, 4096, 5120, 6144, 7168, 8192].map((size) => ({ label: size, value: size }))}
+            value={startTransferTaskPayload.fragmentSize}
+          />
           <Button
             type="primary"
             size="middle"

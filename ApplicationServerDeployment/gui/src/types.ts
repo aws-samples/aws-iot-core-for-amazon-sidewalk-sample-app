@@ -60,6 +60,7 @@ export interface IStartTransferTask {
   fileName: string;
   startTimeUTC?: number;
   deviceIds: Array<string>;
+  fragmentSize: number | null;
 }
 
 export interface ICancelTask {
