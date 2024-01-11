@@ -274,7 +274,10 @@ export const WirelessDevicesTable = () => {
         rowSelection={{
           type: 'checkbox',
           onChange: handleDeviceSelected,
-          selectedRowKeys: startTransferTaskPayload.deviceIds
+          selectedRowKeys: startTransferTaskPayload.deviceIds,
+          getCheckboxProps: (record: IWirelessDevice) => ({
+            disabled: !['COMPLETED', 'FAILED', 'CANCELLED', ''].includes(record.transferStatus) // only this statuses are available for selection
+          })
         }}
         columns={columns}
         dataSource={devicesList?.wirelessDevices}

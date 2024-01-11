@@ -132,7 +132,7 @@ export default [
       //   status = 'PENDING';
       // }
 
-      return { device_id: query.fuotaTaskId, status };
+      return { deviceId: query.fuotaTaskId, status };
     },
     timeout: 1000,
     statusCode: 200
