@@ -63,7 +63,7 @@ export const DatePicker = ({ onDatePickerChange, dateValue }: Props) => {
       placeholder="Now + 6 minutes"
       onChange={onDatePickerChange}
       format="YYYY-MM-DD HH:mm:ss"
-      disabledDate={disabledDate}
+      disabledDate={disabledDate as any}
       disabledTime={disabledTime as any}
       value={dateValue ? dayjs(dateValue) : undefined}
     />

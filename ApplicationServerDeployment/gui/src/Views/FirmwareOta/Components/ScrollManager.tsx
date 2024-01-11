@@ -12,6 +12,7 @@ type TableType = 'tasks' | 'devices';
 const scrollContext = createContext({
   setItemsDisposition: (items: ITransferTasks | IWirelessDevices, tableType: TableType) => {},
   scrollTo: (_id: string, _tableType: TableType) => {},
+  checkReferenceExistance: (_id: string, _tableType: TableType): Boolean => true,
   tables: {
     devices: {
       pageSize: APP_CONFIG.ota.tables.devices.pageSize,
@@ -50,6 +51,9 @@ const useScrollProvider = () => {
   const setPageIndex = (page: number, tableType: TableType) => {
     setPageIndexInternal((previousValues) => ({ ...previousValues, [tableType]: page }));
   };
+
+  const checkReferenceExistance = (id: string, tableType: TableType) =>
+    tables.current[tableType].idsList.findLastIndex((item) => item === id) !== -1;
 
   const scrollTo = (id: string, tableType: TableType) => {
     const indexOfItem = tables.current[tableType].idsList.findLastIndex((item) => item === id);
@@ -104,6 +108,7 @@ const useScrollProvider = () => {
   return {
     setItemsDisposition,
     scrollTo,
+    checkReferenceExistance,
     tables: tables.current,
     pageIndex,
     setPageIndex

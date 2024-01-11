@@ -138,7 +138,11 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
             <ul style={{ margin: 0 }}>
               {results.map(({ data }) => (
                 <li key={data?.deviceId} style={{ display: 'flex', gap: '5px' }}>
-                  <a onClick={() => scrollManager.scrollTo(data?.deviceId!, 'devices')}>{data?.deviceId}</a>
+                  {scrollManager.checkReferenceExistance(data?.deviceId!, 'devices') ? (
+                    <a onClick={() => scrollManager.scrollTo(data?.deviceId!, 'devices')}>{data?.deviceId}</a>
+                  ) : (
+                    <>{data?.deviceId}</>
+                  )}
                   : <TransferStatus type={data?.status!} />
                 </li>
               ))}

@@ -114,7 +114,12 @@ export const WirelessDevicesTable = () => {
     {
       title: 'Task ID',
       dataIndex: 'taskId',
-      render: (value: string) => <a onClick={() => scrollManager.scrollTo(value, 'tasks')}>{showValueOrDash(value)}</a>
+      render: (value: string) =>
+        scrollManager.checkReferenceExistance(value, 'tasks') ? (
+          <a onClick={() => scrollManager.scrollTo(value, 'tasks')}>{showValueOrDash(value)}</a>
+        ) : (
+          <>{showValueOrDash(value)}</>
+        )
     }
   ];
 
@@ -288,7 +293,7 @@ export const WirelessDevicesTable = () => {
           onChange: handleDeviceSelected,
           selectedRowKeys: startTransferTaskPayload.deviceIds,
           getCheckboxProps: (record: IWirelessDevice) => ({
-            disabled: !['COMPLETED', 'FAILED', 'CANCELLED', ''].includes(record.transferStatus) // only this statuses are available for selection
+            disabled: !['COMPLETED', 'FAILED', 'CANCELLED', '', null].includes(record.transferStatus) // only this statuses are available for selection
           })
         }}
         columns={columns}
