@@ -5,7 +5,7 @@
 Handles uplinks coming from the Sidewalk Sensor Monitoring Demo Application.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from random import random
 from typing import Final
@@ -42,9 +42,7 @@ class OTAStartTransferHandler:
         # Mocked output values
         task_id = 'TaskId'
         task_status = 'PENDING'
-        creation_time_utc = start_time_utc
         task_end_time_utc = None
-        file_size_kb = 1024
         origination = 'DEVICE' if is_device_trigger else 'CLOUD'
 
         
@@ -61,54 +59,73 @@ class OTAStartTransferHandler:
             print(f'file_size ', file_size)
             if file_size and file_size < 0:
                 print('The file does not exists ',  file_name)
-                return
+                raise FileNotFoundError(f"File not found!")
                 
-            # Call the CreateFUOTATaskAPI
-            create_fuota_task_response = self._iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn, fragment_size=fragment_size)
-            task_id = create_fuota_task_response.get('Id', '')
-            print(f'task id ', task_id)
-            print('task id ', create_fuota_task_response.get('Id', ''))
+            try :
 
-            # Call AssociateWirelessDeviceWithFuotaTask
-            errored_devices = []
-            
-            for device in device_ids:
-                try: 
-                    associate_wireless_devices_with_fuota_task = self._iot_handler.associate_wireless_device_with_fuota_task(
+                # Call the CreateFUOTATaskAPI
+                create_fuota_task_response = self._iot_handler.create_fuota_task(s3_uri=s3_uri, s3_update_role=fuota_s3_role_arn, fragment_size=fragment_size)
+                task_id = create_fuota_task_response.get('Id', '')
+                print(f'task id ', task_id)
+                print('task id ', create_fuota_task_response.get('Id', ''))
+
+                # Call AssociateWirelessDeviceWithFuotaTask
+                errored_devices = []
+                
+                for device in device_ids:
+                    try: 
+                        associate_wireless_devices_with_fuota_task = self._iot_handler.associate_wireless_device_with_fuota_task(
+                            fuota_task_id=task_id,
+                            wireless_device_id=device
+                        )
+                        print("Associate device to Fuota task response ", associate_wireless_devices_with_fuota_task)
+                    except Exception as e:
+                        print(f'Error in AssociateWirelessDeviceWithFuotaTask ', e)
+                        errored_devices.append('device')
+
+                # The start time for the transfer task for Sidewalk should always be atleast 5 minutes ahead of the current time
+                utc_now = datetime.utcnow()
+                print('utc_now ', utc_now)
+                now_plus_6 = utc_now + timedelta(minutes=6)
+                print('now_plus_6 ', now_plus_6)
+
+                creation_time_utc_milliseconds = int(now_plus_6.timestamp() * 1000) if start_time_utc is None else start_time_utc
+                print('Time taken into consideration for starting the FUOTA creation_time_utc: ', creation_time_utc_milliseconds)
+                
+                non_error_devices = [device_id for device_id in device_ids if device_id not in errored_devices]
+                print("Non-error devices:", non_error_devices)
+                print('utc to sailboat format ', self.utc_to_datetime(creation_time_utc_milliseconds))
+
+                if non_error_devices:
+                    # Call StartTransferTask API
+                    start_fuota_task_response = iot_handler.start_fuota_task(
                         fuota_task_id=task_id,
-                        wireless_device_id=device
+                        start_time = self.utc_to_datetime(creation_time_utc_milliseconds)
                     )
-                    print("Associate device to Fuota task response ", associate_wireless_devices_with_fuota_task)
-                except Exception as e:
-                    print(f'Error in AssociateWirelessDeviceWithFuotaTask ', e)
-                    errored_devices.append(device)
+                    print('Start FUOTA task API response, ', start_fuota_task_response)
 
-            # The start time for the transfer task for Sidewalk should always be 5 minutes ahead of the current time
-            now = datetime.now()
-            now_plus_5 = now + timedelta(minutes=6)
-            # Call StartTransferTask API
-            start_fuota_task_response = iot_handler.start_fuota_task(
-                fuota_task_id=task_id,
-                start_time = self.datetime_to_iot_format(now_plus_5)
-            )
-            print('Start FUOTA task API response, ', start_fuota_task_response)
-
-            # Add the entry to the tables
-            self.add_record_to_the_table(device_ids, task_id, now, file_name, file_size, origination)
+                    # Add the entry to the tables
+                    self.add_record_to_the_table(non_error_devices, task_id, int(creation_time_utc_milliseconds), file_name, file_size, origination)
+                else:
+                    print('Every device has error, skipping db save & start api call')
+                return {
+                        'taskId': task_id,
+                        'taskStatus': task_status,
+                        'creationTimeUTC': creation_time_utc_milliseconds,
+                        'taskEndTimeUTC': task_end_time_utc,
+                        'fileName': file_name,
+                        'fileSizeKB': file_size,
+                        'origination': origination,
+                        'deviceIds': non_error_devices
+                    }
+            except Exception as e:
+                print(f'Exception inner', e)
+                raise e
 
         except Exception as e:
             print(f'Exception ', e)
+            raise e
             
-        return {
-            'taskId': task_id,
-            'taskStatus': task_status,
-            'creationTimeUTC': creation_time_utc,
-            'taskEndTimeUTC': task_end_time_utc,
-            'fileName': file_name,
-            'fileSizeKB': file_size_kb,
-            'origination': origination,
-            'deviceIds': device_ids
-        }
 
 
     def lambda_handler(self, event, context, is_device_trigger=False):
@@ -146,7 +163,7 @@ class OTAStartTransferHandler:
                 file_name=''
             else:
                 file_name = json_body.get("fileName", "DefaultFileName")
-            start_time_utc = json_body.get("startTimeUTC", 123456789)
+            start_time_utc = json_body.get("startTimeUTC")
             device_ids = json_body.get("deviceIds", ["DefaultDeviceId"])
             fragment_size = json_body.get("fragmentSize", 1024)
 
@@ -156,10 +173,15 @@ class OTAStartTransferHandler:
                     'statusCode': 200,
                     'body': json.dumps(output)
                 }
+            except FileNotFoundError as fe:
+                return {
+                    'statusCode': 404,
+                    'body': str(fe),
+                }
             except Exception as e:
                 return {
                     'statusCode': 500,
-                    'body': json.dumps(f'Unexpected error: {str(e)}'),
+                    'body': str(e),
                 }
         except Exception:
             print(f'Unexpected error occurred: {traceback.format_exc()}')
@@ -181,14 +203,14 @@ class OTAStartTransferHandler:
 
     def add_record_to_the_table(self, device_ids, task_id, start_time, file_name, file_size, origination):
         # Add all to the Transfer task table
-        transfer_task = TransferTask(task_id=task_id, task_status='PENDING', creation_time_UTC=self.datetime_to_int(start_time), 
+        transfer_task = TransferTask(task_id=task_id, task_status='PENDING', creation_time_UTC=0, 
                                     file_name=file_name, file_size_kb=file_size, origination=origination,
-                                    device_ids=device_ids, task_end_time_UTC=0, task_start_time_UTC=0)
+                                    device_ids=device_ids, task_end_time_UTC=0, task_start_time_UTC=start_time)
         transfer_tasks_handler.add_transfer_task(transferTask = transfer_task)
 
         for device in device_ids:
             device_transfer = DeviceTransfer(device_id=device, transfer_status='PENDING', 
-                                            status_updated_time_UTC=0, transfer_start_time_UTC=0, 
+                                            status_updated_time_UTC=0, transfer_start_time_UTC=start_time, 
                                             transfer_end_time_UTC=0, file_name=file_name, 
                                             file_size_kb=file_size, firmware_upgrade_status='PENDING', 
                                             firmware_version=0, task_id=task_id)
@@ -212,6 +234,13 @@ class OTAStartTransferHandler:
     
     def datetime_to_int(self, dt):
         return dt.timestamp()
+    
+    def utc_to_datetime(self, utc_timestamp):
+        utc_timestamp = utc_timestamp/1000
+        dt = datetime.utcfromtimestamp(utc_timestamp).replace(tzinfo=timezone.utc)
+        formatted_datetime = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        print('Formatted date and time ', formatted_datetime)
+        return formatted_datetime
     
     def get_current_file_size(self, bucket_name, folder_path):
         # List objects in the folder

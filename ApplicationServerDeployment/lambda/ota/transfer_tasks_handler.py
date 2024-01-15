@@ -1,5 +1,6 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
+from datetime import datetime
 from typing import List
 
 import boto3
@@ -80,18 +81,19 @@ class TransferTasksHandler:
         :return:             Updated TransferTask object.
         """
         try:
+            condition_expression = 'attribute_not_exists(task_id)'
             self._table.put_item(
                 Item={
                     'task_id': transferTask.get_task_id(),
                     'task_status': transferTask.get_task_status(),
-                    'creation_time_UTC': transferTask.get_creation_time_UTC(),
+                    'creation_time_UTC': (int(datetime.utcnow().timestamp())*1000),
                     'task_start_time_UTC': transferTask.get_task_start_time_UTC(),
-                    'task_end_time_UTC': transferTask.get_task_end_time_UTC(),
                     'file_name': transferTask.get_file_name(),
                     'file_size_kb': transferTask.get_file_size_kb(),
                     'origination': transferTask.get_origination(),
                     'device_ids': transferTask.get_device_ids()
                 },
+                ConditionExpression=condition_expression,
                 ReturnValues="ALL_OLD"
             )
         except ClientError as err:
