@@ -2018,7 +2018,7 @@ Resources:
             - 'Username'
         Name: SidewalkSampleApplicationAuthOriginRequestPolicy
         QueryStringsConfig:
-          QueryStringBehavior: none
+          QueryStringBehavior: all
 
   # Cloud Front distribution. Hosts S3 bucket
   CloudFrontDistribution:
