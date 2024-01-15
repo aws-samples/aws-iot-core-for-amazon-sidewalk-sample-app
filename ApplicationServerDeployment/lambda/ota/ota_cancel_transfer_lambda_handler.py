@@ -91,7 +91,7 @@ def update_transfer_tasks_and_device_transfers(task_ids):
     for map in device_task_map:
         device_id = map.get('device_id')
         task_id = map.get('task_id')
-        device_response = device_transfers_handler.get_device_transfer_details_by_task(device_id=device_id, task_id=task_id)
+        device_response = device_transfers_handler.get_device_transfer_details(device_id=device_id)
         print('The db device: ', device_response.to_dict_camel_case())
         device_response._transfer_status = 'CANCELLED'
         device_response._firmware_upgrade_status = 'None'

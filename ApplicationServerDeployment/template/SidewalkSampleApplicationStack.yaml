@@ -90,13 +90,9 @@ Resources:
       AttributeDefinitions:
         - AttributeName: device_id
           AttributeType: "S"
-        - AttributeName: task_id
-          AttributeType: "S"
       KeySchema:
         - AttributeName: device_id
           KeyType: HASH
-        - AttributeName: task_id
-          KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 2
         WriteCapacityUnits: 2

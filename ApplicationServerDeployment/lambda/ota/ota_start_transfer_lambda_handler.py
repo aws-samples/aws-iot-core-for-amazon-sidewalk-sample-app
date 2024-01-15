@@ -210,11 +210,13 @@ class OTAStartTransferHandler:
         transfer_tasks_handler.add_transfer_task(transferTask = transfer_task)
 
         for device in device_ids:
-            device_transfer = DeviceTransfer(device_id=device, transfer_status='PENDING', 
-                                            status_updated_time_UTC=0, transfer_start_time_UTC=start_time, 
-                                            transfer_end_time_UTC=0, file_name=file_name, 
-                                            file_size_kb=file_size, firmware_upgrade_status='PENDING', 
-                                            firmware_version=0, task_id=task_id)
+            device_transfer = device_transfers_handler.get_device_transfer_details(device_id=device)
+            device_transfer._transfer_status = 'PENDING'
+            device_transfer._transfer_start_time_UTC = start_time
+            device_transfer._file_name = file_name
+            device_transfer._file_size_kb = file_size
+            device_transfer._firmware_upgrade_status = 'PENDING'
+            device_transfer._task_id=task_id
             device_transfers_handler.add_device_transfer(device_transfer)
 
     def get_file_size(self, bucket_name, key):
