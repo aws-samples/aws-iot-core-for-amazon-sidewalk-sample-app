@@ -68,3 +68,21 @@ class TransferTask(object):
             'origination': self._origination,
             'deviceIds': self._device_ids
         }
+
+    def to_dict_camel_case(self) -> dict:
+        """
+        Returns dict representation of the transfer task object.
+
+        :return:    Dict representation of the TransferTask.
+        """
+        return {
+            'task_id': self._task_id,
+            'task_status': self._task_status,
+            'creation_time_UTC': self._creation_time_UTC,
+            'task_start_time_UTC': self._task_start_time_UTC,
+            'task_end_time_UTC': self._task_end_time_UTC,
+            'file_name': self._file_name,
+            'file_size_kb': self._file_size_kb,
+            'origination': self._origination,
+            'device_ids': self._device_ids
+        }

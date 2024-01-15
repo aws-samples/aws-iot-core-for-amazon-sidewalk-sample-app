@@ -163,7 +163,7 @@ class TransferTasksHandler:
         :return:                Updated TransferTask object.
         """
         try:
-            self._table.put_item(Item=transfer_task.to_dict())
+            self._table.put_item(Item=transfer_task.to_dict_camel_case())
         except ClientError as err:
             logger.error(
                 f'Error while calling update_transfer_task for task_id: {transfer_task.get_task_id()}: {err}'

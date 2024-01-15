@@ -68,6 +68,26 @@ class DeviceTransfersHandler:
             raise
         else:
             return DeviceTransfer(**items[0]) if items else None
+        
+    def get_device_transfer_details_by_task(self, device_id: str, task_id: str) -> DeviceTransfer:
+        """
+        Queries DeviceTransfer table to fetch device record by the taskID & deviceID
+
+        :param device_id:  Id of the wireless device.
+        :param task_id:    Id of the transfer task.
+        :return:                    List of DeviceTransfer objects.
+        """
+        items = []
+        try:
+            key_condition_expression = Key('device_id').eq(device_id) & Key('task_id').eq(task_id)
+            response = self._table.query(KeyConditionExpression=key_condition_expression)
+            items = response.get('Items', [])
+        except ClientError as err:
+            logger.error(f'Error while calling get_device_transfer_details: {err}')
+            raise
+        else:
+            return DeviceTransfer(**items[0]) if items else None
+
 
     # -----------------
     # Write operations
@@ -312,7 +332,7 @@ class DeviceTransfersHandler:
         :return:                Updated DeviceTransfer object.
         """
         try:
-            self._table.put_item(Item=device_transfer.to_dict())
+            self._table.put_item(Item=device_transfer.to_dict_camel_case())
         except ClientError as err:
             logger.error(
                 f'Error while calling update_device_transfer for deviceId: {device_transfer._device_id}: {err}'

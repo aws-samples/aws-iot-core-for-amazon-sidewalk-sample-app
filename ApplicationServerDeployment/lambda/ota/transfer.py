@@ -78,3 +78,23 @@ class DeviceTransfer(object):
             'firmwareUpgradeStatus': self._firmware_upgrade_status,
             'firmwareVersion': self._firmware_version
         }
+    
+    def to_dict_camel_case(self) -> dict:
+        """
+        Returns camel case dict representation of the DeviceTransfer object.
+
+        :return:    Dict representation of the DeviceTransfer.
+        """
+        return {
+            'device_id': self._device_id,
+            'task_id': self._task_id,
+            'transfer_status': self._transfer_status,
+            'transfer_progress': self._transfer_progress,
+            'status_updated_time_UTC': self._status_updated_time_UTC,
+            'transfer_start_time_UTC': self._transfer_start_time_UTC,
+            'transfer_end_time_UTC': self._transfer_end_time_UTC,
+            'file_name': self._file_name,
+            'file_size_kb': self._file_size_kb,
+            'firmware_upgrade_status': self._firmware_upgrade_status,
+            'firmware_version': self._firmware_version
+        }
