@@ -60,7 +60,8 @@ class OTAStartTransferHandler:
             if file_size and file_size < 0:
                 print('The file does not exists ',  file_name)
                 raise FileNotFoundError(f"File not found!")
-                
+            file_size = file_size/1024  
+            print(f'file_size in kb', file_size) 
             try :
 
                 # Call the CreateFUOTATaskAPI
@@ -81,7 +82,7 @@ class OTAStartTransferHandler:
                         print("Associate device to Fuota task response ", associate_wireless_devices_with_fuota_task)
                     except Exception as e:
                         print(f'Error in AssociateWirelessDeviceWithFuotaTask ', e)
-                        errored_devices.append('device')
+                        errored_devices.append(device)
 
                 # The start time for the transfer task for Sidewalk should always be atleast 5 minutes ahead of the current time
                 utc_now = datetime.utcnow()
