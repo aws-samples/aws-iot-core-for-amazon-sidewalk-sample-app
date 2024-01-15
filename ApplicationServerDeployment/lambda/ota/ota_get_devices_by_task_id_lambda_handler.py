@@ -33,10 +33,10 @@ def lambda_handler(event, context):
         deviceList = getDeviceList(fuota_task_id)
 
         # Remove this after integration is completed for all IoTWireless API
-        deviceList = []
+        # deviceList = []
         
-        deviceList.append({'status':"PENDING", 'deviceId' : 'device_id_1'})
-        deviceList.append({'status':"PENDING", 'deviceId' : 'device_id_2'})
+        # deviceList.append({'status':"PENDING", 'deviceId' : 'device_id_1'})
+        # deviceList.append({'status':"PENDING", 'deviceId' : 'device_id_2'})
 
         return {
             'statusCode': 200,
@@ -52,6 +52,7 @@ def lambda_handler(event, context):
     
 def getDeviceList(task_id: str):
     api_response = iot_handler.list_wireless_devices(fuota_task_id=task_id)
+    print('Api response ', api_response)
     wireless_device_list = api_response.get('WirelessDeviceList', [])
     device_list = [{'status': device.get('FuotaDeviceStatus', ''), 'deviceId': device.get('Id', 0)} for device in wireless_device_list]
     return device_list
