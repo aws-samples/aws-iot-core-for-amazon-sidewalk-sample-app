@@ -1622,7 +1622,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: SidewalkOTAGetDevicesByTaskIdLambda
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/otaDevices
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SidewalkApiGateway}/*/GET/api/otaDevices*
 
   # Set SidewalkOTAGetS3FilesLambda permissions regarding API Gateway
   SidewalkOTAGetS3FilesLambdaPermissionsForApiGateway:
