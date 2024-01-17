@@ -168,6 +168,10 @@ class OTAStartTransferHandler:
             device_ids = json_body.get("deviceIds", ["DefaultDeviceId"])
             fragment_size = json_body.get("fragmentSize", 1024)
 
+            # Handle case where UI send fragmentSize key with value null
+            if(fragment_size is None):
+                fragment_size = 1024
+
             try:
                 output = self.create_task(file_name, start_time_utc, device_ids, fragment_size, is_device_trigger)
                 return {
