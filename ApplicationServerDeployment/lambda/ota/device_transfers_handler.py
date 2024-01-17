@@ -141,8 +141,7 @@ class DeviceTransfersHandler:
         try:
             self._table.update_item(
                 Key={
-                    'device_id': device_transfer.get_device_id(),
-                    'task_id': device_transfer.get_task_id()
+                    'device_id': device_transfer.get_device_id()
                 },
                 UpdateExpression="SET transfer_status = :status, "
                                  "transfer_start_time_UTC = :start_time, "
@@ -168,8 +167,7 @@ class DeviceTransfersHandler:
         try:
             self._table.update_item(
                 Key={
-                    'device_id': device_transfer.get_device_id(),
-                    'task_id': device_transfer.get_task_id()
+                    'device_id': device_transfer.get_device_id()
                 },
                 UpdateExpression="SET transfer_status = :status, "
                                  "status_updated_time_UTC = :status_time ,"
@@ -253,6 +251,7 @@ class DeviceTransfersHandler:
             # Fetch the task_id using the common method
             device_transfer_record = self.get_device_transfer_details(device_id=device_transfer.get_device_id())
             task_id = device_transfer_record.get_task_id()
+            status_time = int(datetime.utcnow().timestamp())*1000
             print('Task details: ', task_id)
             if task_id is not None:
                 # Update firmware version using the retrieved task_id
@@ -264,7 +263,7 @@ class DeviceTransfersHandler:
                                      "status_updated_time_UTC = :status_time ",
                     ExpressionAttributeValues={
                         ':firmware_version': device_transfer.get_firmware_version(),
-                        ':status_time': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                        ':status_time': status_time
                     },
                     ReturnValues="ALL_NEW"  # You can adjust the return values as needed
                 )
