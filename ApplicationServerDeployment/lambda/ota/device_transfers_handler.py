@@ -196,7 +196,7 @@ class DeviceTransfersHandler:
             # Query for the record with the given deviceId and transfer state
             response = self._table.query(
                 KeyConditionExpression=Key('device_id').eq(device_id),
-                FilterExpression=Attr('transfer_status').eq('pending') | Attr('transfer_status').eq('transferring'),
+                FilterExpression=Attr('transfer_status').eq('PENDING') | Attr('transfer_status').eq('transferring'),
                 Limit=1  # We expect only one record, so limit the result to 1
             )
 
@@ -222,19 +222,19 @@ class DeviceTransfersHandler:
         try:
             # Fetch the task_id using the common method
             task_id = self._fetch_task_id(device_transfer.get_device_id())
+            status_time = int(datetime.utcnow().timestamp())*1000
 
             if task_id is not None:
                 # Update firmware upgrade status using the retrieved task_id
                 self._table.update_item(
                     Key={
-                        'device_id': device_transfer.get_device_id(),
-                        'task_id': task_id
+                        'device_id': device_transfer.get_device_id()
                     },
                     UpdateExpression="SET firmware_upgrade_status = :upgrade_status, "
                                      "status_updated_time_UTC = :status_time ",
                     ExpressionAttributeValues={
                         ':upgrade_status': device_transfer.get_firmware_upgrade_status(),
-                        ':status_time': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                        ':status_time': status_time
                     },
                     ReturnValues="ALL_NEW"  # You can adjust the return values as needed
                 )
@@ -258,8 +258,7 @@ class DeviceTransfersHandler:
                 # Update firmware version using the retrieved task_id
                 self._table.update_item(
                     Key={
-                        'device_id': device_transfer.get_device_id(),
-                        'task_id': task_id
+                        'device_id': device_transfer.get_device_id()
                     },
                     UpdateExpression="SET firmware_version = :firmware_version, "
                                      "status_updated_time_UTC = :status_time ",
@@ -284,19 +283,18 @@ class DeviceTransfersHandler:
         try:
             # Fetch the task_id using the common method
             task_id = self._fetch_task_id(device_transfer.get_device_id())
-
+            status_time = int(datetime.utcnow().timestamp())*1000
             # Update the transfer progress using the retrieved task_id
             if task_id is not None:
                 self._table.update_item(
                     Key={
-                        'device_id': device_transfer.get_device_id(),
-                        'task_id': task_id
+                        'device_id': device_transfer.get_device_id()
                     },
                     UpdateExpression="SET transfer_progress = :transfer_progress, "
                                      "status_updated_time_UTC = :status_time ",
                     ExpressionAttributeValues={
                         ':transfer_progress': device_transfer.get_transfer_progress(),
-                        ':status_time': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                        ':status_time': status_time
                     },
                     ReturnValues="ALL_NEW"  # You can adjust the return values as needed
                 )
