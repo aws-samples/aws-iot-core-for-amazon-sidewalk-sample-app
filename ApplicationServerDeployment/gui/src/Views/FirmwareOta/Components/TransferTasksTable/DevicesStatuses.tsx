@@ -131,7 +131,7 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
     <Collapse
       bordered={false}
       expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-      style={{ background: 'light-gray' }}
+      style={{ background: 'light-gray', minWidth: '160px' }}
       items={[
         {
           key: '1',

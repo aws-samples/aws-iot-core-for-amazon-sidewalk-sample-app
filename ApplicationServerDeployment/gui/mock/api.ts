@@ -141,7 +141,6 @@ export default [
     url: '/api/ota/deviceTransfers/:id/mock',
     method: 'get',
     response: ({ query }) => {
-      console.log({ query })
       const statuses = ['PENDING', 'TRANSFERRING', 'CANCELLED', 'FAILED', 'COMPLETED', 'NONE'];
       let transferStatus = statuses[Math.floor(Math.random() * (statuses.length - 0) + 0)];
 
