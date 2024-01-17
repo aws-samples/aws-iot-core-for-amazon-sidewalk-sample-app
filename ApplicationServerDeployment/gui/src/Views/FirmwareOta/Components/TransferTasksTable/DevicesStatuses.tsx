@@ -3,8 +3,8 @@
 
 import { UseQueryOptions } from 'react-query';
 import { apiClient } from '../../../../apiClient';
-import { ENDPOINTS } from '../../../../endpoints';
-import { IWirelessDeviceStatus } from '../../../../types';
+import { ENDPOINTS, interpolateParams } from '../../../../endpoints';
+import { IWirelessDevice, IWirelessDeviceStatus } from '../../../../types';
 import { AxiosError } from 'axios';
 import { APP_CONFIG } from '../../../../appConfig';
 import { Collapse, Spin } from 'antd';
@@ -16,6 +16,7 @@ import { useEffect, useRef } from 'react';
 import { logger } from '../../../../utils/logger';
 import { useQueriesWithRefetch } from '../../../../utils';
 import { queryClient } from '../../../../App';
+import { MOCK_MODE } from '../../../../constants';
 
 interface Props {
   devices: Array<string>;
@@ -29,14 +30,15 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
 
   let { results, refetchAll } = useQueriesWithRefetch(
     devices.map(
-      (deviceId): UseQueryOptions<IWirelessDeviceStatus, AxiosError> => ({
+      (deviceId): UseQueryOptions<IWirelessDevice, AxiosError> => ({
         queryKey: ['deviceById', deviceId],
-        queryFn: () => apiClient.get(`${ENDPOINTS.getDevicesByTaskId}?fuotaTaskId=${deviceId}`),
+        queryFn: () =>
+          apiClient.get(interpolateParams(ENDPOINTS.getDeviceById, { id: deviceId }).concat(MOCK_MODE ? '/mock' : '')),
         refetchOnWindowFocus: false,
         cacheTime: 0,
         retry: false,
         refetchInterval: (data) => {
-          if (data?.status === 'PENDING' || data?.status === 'TRANSFERRING') {
+          if (data?.transferStatus === 'PENDING' || data?.transferStatus === 'TRANSFERRING') {
             return APP_CONFIG.intervals.otaProgressTasks;
           }
 
@@ -62,7 +64,7 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
     if (!progressCellElement.current || isLoading) return;
 
     const count = results.reduce((acc: number, item) => {
-      if (item.data?.status !== 'PENDING' && item.data?.status !== 'TRANSFERRING') {
+      if (item.data?.transferStatus !== 'PENDING' && item.data?.transferStatus !== 'TRANSFERRING') {
         acc += 1;
       }
 
@@ -109,10 +111,10 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
     <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', maxWidth: '200px', justifyContent: 'space-between' }}>
       {Object.entries(
         results.reduce<{ [key: string]: number }>((acc, { data }) => {
-          if (data?.status! in acc) {
-            acc[data?.status!] += 1;
+          if (data?.transferStatus! in acc) {
+            acc[data?.transferStatus!] += 1;
           } else {
-            acc[data?.status!] = 1;
+            acc[data?.transferStatus!] = 1;
           }
 
           return acc;
@@ -143,7 +145,7 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
                   ) : (
                     <>{data?.deviceId}</>
                   )}
-                  : <TransferStatus type={data?.status!} />
+                  : <TransferStatus type={data?.transferStatus!} />
                 </li>
               ))}
             </ul>

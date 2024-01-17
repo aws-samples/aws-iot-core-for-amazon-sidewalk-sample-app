@@ -126,13 +126,30 @@ export default [
     method: 'get',
     response: ({ query }) => {
       const statuses = ['PENDING', 'TRANSFERRING', 'CANCELLED', 'FAILED', 'COMPLETED', 'NONE'];
-      let status = statuses[Math.floor(Math.random() * (statuses.length - 0) + 0)];
+      let transferStatus = statuses[Math.floor(Math.random() * (statuses.length - 0) + 0)];
 
       // if (query.fuotaTaskId === '6540562b20d2ed23212f08ad') {
       //   status = 'PENDING';
       // }
 
-      return { deviceId: query.fuotaTaskId, status };
+      return { deviceId: query.fuotaTaskId, transferStatus };
+    },
+    timeout: 1000,
+    statusCode: 200
+  },
+  {
+    url: '/api/ota/deviceTransfers/:id/mock',
+    method: 'get',
+    response: ({ query }) => {
+      console.log({ query })
+      const statuses = ['PENDING', 'TRANSFERRING', 'CANCELLED', 'FAILED', 'COMPLETED', 'NONE'];
+      let transferStatus = statuses[Math.floor(Math.random() * (statuses.length - 0) + 0)];
+
+      // if (query.fuotaTaskId === '6540562b20d2ed23212f08ad') {
+      //   status = 'PENDING';
+      // }
+
+      return { deviceId: query.id, transferStatus };
     },
     timeout: 1000,
     statusCode: 200
