@@ -67,13 +67,15 @@ class TestDecoder(unittest.TestCase):
         self.assertEqual(decoded['sensor'], False)
 
     def test_decodeCapabilities_Ota_FirmwareVersion_ShouldSuccess(self):
-        cmd = Command().decode('400E018F04D209290C04')
+        cmd = Command().decode('400E01CF0804D209290D8011D70C04')
         cmd_json = json.loads(cmd.__str__())
         decoded = cmd_json['decoded']
         self.assertEqual(cmd_json['id'], 'DEMO_APP_CAP_DISCOVERY_NOTIFICATION')
         self.assertEqual(decoded['ota_supported'], 1)
         self.assertEqual(decoded['major'], 1234)
         self.assertEqual(decoded['minor'], 2345)
+        self.assertEqual(decoded['patch'], 3456)
+        self.assertEqual(decoded['build'], 4567)
         self.assertEqual(decoded['link_type'], 'LORA')
 
     # ---------------------------------
@@ -247,17 +249,15 @@ class TestDecoder(unittest.TestCase):
         self.assertEqual(decoded['link_type'], 'BLE')
 
     def test_decodeOta_progress(self):
-        cmd = Command().decode('41D105140014006493000000000C01')
+        cmd = Command().decode('41D1094B000C00000010000093000000000C01')
         cmd_json = json.loads(cmd.__str__())
         decoded = cmd_json['decoded']
         self.assertEqual(cmd_json['id'], 'DEMO_APP_ACTION_NOTIFICATION')
         self.assertEqual(decoded['link_type'], 'BLE')
-        self.assertEqual(decoded['ota_percent'], 20)
-        self.assertEqual(decoded['total_file_size'], 100)
-        self.assertEqual(decoded['completed_file_size'], 20)
+        self.assertEqual(decoded['ota_percent'], 75)
+        self.assertEqual(decoded['total_file_size'], 1024*1024)
+        self.assertEqual(decoded['completed_file_size'], 1024 * 768)
         self.assertEqual(decoded['file_id'], 0)
-
-        cmd = Command().decode('41D105480400058C93000000000C01')
 
     def test_decodeOta_Completion_Status(self):
         cmd = Command().decode('41120293000000000C01')

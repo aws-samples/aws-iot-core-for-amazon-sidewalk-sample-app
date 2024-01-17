@@ -211,7 +211,7 @@ class Tag:
         :return: Dict representing firmware version
         """
         vals = wrap(self.val, 16)
-        return {"major": int(vals[0], 2), "minor": int(vals[1], 2)}
+        return {"major": int(vals[0], 2), "minor": int(vals[1], 2), "patch": int(vals[2], 2), "build": int(vals[3], 2)}
 
     def _decode_ota_trigger_notify(self):
         """
