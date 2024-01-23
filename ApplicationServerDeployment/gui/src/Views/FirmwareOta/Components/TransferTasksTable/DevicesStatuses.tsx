@@ -95,7 +95,7 @@ export const DevicesStatutes = ({ devices, taskId, forceRefetching }: Props) => 
     });
   }, [forceRefetching]);
 
-  if (isError) {
+  if (isError || results?.length === 0) {
     return <>-</>;
   }
 

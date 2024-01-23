@@ -9,13 +9,7 @@
       "fileName": "ipsum.png",
       "fileSizeKB": 679,
       "origination": "Device",
-      "deviceIds": [
-        "6540562b20d2ed23212f08ad",
-        "6540562b9a43699094046e4c",
-        "6540562b0a810cf3a1abcefd",
-        "6540562bd15c1e6d1bf10979",
-        "6540562b61ea0399b45ae9d0"
-      ]
+      "deviceIds": []
     },
     {
       "taskId": "6540591d078219abee59a489",
