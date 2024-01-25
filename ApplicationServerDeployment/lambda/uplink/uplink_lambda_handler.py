@@ -75,6 +75,7 @@ def lambda_handler(event, context):
 
         notification = event.get("notification")
         if notification is not None:
+            print(f'Sailboat notification received {notification}')
             try:
                 ota_notifications_handler.save_fuota_task_notifications(notification)
                 return {
@@ -95,6 +96,7 @@ def lambda_handler(event, context):
                 'body': json.dumps('Unsupported request received. Only uplink and notification are supported')
             }
 
+        print(f'Device Uplink received {uplink}')
         wireless_metadata = uplink.get("WirelessMetadata")
         wireless_device_id = uplink.get("WirelessDeviceId")
         sidewalk = wireless_metadata.get("Sidewalk")
@@ -226,7 +228,6 @@ def lambda_handler(event, context):
                                        ' Body: ' + response_body)
                 }
 
-            # TODO: Add handler to trigger OTA
             if "ota_trigger" in decoded_payload:
                 start_transfer_event = {}
                 start_transfer_event['body'] = {'startTimeUTC': int(datetime_now.timestamp()), 'deviceIds':[wireless_device_id]}
