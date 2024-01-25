@@ -114,7 +114,8 @@
                 "dynamodb:UpdateTimeToLive",
                 "dynamodb:DescribeTimeToLive",
                 "dynamodb:List*",
-                "dynamodb:Update*"
+                "dynamodb:Update*",
+                "dynamodb:TagResource"
             ],
             "Resource": [
                 "arn:aws:dynamodb:*:<account_ID>:table/SidewalkDevices",

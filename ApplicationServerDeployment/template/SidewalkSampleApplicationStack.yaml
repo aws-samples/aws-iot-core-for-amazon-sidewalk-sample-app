@@ -1853,6 +1853,7 @@ Resources:
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/device_registration_state/*
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/proximity/*
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/message_delivery_status/*
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/*
 
   # AWS IoT wireless rule for notification. Passes incoming notifications to the SidewalkUplinkLambda
   SidewalkNotificationRule:
@@ -1865,7 +1866,7 @@ Resources:
       TopicRulePayload:
         AwsIotSqlVersion: 2016-03-23
         Description: Rule for processing Sidewalk notifications.
-        Sql: SELECT * as notification FROM '$aws/iotwireless/events/+/+/sidewalk/wireless_devices'
+        Sql: SELECT * as notification FROM '$aws/iotwireless/events/+/+/sidewalk/wireless_devices/#'
         Actions:
           - Lambda:
               FunctionArn: !GetAtt SidewalkUplinkLambda.Arn
