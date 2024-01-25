@@ -51,9 +51,12 @@ class OTANotificationsHandler:
         return self._device_transfers_handler.update_device_transfer_firmware_version(device_transfer)
 
     def update_device_progress_pct(self, wireless_device_id: str, progress_pct: str):
+        progress_pct_val = int(progress_pct)
+        status = 'PENDING' if progress_pct_val == 0 else 'TRANSFERRING'
         device_transfer = DeviceTransfer(
             device_id=wireless_device_id,
-            transfer_progress=int(progress_pct)
+            transfer_progress=progress_pct_val,
+            transfer_status=status
         )
         return self._device_transfers_handler.update_device_transfer_progress_pct(device_transfer)
 

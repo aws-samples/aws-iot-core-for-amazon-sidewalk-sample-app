@@ -290,10 +290,12 @@ class DeviceTransfersHandler:
                         'device_id': device_transfer.get_device_id()
                     },
                     UpdateExpression="SET transfer_progress = :transfer_progress, "
-                                     "status_updated_time_UTC = :status_time ",
+                                    "status_updated_time_UTC = :status_time "
+                                    "transfer_status = :transfer_status ",
                     ExpressionAttributeValues={
                         ':transfer_progress': device_transfer.get_transfer_progress(),
-                        ':status_time': status_time
+                        ':status_time': status_time,
+                        ':transfer_status': device_transfer.get_transfer_status
                     },
                     ReturnValues="ALL_NEW"  # You can adjust the return values as needed
                 )
