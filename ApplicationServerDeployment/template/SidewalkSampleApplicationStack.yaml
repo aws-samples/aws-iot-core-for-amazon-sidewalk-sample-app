@@ -1853,6 +1853,7 @@ Resources:
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/device_registration_state/*
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/proximity/*
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/message_delivery_status/*
+              - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/fuota_device_status/*
               - !Sub arn:aws:iotwireless:${AWS::Region}:${AWS::AccountId}:/$aws/iotwireless/events/*
 
   # AWS IoT wireless rule for notification. Passes incoming notifications to the SidewalkUplinkLambda
