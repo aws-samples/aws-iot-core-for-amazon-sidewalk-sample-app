@@ -1,4 +1,6 @@
 ## Brief
+Newest sample can be build by following instruction: https://nrfconnect.github.io/sdk-sidewalk/samples/variants/hello.html#variant-sidewalk-hello
+
 ![Alt text]( ./00_TLDR_Nordic_programming.gif "How to program Nordic DK board")
 
 ## Step by step
