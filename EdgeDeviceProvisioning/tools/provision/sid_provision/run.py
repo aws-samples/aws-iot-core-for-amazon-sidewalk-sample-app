@@ -28,6 +28,8 @@ from dataclasses import dataclass, field
 
 PROVISION_MFG_STORE_VERSION = 7
 
+SILABS_MFG_NVM3_KEY_BASE = 0xA9000 # see component/includes/projects/sid/sal/silabs/sid_pal/include/nvm3_manager.h
+
 try:
     from rich import print
 except ImportError:
@@ -979,7 +981,7 @@ class SidMfgOutNVM3:
             if not obj.skip:
                 self._objs.append(
                     "0x{:04x}:OBJ:{}".format(
-                        SidMfgValueId[obj.name].value,
+                        SidMfgValueId[obj.name].value + SILABS_MFG_NVM3_KEY_BASE,
                         binascii.hexlify(obj.encoded).decode(),
                     )
                 )
@@ -1444,61 +1446,61 @@ ARG_GROUPS = [
             SidChipAddr(
                 name="mg21",
                 mem=512,
-                offset_addr=0x00072000,
+                offset_addr=0x00078000,
                 full_name="EFR32MG21B020F512IM32",
             ),
             SidChipAddr(
                 name="mg21",
                 mem=768,
-                offset_addr=0x000B2000,
+                offset_addr=0x000B8000,
                 full_name="EFR32MG21B020F768IM32",
             ),
             SidChipAddr(
                 name="mg21",
                 mem=1024,
-                offset_addr=0x000F2000,
+                offset_addr=0x000F8000,
                 full_name="EFR32MG21B020F1024IM32",
             ),
             SidChipAddr(
                 name="bg21",
                 mem=512,
-                offset_addr=0x00072000,
+                offset_addr=0x00078000,
                 full_name="EFR32BG21B020F512IM32",
             ),
             SidChipAddr(
                 name="bg21",
                 mem=768,
-                offset_addr=0x000B2000,
+                offset_addr=0x000B8000,
                 full_name="EFR32BG21B020F768IM32",
             ),
             SidChipAddr(
                 name="bg21",
                 mem=1024,
-                offset_addr=0x000F2000,
+                offset_addr=0x000F8000,
                 full_name="EFR32BG21B020F1024IM32",
             ),
             SidChipAddr(
                 name="mg24",
                 mem=1024,
-                offset_addr=0x080F2000,
+                offset_addr=0x080F8000,
                 full_name="EFR32MG24BA020F1024GM48",
             ),
             SidChipAddr(
                 name="mg24",
                 mem=1536,
-                offset_addr=0x08172000,
+                offset_addr=0x08178000,
                 full_name="EFR32MG24BA020F1536GM48",
             ),
             SidChipAddr(
                 name="bg24",
                 mem=1024,
-                offset_addr=0x080F2000,
+                offset_addr=0x080F8000,
                 full_name="EFR32BG24BA020F1024GM48",
             ),
             SidChipAddr(
                 name="bg24",
                 mem=1536,
-                offset_addr=0x08172000,
+                offset_addr=0x08178000,
                 full_name="EFR32BG24BA020F1536GM48",
                 default=True,
             ),
