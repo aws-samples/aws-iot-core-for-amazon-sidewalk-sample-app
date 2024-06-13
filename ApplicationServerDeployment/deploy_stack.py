@@ -8,9 +8,6 @@ from time import sleep
 
 import boto3
 import webbrowser
-
-from botocore.exceptions import ClientError
-
 from constants.SampleApplicationConstants import *
 from libs.cloud_formation_client import CloudFormationClient
 from libs.config import Config
@@ -95,17 +92,22 @@ if sid_dest_already_exists:
 # --------------------
 parent = Path(__file__).parent
 lambdas = ['SidewalkUplinkLambda', 'SidewalkDownlinkLambda', 'SidewalkDbHandlerLambda']
-dirs = ['uplink', 'downlink', 'db_handler']
+dirs = ['uplink', 'downlink', 'db_handler', 'alexa']
 common_dirs = ['codec', 'database', 'utils']
 lambda_client.upload_lambda_files(parent, lambdas, dirs, common_dirs)
+
 auth_lambdas = ['SidewalkUserAuthenticatorLambda', 'SidewalkTokenAuthenticatorLambda', 'SidewalkTokenGeneratorLambda']
 auth_dirs = ['authUser', 'authApiGw', 'authRequestSigner']
 auth_library_dirs = ['authLibs']
 lambda_client.upload_lambda_files(parent, auth_lambdas, auth_dirs, auth_library_dirs)
-
 auth_string = config.get_username_and_password_as_base64()
 env_variables = {"CREDENTIALS": auth_string}
-lambda_client.update_lambda_env_variables(auth_lambdas, env_variables)
+
+alexa_lambdas = ['AlexaSkillLambda']
+alexa_dirs = ['alexa']
+alexa_library_dirs = ['alexaLibs', 'authLibs']
+lambda_client.upload_lambda_files(parent, alexa_lambdas, alexa_dirs, alexa_library_dirs)
+lambda_client.add_lambda_permissions('AlexaSkillLambda', config.alexa_skill_id)
 
 # ---------------------------
 # Upload WebApp assets to S3
@@ -118,10 +120,16 @@ s3_client.put_files(bucket_name, Path(__file__).parent.joinpath('gui', 'build'))
 # --------------------------------
 web_app_url = cf_client.get_output_var(STACK_NAME, 'CloudFrontDistribution')
 config.set_web_app_url(web_app_url)
+env_variables['CDN_URL'] = web_app_url
+lambda_client.update_lambda_env_variables(alexa_lambdas, env_variables)
 webbrowser.open(f'https://{web_app_url}')
-
+alexa_lambda_arn = cf_client.get_output_var(STACK_NAME, 'AlexaLambdaARN')
+config.set_alexa_lambda_ARN(alexa_lambda_arn)
 log_success('---------------------------------------------------------------')
 log_success('Opening Sensor Monitoring App on the following link:')
 log_success(f'https://{web_app_url}')
 log_success(f'This URL has been saved to config.yaml Outputs.WEB_APP_URL')
+log_success(alexa_lambda_arn)
+log_success(
+    f'This LAMBDA ARN has been saved to config.yaml Outputs.ALEXA_LAMBDA_ARN, please use this as is on the Alexa Developer Console.')
 log_success('---------------------------------------------------------------')

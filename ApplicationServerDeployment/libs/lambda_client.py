@@ -69,3 +69,24 @@ class LambdaClient:
                         sleep(1)
                     else:
                         terminate(f'Unable to update environment variables: {e}', ErrCode.EXCEPTION)
+
+    def add_lambda_permissions(self, lambda_name: str, skill_id: str):
+        """
+        Adds lambda permissions for Alexa trigger. Includes retry mechanism.
+        :param lambdas: list of lambda names to update
+        :param skill_id: id of alexa skill
+        """
+        try:
+            response = self.lambda_client.add_permission(
+                FunctionName=lambda_name,
+                StatementId=f'{lambda_name}-PermissionsForAlexaSkillKit',
+                Action='lambda:InvokeFunction',
+                Principal='alexa-connectedhome.amazon.com',
+                EventSourceToken=skill_id
+            )
+            eval_client_response(response, f'Permissions added.')
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceConflictException':
+                sleep(1)
+            else:
+                terminate(f'Unable to add permissions: {e}', ErrCode.EXCEPTION)

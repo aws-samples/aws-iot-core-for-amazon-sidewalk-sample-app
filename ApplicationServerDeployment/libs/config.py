@@ -45,6 +45,14 @@ class Config:
         self.web_app_url = url
         self._update_config(self.CONFIG_PATH, 'Outputs', 'WEB_APP_URL', url)
 
+    def set_alexa_lambda_ARN(self, ARN):
+        """
+        Sets web_app_url in both: object and config file.
+
+        :param url:     Web App URL to be set.
+        """
+        self._update_config(self.CONFIG_PATH, 'Outputs', 'ALEXA_LAMBDA_ARN', ARN)
+
     def set_workspace_url(self, url):
         """
         Sets Grafana workspace_url in both: object and config file.
@@ -66,6 +74,17 @@ class Config:
 
             self.region_name = 'us-east-1' # Leave this as us-east-1 unless you know what you are doing
             self.web_app_url = ''
+            self.alexa_skill_id = config.get('Config', {}).get('ALEXA_SKILL_ID', 'ask.skill.1234567890')
+        except yaml.YAMLError as e:
+            terminate(f'Invalid structure of a config file: {e}', ErrCode.EXCEPTION)
+
+    def get_alexa_skill_id(self):
+        """
+        Reads Alexa skill ID from config file.
+        """
+        try:
+            config = yaml.safe_load(read_file(self.CONFIG_PATH))
+            return config.get('Config', {}).get('ALEXA_SKILL_ID')
         except yaml.YAMLError as e:
             terminate(f'Invalid structure of a config file: {e}', ErrCode.EXCEPTION)
 
