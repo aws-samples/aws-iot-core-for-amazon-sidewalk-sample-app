@@ -55,22 +55,22 @@ Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH en
 
 1. Open command line terminal and navigate to project's top level directory.
 
-2. Install virtualenv and required packages. Just copy/paste commands to the terminal.
+2. Create a virtual environment and install required packages. Just copy/paste commands to the terminal.
    You may need to use either `python` or `python3` alias, depending on your configuration.
 
 - Linux / MacOS:
 ```
-python3 -m pip install --user virtualenv
 python3 -m venv sample-app-env
 source sample-app-env/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 python3 -m pip install pyjwt -t ./ApplicationServerDeployment/lambda/authLibs
 ```
+> **Note:** On Debian/Ubuntu, if you get an error about `ensurepip`, install the `python3-venv` package first:
+> `sudo apt install python3-venv`
 
 - Windows:
 ```
-python -m pip install --user virtualenv
 python -m venv sample-app-env
 sample-app-env\Scripts\activate.bat
 python -m pip install --upgrade pip
