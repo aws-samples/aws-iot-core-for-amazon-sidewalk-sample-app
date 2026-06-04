@@ -27,6 +27,7 @@ from typing import Iterator
 from dataclasses import dataclass, field
 
 PROVISION_MFG_STORE_VERSION = 7
+PROVISION_MFG_STORE_TLV_VERSION = 8
 
 try:
     from rich import print
@@ -34,11 +35,13 @@ except ImportError:
     pass
 
 SMSN_SIZE: int = 32
-SERIAL_SIZE: int = 4
+SERIAL_SIZE_WITHOUT_EXPANSION: int = 4
 PRK_SIZE: int = 32
 ED25519_PUB_SIZE: int = 32
 P256R1_PUB_SIZE: int = 64
 SIG_SIZE: int = 64
+
+SILABS_MFG_NVM3_KEY_BASE = 0xA9000 # see projects/sid/sal/silabs/sid_pal/include/nvm3_manager.h
 
 # pylint: disable=C0114,C0115,C0116
 
@@ -105,28 +108,28 @@ class SidMfgValueId(Enum):
     SID_PAL_MFG_STORE_DEVICE_PUB_P256R1_SIGNATURE = (11, 64)
     SID_PAL_MFG_STORE_DAK_PUB_ED25519 = (12, 32)
     SID_PAL_MFG_STORE_DAK_PUB_ED25519_SIGNATURE = (13, 64)
-    SID_PAL_MFG_STORE_DAK_ED25519_SERIAL = (14, 4)
+    SID_PAL_MFG_STORE_DAK_ED25519_SERIAL = (14, None)
     SID_PAL_MFG_STORE_DAK_PUB_P256R1 = (15, 64)
     SID_PAL_MFG_STORE_DAK_PUB_P256R1_SIGNATURE = (16, 64)
-    SID_PAL_MFG_STORE_DAK_P256R1_SERIAL = (17, 4)
+    SID_PAL_MFG_STORE_DAK_P256R1_SERIAL = (17, None)
     SID_PAL_MFG_STORE_PRODUCT_PUB_ED25519 = (18, 32)
     SID_PAL_MFG_STORE_PRODUCT_PUB_ED25519_SIGNATURE = (19, 64)
-    SID_PAL_MFG_STORE_PRODUCT_ED25519_SERIAL = (20, 4)
+    SID_PAL_MFG_STORE_PRODUCT_ED25519_SERIAL = (20, None)
     SID_PAL_MFG_STORE_PRODUCT_PUB_P256R1 = (21, 64)
     SID_PAL_MFG_STORE_PRODUCT_PUB_P256R1_SIGNATURE = (22, 64)
-    SID_PAL_MFG_STORE_PRODUCT_P256R1_SERIAL = (23, 4)
+    SID_PAL_MFG_STORE_PRODUCT_P256R1_SERIAL = (23, None)
     SID_PAL_MFG_STORE_MAN_PUB_ED25519 = (24, 32)
     SID_PAL_MFG_STORE_MAN_PUB_ED25519_SIGNATURE = (25, 64)
-    SID_PAL_MFG_STORE_MAN_ED25519_SERIAL = (26, 4)
+    SID_PAL_MFG_STORE_MAN_ED25519_SERIAL = (26, None)
     SID_PAL_MFG_STORE_MAN_PUB_P256R1 = (27, 64)
     SID_PAL_MFG_STORE_MAN_PUB_P256R1_SIGNATURE = (28, 64)
-    SID_PAL_MFG_STORE_MAN_P256R1_SERIAL = (29, 4)
+    SID_PAL_MFG_STORE_MAN_P256R1_SERIAL = (29, None)
     SID_PAL_MFG_STORE_SW_PUB_ED25519 = (30, 32)
     SID_PAL_MFG_STORE_SW_PUB_ED25519_SIGNATURE = (31, 64)
-    SID_PAL_MFG_STORE_SW_ED25519_SERIAL = (32, 4)
+    SID_PAL_MFG_STORE_SW_ED25519_SERIAL = (32, None)
     SID_PAL_MFG_STORE_SW_PUB_P256R1 = (33, 64)
     SID_PAL_MFG_STORE_SW_PUB_P256R1_SIGNATURE = (34, 64)
-    SID_PAL_MFG_STORE_SW_P256R1_SERIAL = (35, 4)
+    SID_PAL_MFG_STORE_SW_P256R1_SERIAL = (35, None)
     SID_PAL_MFG_STORE_AMZN_PUB_ED25519 = (36, 32)
     SID_PAL_MFG_STORE_AMZN_PUB_P256R1 = (37, 64)
     SID_PAL_MFG_STORE_APID = (38, 4)
@@ -147,7 +150,8 @@ class SidSupportedPlatform(Enum):
     NORDIC = (0, "nordic")
     TI = (1, "ti")
     SILABS = (2, "silabs")
-    GENERIC = (3, "generic")
+    TELINK = (3, "telink")
+    GENERIC = (4, "generic")
 
     def __init__(self, value: int, str_name: str) -> None:
         # Overload the value so that the enum value corresponds to the
@@ -214,9 +218,9 @@ class SidPlatformArgs:
     config_file: Any = None
     chips: list[SidChipAddr] = field(default_factory=list)
 
-    def get_chip_from_name_mem(self, name: str, mem: int) -> Union[SidChipAddr, None]:
+    def get_chip_from_name(self, name: str) -> Union[SidChipAddr, None]:
         for _ in self.chips:
-            if _.name == name and _.mem == mem:
+            if _.name == name:
                 return _
         return None
 
@@ -229,47 +233,62 @@ class SidArgOutContainer:
     chip: SidChipAddr
 
 
-class StructureHelper:
+class SidCertMfgCertChain(object):
+    @staticmethod
+    def get_serial_length(serial):
+        sn = int.from_bytes(serial[0:SERIAL_SIZE_WITHOUT_EXPANSION], "little")
+        if sn & 0xF0000000 == 0xB0000000:
+            # It's a long serial
+            return ((sn >> 16) & 0x7F) + 2
+        return SERIAL_SIZE_WITHOUT_EXPANSION
+
+    def __init__(self, cert_buffer: bytes, priv: bytes, serial_expansion_supported: bool):
+        self._cert_buffer = cert_buffer
+        self.device_prk = binascii.unhexlify(priv)
+        assert len(self.device_prk) == PRK_SIZE, "Invalid {} private key size -{} Expected Size -{}".format(
+            self.chain_name, len(self.device_prk), PRK_SIZE
+        )
+
+        def split_bytes(data, length):
+            if len(data) < length:
+                raise ValueError("Cert chain of {} is shorter than expected".format(self.chain_name))
+            return (data[:length], data[length:])
+
+        ca_list = ["device", "dak", "product", "man", "sw", "root"]
+        data = cert_buffer
+        for ca in ca_list:
+            if ca == "device":
+                serial_len = SMSN_SIZE
+            else:
+                serial_len = (
+                    self.get_serial_length(data) if serial_expansion_supported else SERIAL_SIZE_WITHOUT_EXPANSION
+                )
+            (serial, data) = split_bytes(data, serial_len)
+            (pubk, data) = split_bytes(data, self.pubk_size)
+            (sig, data) = split_bytes(data, SIG_SIZE)
+            self.__dict__["{}_serial".format(ca)] = serial
+            self.__dict__["{}_pub".format(ca)] = pubk
+            self.__dict__["{}_sig".format(ca)] = sig
+        self.__dict__["smsn"] = self.__dict__["device_serial"]
+
+        if len(data):
+            raise ValueError("Cert chain of {} is longer than expected".format(self.chain_name))
+
     def __repr__(self) -> str:
         repr_str = f"{self.__class__.__name__}\n"
-        # type: ignore
-        repr_str += f" device_prk-{binascii.hexlify(self.device_prk).upper()}\n"
-        for _ in self.__class__._fields_:  # type: ignore
-            field_name = _[0]
-            # type: ignore
+        for field_name in self.__dict__:  # type: ignore
             repr_str += f" {field_name}: {binascii.hexlify(getattr(self, field_name)).upper()}\n"
         return repr_str
 
 
-class SidCertMfgP256R1Chain(Structure, StructureHelper):
+class SidCertMfgP256R1Chain(SidCertMfgCertChain):
+    pubk_size = P256R1_PUB_SIZE
+    chain_name = "P256R1"
 
-    # pylint: disable=C0326
-    _fields_ = [
-        ("smsn", c_ubyte * SMSN_SIZE),
-        ("device_pub", c_ubyte * P256R1_PUB_SIZE),
-        ("device_sig", c_ubyte * SIG_SIZE),
-        ("dak_serial", c_ubyte * SERIAL_SIZE),
-        ("dak_pub", c_ubyte * P256R1_PUB_SIZE),
-        ("dak_sig", c_ubyte * SIG_SIZE),
-        ("product_serial", c_ubyte * SERIAL_SIZE),
-        ("product_pub", c_ubyte * P256R1_PUB_SIZE),
-        ("product_sig", c_ubyte * SIG_SIZE),
-        ("man_serial", c_ubyte * SERIAL_SIZE),
-        ("man_pub", c_ubyte * P256R1_PUB_SIZE),
-        ("man_sig", c_ubyte * SIG_SIZE),
-        ("sw_serial", c_ubyte * SERIAL_SIZE),
-        ("sw_pub", c_ubyte * P256R1_PUB_SIZE),
-        ("sw_sig", c_ubyte * SIG_SIZE),
-        ("root_serial", c_ubyte * SERIAL_SIZE),
-        ("root_pub", c_ubyte * P256R1_PUB_SIZE),
-        ("root_sig", c_ubyte * SIG_SIZE),
-    ]
-
-    def __new__(cls, cert_buffer: bytes, priv: bytes):  # type: ignore
-        return cls.from_buffer_copy(cert_buffer)
-
-    def __init__(self: SidCertMfgP256R1Chain, cert_buffer: bytes, priv: bytes) -> None:
-        self._cert_buffer = cert_buffer
+    def __init__(
+        self: SidCertMfgP256R1Chain, cert_buffer: bytes, priv: bytes, serial_expansion_supported: bool = True
+    ) -> None:
+        # self._cert_buffer = cert_buffer
         _device_prk = bytearray(binascii.unhexlify(priv))
         """
         Sometimes cloud generates p256r1 private key with an invalid preceding
@@ -279,56 +298,22 @@ class SidCertMfgP256R1Chain(Structure, StructureHelper):
             print(f"P256R1 private key size is {PRK_SIZE+1}, truncate to {PRK_SIZE}")
             del _device_prk[0]
 
-        self.device_prk = bytes(_device_prk)
-
-        assert len(self.device_prk) == PRK_SIZE, "Invalid P256R1 private key size -{} Expected Size -{}".format(
-            len(self.device_prk), PRK_SIZE
-        )
+        super().__init__(cert_buffer, str(binascii.hexlify(_device_prk), "ascii"), serial_expansion_supported)
 
 
-class SidCertMfgED25519Chain(Structure, StructureHelper):
-
-    # pylint: disable=C0326
-    _fields_ = [
-        ("smsn", c_ubyte * SMSN_SIZE),
-        ("device_pub", c_ubyte * ED25519_PUB_SIZE),
-        ("device_sig", c_ubyte * SIG_SIZE),
-        ("dak_serial", c_ubyte * SERIAL_SIZE),
-        ("dak_pub", c_ubyte * ED25519_PUB_SIZE),
-        ("dak_sig", c_ubyte * SIG_SIZE),
-        ("product_serial", c_ubyte * SERIAL_SIZE),
-        ("product_pub", c_ubyte * ED25519_PUB_SIZE),
-        ("product_sig", c_ubyte * SIG_SIZE),
-        ("man_serial", c_ubyte * SERIAL_SIZE),
-        ("man_pub", c_ubyte * ED25519_PUB_SIZE),
-        ("man_sig", c_ubyte * SIG_SIZE),
-        ("sw_serial", c_ubyte * SERIAL_SIZE),
-        ("sw_pub", c_ubyte * ED25519_PUB_SIZE),
-        ("sw_sig", c_ubyte * SIG_SIZE),
-        ("root_serial", c_ubyte * SERIAL_SIZE),
-        ("root_pub", c_ubyte * ED25519_PUB_SIZE),
-        ("root_sig", c_ubyte * SIG_SIZE),
-    ]
-
-    def __new__(cls, cert_buffer: bytes, priv: bytes):  # type: ignore
-        return cls.from_buffer_copy(cert_buffer)
-
-    def __init__(self: SidCertMfgED25519Chain, cert_buffer: bytes, priv: bytes):
-        self._cert_buffer = cert_buffer
-        self.device_prk = binascii.unhexlify(priv)
-        assert len(self.device_prk) == PRK_SIZE, "Invalid ED25519 private key size -{} Expected Size -{}".format(
-            len(self.device_prk), PRK_SIZE
-        )
+class SidCertMfgED25519Chain(SidCertMfgCertChain):
+    pubk_size = ED25519_PUB_SIZE
+    chain_name = "ED25519"
 
 
 class SidCertMfgCert:
     @staticmethod
     def from_base64(
-        cert: bytes, priv: bytes, is_p256r1: bool = False
+        cert: bytes, priv: bytes, is_p256r1: bool, serial_expansion_supported: bool
     ) -> Union[SidCertMfgP256R1Chain, SidCertMfgED25519Chain]:
         if is_p256r1:
-            return SidCertMfgP256R1Chain(base64.b64decode(cert), priv)
-        return SidCertMfgED25519Chain(base64.b64decode(cert), priv)
+            return SidCertMfgP256R1Chain(base64.b64decode(cert), priv, serial_expansion_supported)
+        return SidCertMfgED25519Chain(base64.b64decode(cert), priv, serial_expansion_supported)
 
 
 class SidMfgObj:
@@ -386,7 +371,7 @@ class SidMfgObj:
             )
             raise ValueError(ex_str)
 
-        if byte_len != mfg_enum.size:
+        if mfg_enum.size is not None and byte_len != mfg_enum.size:
             print(f"{self} has incorrect size {byte_len} expected {mfg_enum.size}")
 
     @property
@@ -426,6 +411,8 @@ class SidMfgObj:
 
 
 class SidMfg:
+    FIXED_POSITION_FIELDS_IN_TLV = [SidMfgValueId.SID_PAL_MFG_STORE_MAGIC, SidMfgValueId.SID_PAL_MFG_STORE_VERSION]
+
     def __init__(self: SidMfg, app_pub: Union[None, bytes], config: Any, is_network_order: bool) -> None:
         self._config = config
         self._app_pub: Optional[bytes] = app_pub
@@ -433,6 +420,7 @@ class SidMfg:
         self._is_network_order: bool = is_network_order
         self._mfg_objs: List[SidMfgObj] = []
         self._word_size: int = 0 if not self._config else self._config.offset_size
+        self._tlv_enabled = self._config.tlv_enabled if self._config and hasattr(self._config, "tlv_enabled") else True
 
     def __iter__(self: SidMfg) -> Iterator[SidMfgObj]:
         return iter(sorted(self._mfg_objs, key=lambda mfg_obj: mfg_obj.id_val))
@@ -447,13 +435,18 @@ class SidMfg:
 
     def append(self: SidMfg, mfg_enum: SidMfgValueId, value: Any, can_skip: bool = False) -> None:
         try:
-            offset_config = 0 if not self._config else self._config.mfg_offsets[mfg_enum.name]
+            offset_config = None
+            word_size = 0
+            if self._config and (not self._tlv_enabled or mfg_enum in self.FIXED_POSITION_FIELDS_IN_TLV):
+                offset_config = self._config.mfg_offsets[mfg_enum.name]
+                word_size = self._word_size
+
             mfg_obj = SidMfgObj(
                 mfg_enum,
                 value,
                 offset_config,
                 skip=can_skip,
-                word_size=self._word_size,
+                word_size=word_size,
                 is_network_order=self._is_network_order,
             )
             self._mfg_objs.append(mfg_obj)
@@ -468,7 +461,16 @@ class SidMfg:
 
     @property
     def mfg_version(self):
-        return PROVISION_MFG_STORE_VERSION.to_bytes(4, byteorder="big" if self._is_network_order else "little")
+        mfg_version = PROVISION_MFG_STORE_TLV_VERSION if self._tlv_enabled else PROVISION_MFG_STORE_VERSION
+        return mfg_version.to_bytes(4, byteorder="big" if self._is_network_order else "little")
+
+    @property
+    def is_network_order(self):
+        return self._is_network_order
+
+    @property
+    def word_size(self):
+        return self._word_size
 
     @classmethod
     def from_args(cls, __args__: argparse.Namespace, __pa__) -> None:
@@ -594,9 +596,17 @@ class SidMfgAcsJson(SidMfg):
         super().__init__(app_pub=app_pub, config=config, is_network_order=is_network_order)
 
         _acs_json = AttrDict(acs_json)
-        self._ed25519 = SidCertMfgCert.from_base64(_acs_json.eD25519, _acs_json.metadata.devicePrivKeyEd25519)
+        self._ed25519 = SidCertMfgCert.from_base64(
+            _acs_json.eD25519,
+            _acs_json.metadata.devicePrivKeyEd25519,
+            is_p256r1=False,
+            serial_expansion_supported=self._tlv_enabled,
+        )
         self._p256r1 = SidCertMfgCert.from_base64(
-            _acs_json.p256R1, _acs_json.metadata.devicePrivKeyP256R1, is_p256r1=True
+            _acs_json.p256R1,
+            _acs_json.metadata.devicePrivKeyP256R1,
+            is_p256r1=True,
+            serial_expansion_supported=self._tlv_enabled,
         )
         self._apid = _acs_json.metadata.apid
         self._smsn = binascii.unhexlify(_acs_json.metadata.smsn)
@@ -708,6 +718,14 @@ class SidMfgAwsJson(SidMfg):
         _aws_device_profile_json = AttrDict(aws_device_profile_json)
         _aws_certificate_json = AttrDict(aws_certificate_json)
 
+        def add_generic_sidewalk_filename(json_dict):
+            if json_dict and json_dict.get("_SidewalkFileName", None) is None:
+                json_dict._SidewalkFileName = "Generic"
+
+        add_generic_sidewalk_filename(_aws_wireless_device_json)
+        add_generic_sidewalk_filename(_aws_device_profile_json)
+        add_generic_sidewalk_filename(_aws_certificate_json)
+
         def get_value(crypt_keys: Any, key_type: str) -> Any:
             for _ in crypt_keys:
                 _ = AttrDict(_)
@@ -722,11 +740,14 @@ class SidMfgAwsJson(SidMfg):
             self._ed25519 = SidCertMfgCert.from_base64(
                 get_value(_aws_wireless_device_json.Sidewalk.DeviceCertificates, "Ed25519"),
                 get_value(_aws_wireless_device_json.Sidewalk.PrivateKeys, "Ed25519"),
+                is_p256r1=False,
+                serial_expansion_supported=self._tlv_enabled,
             )
             self._p256r1 = SidCertMfgCert.from_base64(
                 get_value(_aws_wireless_device_json.Sidewalk.DeviceCertificates, "P256r1"),
                 get_value(_aws_wireless_device_json.Sidewalk.PrivateKeys, "P256r1"),
                 is_p256r1=True,
+                serial_expansion_supported=self._tlv_enabled,
             )
 
             _apid = self._get_apid_from_aws_device_profile_json(_aws_device_profile_json)
@@ -742,11 +763,14 @@ class SidMfgAwsJson(SidMfg):
             self._ed25519 = SidCertMfgCert.from_base64(
                 _aws_certificate_json.eD25519,
                 _aws_certificate_json.metadata.devicePrivKeyEd25519,
+                is_p256r1=False,
+                serial_expansion_supported=self._tlv_enabled,
             )
             self._p256r1 = SidCertMfgCert.from_base64(
                 _aws_certificate_json.p256R1,
                 _aws_certificate_json.metadata.devicePrivKeyP256R1,
                 is_p256r1=True,
+                serial_expansion_supported=self._tlv_enabled,
             )
 
             self._apid = None
@@ -906,11 +930,24 @@ class SidMfgOutBin:
     def __init__(self: SidMfgOutBin, file_name: str, config: Any) -> None:
         self._file_name = file_name
         self._config = config
+        self._tlv_enabled = config.tlv_enabled if config and hasattr(config, "tlv_enabled") else True
+        if self._tlv_enabled:
+            self._tlv_region_start = (
+                config.mfg_offsets[SidMfgValueId.SID_PAL_MFG_STORE_VERSION.name]["end"] * config.offset_size
+            )
+            self._word_size = config.offset_size
+            assert not hasattr(config, "mfg_page_size"), "mfg_page_size is not applicable for TLV mfg page"
         self._encoded = bytearray()
         self._resize_encoded()
 
     def _resize_encoded(self: SidMfgOutBin):
-        _encoded_size = self._config.mfg_page_size * self._config.offset_size
+        if self._tlv_enabled:
+            _encoded_size = self._tlv_region_start
+        elif self._config:
+            _encoded_size = self._config.mfg_page_size * self._config.offset_size
+        else:
+            _encoded_size = 0
+
         if len(self._encoded) < _encoded_size:
             self._encoded.extend(bytearray(b"\xff") * (_encoded_size - len(self._encoded)))
 
@@ -930,15 +967,38 @@ class SidMfgOutBin:
     def file_name(self):
         return self._file_name
 
+    def remove_value_with_tag(self, tag, is_network_order):
+        pos = self._tlv_region_start
+        while pos + 4 < len(self._encoded):
+            byteorder = "big" if is_network_order else "little"
+            record_len = int.from_bytes(self._encoded[pos + 2 : pos + 4], byteorder) + 4
+            record_len = (record_len + self._word_size - 1) // self._word_size * self._word_size
+            if int.from_bytes(self._encoded[pos : pos + 2], byteorder) == tag:
+                del self._encoded[pos : pos + record_len]
+                break
+            pos += record_len
+
+    def make_tlv(self, tag, encoded_data, is_network_order):
+        byteorder = "big" if is_network_order else "little"
+        tlv = tag.to_bytes(2, byteorder) + len(encoded_data).to_bytes(2, byteorder) + encoded_data
+        # Round to MFG's word_size boundary
+        tlv += b"\xff" * ((len(tlv) + self._word_size - 1) // self._word_size * self._word_size - len(tlv))
+        return tlv
+
     def write(self: SidMfgOutBin, sid_mfg: SidMfg) -> None:
         encoded_len = len(self._encoded)
         for _ in sid_mfg:
-            if encoded_len <= _.end:
-                ex_str = "Cannot fit Field-{} in mfg page, mfg_page_size has to be at least {}".format(
-                    _.name, int(_.end / self._config.offset_size) + 1
-                )
-                raise Exception(ex_str)
-            self._encoded[_.start : _.end] = _.encoded
+            if self._tlv_enabled and not _.start and not _.end:
+                self.remove_value_with_tag(_.id_val, sid_mfg.is_network_order)
+                self._encoded += self.make_tlv(_.id_val, _.encoded, sid_mfg.is_network_order)
+                encoded_len = len(self._encoded)
+            else:
+                if encoded_len < _.end:
+                    ex_str = "Cannot fit Field-{} in mfg page, mfg_page_size has to be at least {}".format(
+                        _.name, int(_.end / self._config.offset_size) + 1
+                    )
+                    raise Exception(ex_str)
+                self._encoded[_.start : _.end] = _.encoded
 
             if encoded_len != len(self._encoded):
                 raise Exception("Encoded Length Changed")
@@ -977,9 +1037,10 @@ class SidMfgOutNVM3:
             raise Exception("mfg is not valid")
         for obj in sid_mfg:
             if not obj.skip:
+                new_mfg_value_id = SidMfgValueId[obj.name].value + SILABS_MFG_NVM3_KEY_BASE
                 self._objs.append(
                     "0x{:04x}:OBJ:{}".format(
-                        SidMfgValueId[obj.name].value,
+                        new_mfg_value_id,
                         binascii.hexlify(obj.encoded).decode(),
                     )
                 )
@@ -1064,9 +1125,9 @@ class SidMfgOutSLS37:
     @classmethod
     def from_args(cls, arg_container: SidArgOutContainer, args: argparse.Namespace, pa):
 
-        chip = arg_container.platform.get_chip_from_name_mem(args.chip, args.memory)
+        chip = arg_container.platform.get_chip_from_name(args.chip)
         if not chip:
-            pa.error(f"{args.chip} {args.mem} are invalid combination")
+            pa.error(f"Specified chip {args.chip} unsupported!")
             sys.exit(1)
 
         # Check if nvm3 file has been written
@@ -1305,7 +1366,7 @@ PLATFORM_MEMORY_ARG = SidArgument(
 PLATFORM_ADDRESS_ARG = SidArgument(
     name="--addr",
     intype=auto_int,
-    help="""Address offset at which mfg page will be stored, this value does not need to be given since 
+    help="""Address offset at which mfg page will be stored, this value does not need to be given since
             it is taken from chip argument \n is useful if the default value needs to be overridden""",
     additional_help=get_additional_addr_help,
 )
@@ -1407,7 +1468,19 @@ ARG_GROUPS = [
         addtional_input_args=[CONFIG_FILE_ARG, PLATFORM_ADDRESS_ARG],
         output_args=[OUTPUT_BIN_ARG, OUTPUT_HEX_ARG],
         config_file=Path("config/nordic/nrf528xx_dk/config.yaml"),
-        chips=[SidChipAddr(name="nrf52840", offset_addr=0xFF000, default=True)],
+        chips=[SidChipAddr(name="nrf52840", offset_addr=0xFD000, default=True)],
+    ),
+    SidPlatformArgs(
+        platform=SidSupportedPlatform.TELINK,
+        input_groups=[
+            ACS_INPUT_GROUP_FORMAT,
+            BB_INPUT_GROUP_FORMAT,
+            AWS_INPUT_GROUP_FORMAT,
+        ],
+        addtional_input_args=[CONFIG_FILE_ARG, PLATFORM_ADDRESS_ARG],
+        output_args=[OUTPUT_BIN_ARG, OUTPUT_HEX_ARG],
+        config_file=Path("config/telink/TL3238E1/config.yaml"),
+        chips=[SidChipAddr(name="TL3238E1", offset_addr=0xF5000, default=True)],
     ),
     SidPlatformArgs(
         platform=SidSupportedPlatform.TI,
@@ -1435,73 +1508,17 @@ ARG_GROUPS = [
             AWS_INPUT_GROUP_FORMAT,
         ],
         addtional_input_args=[
-            PLATFORM_MEMORY_ARG,
             COMMANDER_BIN_ARG,
             SL_SECURE_VAULT_ARG,
+            PLATFORM_ADDRESS_ARG,
         ],
         output_args=[OUTPUT_SL_NVM3_ARG, OUTPUT_SL_S37_ARG],
         chips=[
-            SidChipAddr(
-                name="mg21",
-                mem=512,
-                offset_addr=0x00072000,
-                full_name="EFR32MG21B020F512IM32",
-            ),
-            SidChipAddr(
-                name="mg21",
-                mem=768,
-                offset_addr=0x000B2000,
-                full_name="EFR32MG21B020F768IM32",
-            ),
-            SidChipAddr(
-                name="mg21",
-                mem=1024,
-                offset_addr=0x000F2000,
-                full_name="EFR32MG21B020F1024IM32",
-            ),
-            SidChipAddr(
-                name="bg21",
-                mem=512,
-                offset_addr=0x00072000,
-                full_name="EFR32BG21B020F512IM32",
-            ),
-            SidChipAddr(
-                name="bg21",
-                mem=768,
-                offset_addr=0x000B2000,
-                full_name="EFR32BG21B020F768IM32",
-            ),
-            SidChipAddr(
-                name="bg21",
-                mem=1024,
-                offset_addr=0x000F2000,
-                full_name="EFR32BG21B020F1024IM32",
-            ),
-            SidChipAddr(
-                name="mg24",
-                mem=1024,
-                offset_addr=0x080F2000,
-                full_name="EFR32MG24BA020F1024GM48",
-            ),
-            SidChipAddr(
-                name="mg24",
-                mem=1536,
-                offset_addr=0x08172000,
-                full_name="EFR32MG24BA020F1536GM48",
-            ),
-            SidChipAddr(
-                name="bg24",
-                mem=1024,
-                offset_addr=0x080F2000,
-                full_name="EFR32BG24BA020F1024GM48",
-            ),
-            SidChipAddr(
-                name="bg24",
-                mem=1536,
-                offset_addr=0x08172000,
-                full_name="EFR32BG24BA020F1536GM48",
-                default=True,
-            ),
+            SidChipAddr(name="xg21", full_name="EFR32MG21B020F1024IM32", offset_addr=0x000F8000),
+            SidChipAddr(name="xg24", full_name="EFR32MG24BA020F1536GM48", offset_addr=0x08178000, default=True),
+            SidChipAddr(name="xg28", full_name="EFR32ZG28B322F1024IM68", offset_addr=0x080F8000),
+            SidChipAddr(name="xg23", full_name="EFR32ZG23B020F512IM48", offset_addr=0x8078000),
+            SidChipAddr(name="xg25", full_name="EFR32FG25B222F1920IM56", offset_addr=0x081D8000),
         ],
     ),
     SidPlatformArgs(
@@ -1632,14 +1649,13 @@ def main() -> None:
         print(sid_mfg)
 
     # Create chip address
-    memory = getattr(args, "memory", 0)
-    chip_addr = [_ for _ in platform_group.chips if args.chip == _.name and memory == _.mem]
+    chip_addr = [_ for _ in platform_group.chips if args.chip == _.name ]
     assert len(chip_addr) == 1
     chip_addr = chip_addr[0]
     addr = getattr(args, "addr", None)
     if addr:
         chip_addr.offset_addr = addr
-    print(f"Using chip config [{chip_addr.help_str}]")
+    print(f"Using chip config : ({chip_addr.help_str})")
 
     for _ in platform_group.output_args:
 

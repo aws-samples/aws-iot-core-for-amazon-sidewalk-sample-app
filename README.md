@@ -43,7 +43,9 @@ If you are not sure whether you have coverage, we recommend you turn on an opera
   - SiLabs:
     - Flashing Drivers: *Segger JLink* (https://www.segger.com/downloads/jlink/)
     - Flashing Tool: *Simplicity Commander* (https://community.silabs.com/s/article/simplicity-commander)
-
+  - Telink:
+    - VS Code Support: *Telink VS Code Extension* (https://www.telink-semi.com/development-tools)
+    - Flashing Tool: *Telink Burning and Debugging Tool* (https://www.telink-semi.com/development-tools)
 
 Make sure *Simplicity Commander* (for SiLabs) are present in your system PATH environment variable.  
 --> Try calling `commander --version` in the terminal to make sure the Simplicity Commander is available
@@ -88,7 +90,7 @@ Fill out [config](./config.yaml) file with your details (or leave default values
 | ---                   | ---                                   | ---
 | *AWS_PROFILE*         | *default*                             | Profile to be used during the stack creation. If you have a custom named profile in your AWS CLI configuration files, replace 'default' with the name of your profile. Usually, you'd have just one profile named 'default'.
 | *DESTINATION_NAME*    | *SensorAppDestination*                | The Sidewalk destination used for uplink traffic routing. Can be any string.
-| *HARDWARE_PLATFORM*   | *ALL*                                 | *NORDIC* or *TI* or *SILABS* (or *ALL* if you want to have personalization data generated for all three platforms)
+| *HARDWARE_PLATFORM*   | *ALL*                                 | *NORDIC* or *TI* or *SILABS* or *TELINK* (or *ALL* if you want to have personalization data generated for all three platforms)
 | *USERNAME*            | *null* **(need to be overwritten)**   | User for the WebApp
 | *PASSWORD*            | *null* **(need to be overwritten)**   | User's password
 | *INTERACTIVE_MODE*    | *True*                                | Enables interactive mode (confirmation prompts).
@@ -148,6 +150,8 @@ It interacts with AWS to create WirelessDevice in the backend, downloads created
            --  SiLabs_MFG.nvm3
            --  Silabs_xG21.s37
            --  Silabs_xG24.s37
+           --  Telink_MFG.bin
+           --  Telink_MFG.hex
            --  TI.bin
            --  TI_P1_MFG.hex
            --  TI_P7_MFG.hex
@@ -169,6 +173,7 @@ There are two main files to flash: device-specific data from *EdgeDeviceProvisio
 Programming devices depends on used hardware platform. Find dedicated how-tos under the following paths:  
  --> [how-to program Nordic board](./EdgeDeviceBinaries/nordic/doc/_How_to_program.md)  
  --> [how-to program SiLabs board](./EdgeDeviceBinaries/silabs/doc/_How_to_program.md)  
+ --> [how-to program Telink board](EdgeDeviceBinaries/telink/doc/_How_to_program.md)  
  --> [how-to program TI board](./EdgeDeviceBinaries/ti/doc/_How_to_program.md)  
 
 

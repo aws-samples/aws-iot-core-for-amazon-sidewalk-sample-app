@@ -43,6 +43,8 @@ class EnvConfig:
             self.hardware_platform = BoardType.TI
         elif platform == 'SILABS':
             self.hardware_platform = BoardType.SiLabs
+        elif platform == 'TELINK':
+            self.hardware_platform = BoardType.Telink
         else:
             logger.error("Unknown hardware platform")
             assert False

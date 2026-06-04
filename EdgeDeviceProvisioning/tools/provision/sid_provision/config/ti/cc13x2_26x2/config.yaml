@@ -1,117 +1,79 @@
 offset_size: 1
-mfg_page_size: 1415
 mfg_offsets:
   SID_PAL_MFG_STORE_DEVID:
-    start: 0
-    end: 5
+    null
   SID_PAL_MFG_STORE_VERSION:
     start: 5
     end: 9
   SID_PAL_MFG_STORE_SERIAL_NUM:
-    start: 9
-    end: 26
+    null
   SID_PAL_MFG_STORE_SMSN:
-    start: 26
-    end: 58
+    null
   SID_PAL_MFG_STORE_APP_PUB_ED25519:
-    start: 58
-    end: 90
+    null
   SID_PAL_MFG_STORE_DEVICE_PRIV_ED25519:
-    start: 90
-    end: 122
+    null
   SID_PAL_MFG_STORE_DEVICE_PUB_ED25519:
-    start: 122
-    end: 154
+    null
   SID_PAL_MFG_STORE_DEVICE_PUB_ED25519_SIGNATURE:
-    start: 154
-    end: 218
+    null
   SID_PAL_MFG_STORE_DEVICE_PRIV_P256R1:
-    start: 218
-    end: 250
+    null
   SID_PAL_MFG_STORE_DEVICE_PUB_P256R1:
-    start: 250
-    end: 314
+    null
   SID_PAL_MFG_STORE_DEVICE_PUB_P256R1_SIGNATURE:
-    start: 314
-    end: 378
+    null
   SID_PAL_MFG_STORE_DAK_PUB_ED25519:
-    start: 378
-    end: 410
+    null
   SID_PAL_MFG_STORE_DAK_PUB_ED25519_SIGNATURE:
-    start: 410
-    end: 474
+    null
   SID_PAL_MFG_STORE_DAK_ED25519_SERIAL:
-    start: 474
-    end: 478
+    null
   SID_PAL_MFG_STORE_DAK_PUB_P256R1:
-    start: 478
-    end: 542
+    null
   SID_PAL_MFG_STORE_DAK_PUB_P256R1_SIGNATURE:
-    start: 542
-    end: 606
+    null
   SID_PAL_MFG_STORE_DAK_P256R1_SERIAL:
-    start: 606
-    end: 610
+    null
   SID_PAL_MFG_STORE_PRODUCT_PUB_ED25519:
-    start: 610
-    end: 642
+    null
   SID_PAL_MFG_STORE_PRODUCT_PUB_ED25519_SIGNATURE:
-    start: 642
-    end: 706
+    null
   SID_PAL_MFG_STORE_PRODUCT_ED25519_SERIAL:
-    start: 706
-    end: 710
+    null
   SID_PAL_MFG_STORE_PRODUCT_PUB_P256R1:
-    start: 710
-    end: 774
+    null
   SID_PAL_MFG_STORE_PRODUCT_PUB_P256R1_SIGNATURE:
-    start: 774
-    end: 838
+    null
   SID_PAL_MFG_STORE_PRODUCT_P256R1_SERIAL:
-    start: 838
-    end: 842
+    null
   SID_PAL_MFG_STORE_MAN_PUB_ED25519:
-    start: 842
-    end: 874
+    null
   SID_PAL_MFG_STORE_MAN_PUB_ED25519_SIGNATURE:
-    start: 874
-    end: 938
+    null
   SID_PAL_MFG_STORE_MAN_ED25519_SERIAL:
-    start: 938
-    end: 942
+    null
   SID_PAL_MFG_STORE_MAN_PUB_P256R1:
-    start: 942
-    end: 1006
+    null
   SID_PAL_MFG_STORE_MAN_PUB_P256R1_SIGNATURE:
-    start: 1006
-    end: 1070
+    null
   SID_PAL_MFG_STORE_MAN_P256R1_SERIAL:
-    start: 1070
-    end: 1074
+    null
   SID_PAL_MFG_STORE_SW_PUB_ED25519:
-    start: 1074
-    end: 1106
+    null
   SID_PAL_MFG_STORE_SW_PUB_ED25519_SIGNATURE:
-    start: 1106
-    end: 1170
+    null
   SID_PAL_MFG_STORE_SW_ED25519_SERIAL:
-    start: 1170
-    end: 1174
+    null
   SID_PAL_MFG_STORE_SW_PUB_P256R1:
-    start: 1174
-    end: 1238
+    null
   SID_PAL_MFG_STORE_SW_PUB_P256R1_SIGNATURE:
-    start: 1238
-    end: 1302
+    null
   SID_PAL_MFG_STORE_SW_P256R1_SERIAL:
-    start: 1302
-    end: 1306
+    null
   SID_PAL_MFG_STORE_AMZN_PUB_ED25519:
-    start: 1306
-    end: 1338
+    null
   SID_PAL_MFG_STORE_AMZN_PUB_P256R1:
-    start: 1338
-    end: 1402
+    null
   SID_PAL_MFG_STORE_APID:
-    start: 1402
-    end: 1406
+    null

@@ -14,6 +14,7 @@ class BoardType(Enum):
     Nordic = 0,
     TI = 1,
     SiLabs = 2,
+    Telink = 3,
     All = 99
 
 
@@ -73,6 +74,24 @@ class ProvisionWrapper:
                                                                 out_bin=nordic_bin,
                                                                 chip="nrf52840",
                                                                 out_hex=nordic_hex)
+
+        if board == BoardType.Telink or board == BoardType.All:
+            logger.info("  Generating MFG.hex for Telink")
+            telink_bin = os.path.join(output_dir, "Telink_MFG.bin")
+            telink_hex = os.path.join(output_dir, "Telink_MFG.hex")
+            if input_type == InputType.AWS_API_JSONS:
+                self.generate_bin_and_hex_from_aws_jsons(device_json=wireless_device_path,
+                                                         profile_json=device_profile_path,
+                                                         board=BoardType.Telink,
+                                                         out_bin=telink_bin,
+                                                         chip="TL3238E1",
+                                                         out_hex=telink_hex)
+            else:
+                self.generate_bin_and_hex_from_certificate_json(certificate=certificate_json,
+                                                                board=BoardType.Telink,
+                                                                out_bin=telink_bin,
+                                                                chip="TL3238E1",
+                                                                out_hex=telink_hex)
 
         if board == BoardType.TI or board == BoardType.All:
             logger.info("  Generating MFG.hex for TI P1 and TI P7")
@@ -141,9 +160,15 @@ class ProvisionWrapper:
                                                                  outfile_s37=sl_xg24_mfg_s37)
 
     def generate_bin_and_hex_from_aws_jsons(self, device_json, profile_json, board, out_bin, chip, out_hex, addr=None):
-        assert board in (BoardType.Nordic, BoardType.TI), "Operation supported only for Nordic and TI"
+        assert board in (BoardType.Nordic, BoardType.TI, BoardType.Telink), "Operation supported only for Nordic, Telink and TI"
 
-        platform = "ti" if board == BoardType.TI else "nordic"
+        if board == BoardType.Telink:
+            platform = "telink"
+        elif board == BoardType.TI:
+            platform = "ti"
+        else:
+            platform = "nordic"
+
         args = [sys.executable, 'provision.py', platform, 'aws', '--wireless_device_json', device_json,
                                       '--device_profile_json', profile_json,
                                       '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex]
@@ -164,9 +189,14 @@ class ProvisionWrapper:
         print_subprocess_results(result, subprocess_name="provision.py")
 
     def generate_bin_and_hex_from_certificate_json(self, certificate, board, out_bin, chip, out_hex, addr=None):
-        assert board in (BoardType.Nordic, BoardType.TI), "Operation supported only for Nordic and TI"
+        assert board in (BoardType.Nordic, BoardType.TI, BoardType.Telink), "Operation supported only for Nordic, Telink and TI"
 
-        platform = "ti" if board == BoardType.TI else "nordic"
+        if board == BoardType.Telink:
+            platform = "telink"
+        elif board == BoardType.TI:
+            platform = "ti"
+        else:
+            platform = "nordic"
         args = [sys.executable, 'provision.py', platform, 'aws', '--certificate_json', certificate,
                                       '--output_bin', out_bin, '--chip', chip, '--output_hex', out_hex]
         if addr:
